@@ -58,6 +58,21 @@
         <main class="flex-1 overflow-y-auto p-6">
             <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
                 <h1 class="text-3xl font-bold text-slate-800 mb-2">Selamat Datang ke Portal Kurikulum!</h1>
+                <!-- MUKA SURAT BERUBAH DI SINI -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800 mb-2">Selamat Datang ke Portal Kurikulum!</h1>
+                        <p class="text-slate-500">Pilih modul di sebelah kiri untuk melihat bahan.</p>
+                    </div>
+                    
+                    <!-- BUTANG RAHSIA (Hanya admin/pengurus boleh nampak) -->
+                    <button id="btnUpload" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition flex items-center">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i> Muat Naik Fail
+                    </button>
+                </div>
+                <!-- ... kod kotak info biru sebelum ini biarkan sahaja ... -->
                 <p class="text-slate-500 mb-6">Versi HTML ini jauh lebih ringan, laju, dan bebas pening.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -71,13 +86,14 @@
 
     </div>
 <!-- LETAKKAN SKRIP INI SEBELUM </body> -->
-    <script type="module">
-        // 1. Tarik Firebase melalui CDN (Tiada npm diperlukan!)
+   <script type="module">
+        // 1. Tarik modul Auth dan Firestore dari Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
-       const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyDhEer81oa5wGndqr5dKRwFwVeSahwaUjo",
   authDomain: "kurikulum-skfls.firebaseapp.com",
   projectId: "kurikulum-skfls",
@@ -86,41 +102,66 @@
   appId: "1:401976347574:web:8970f2dab85aa03faf0f17"
 };
 
-        // 3. Hidupkan Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
+        const db = getFirestore(app); // Hidupkan Database
 
-        // 4. Kenal pasti elemen butang di skrin
         const btnLogin = document.getElementById('btnLogin');
         const txtLogin = document.getElementById('txtLogin');
         const iconLogin = document.getElementById('iconLogin');
+        const btnUpload = document.getElementById('btnUpload'); // Pautkan butang rahsia
 
-        // 5. Logik bila butang ditekan (Log Masuk / Log Keluar)
+        // Logik Butang Log Masuk
         btnLogin.addEventListener('click', () => {
             if (auth.currentUser) {
-                // Jika dah log masuk, fungsi ini jadi Log Keluar
                 signOut(auth);
             } else {
-                // Jika belum, fungsi ini buka tetingkap Google
-                signInWithPopup(auth, provider).catch((error) => {
-                    alert("Ralat log masuk: " + error.message);
-                });
+                signInWithPopup(auth, provider).catch(error => alert(error.message));
             }
         });
 
-        // 6. Pantau status pengguna (Berubah secara automatik)
-        onAuthStateChanged(auth, (user) => {
+        // Pantau Status Pengguna
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Berjaya Log Masuk! Tukar rupa butang
+                // UI: Berjaya log masuk
                 txtLogin.textContent = "Log Keluar (" + user.displayName + ")";
                 iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
                 btnLogin.classList.add('bg-red-50', 'border-red-200');
+
+                // LOGIK DATABASE: Semak fail profil pengguna ini di Firestore
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    // Jika profil dah wujud, semak peranan (role) dia
+                    const userData = userSnap.data();
+                    
+                    if (userData.role === 'admin' || userData.role === 'pengurus') {
+                        // Buka penutup rahsia! Munculkan butang upload
+                        btnUpload.classList.remove('hidden');
+                    } else {
+                        btnUpload.classList.add('hidden');
+                    }
+                } else {
+                    // Jika dia pertama kali log masuk, cipta profil sebagai 'awam' (cikgu biasa)
+                    await setDoc(userRef, {
+                        nama: user.displayName,
+                        email: user.email,
+                        role: 'awam', // Status asal
+                        modul_akses: []
+                    });
+                    btnUpload.classList.add('hidden');
+                }
+
             } else {
-                // Kembali ke mod awam
+                // UI: Kembali ke mod awam bila log keluar
                 txtLogin.textContent = "Log Masuk (DELIMa)";
                 iconLogin.className = "fas fa-sign-in-alt mr-2";
                 btnLogin.classList.remove('bg-red-50', 'border-red-200');
+                
+                // Pastikan butang upload disembunyikan
+                btnUpload.classList.add('hidden');
             }
         });
     </script>
