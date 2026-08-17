@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kurikulum SKFLS</title>
+    
+    <!-- 1. Tarik Tailwind CSS tanpa perlu install -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Tarik FontAwesome untuk Ikon yang cantik -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden">
+
+    <!-- BAHAGIAN KIRI: SIDEBAR -->
+    <aside class="w-64 bg-slate-900 text-white min-h-screen hidden md:flex flex-col shadow-xl">
+        <div class="p-6 text-center border-b border-slate-700">
+            <h1 class="text-2xl font-bold tracking-wider">SKFLS</h1>
+            <p class="text-xs text-slate-400 mt-1">Portal Kurikulum Digital</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2">
+            <!-- Butang Aktif -->
+            <a href="index.html" class="flex items-center space-x-3 p-3 bg-blue-600 rounded-lg text-white transition">
+                <i class="fas fa-home w-5 text-center"></i>
+                <span>Dashboard Utama</span>
+            </a>
+            
+            <!-- Butang Biasa -->
+            <a href="#" class="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-folder-open w-5 text-center"></i>
+                <span>Panitia Subjek</span>
+            </a>
+
+            <a href="#" class="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-book w-5 text-center"></i>
+                <span>Program Khas</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- BAHAGIAN KANAN: KANDUNGAN UTAMA -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- NAVBAR (BAR ATAS) -->
+        <header class="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-slate-800">One-Stop Centre</h2>
+            
+            <!-- Butang Login (Nanti kita pautkan dengan Firebase) -->
+            <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium text-sm border border-slate-300 flex items-center">
+                <i class="fas fa-sign-in-alt mr-2"></i> Log Masuk
+            </button>
+        </header>
+
+        <!-- MUKA SURAT BERUBAH DI SINI -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h1 class="text-3xl font-bold text-slate-800 mb-2">Selamat Datang ke Portal Kurikulum!</h1>
+                <p class="text-slate-500 mb-6">Versi HTML ini jauh lebih ringan, laju, dan bebas pening.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 border rounded-lg border-blue-200 bg-blue-50">
+                        <h3 class="font-bold text-blue-800">Info Terkini</h3>
+                        <p class="text-sm text-blue-600">Sistem ini sedang dibangunkan menggunakan Vanilla HTML & Firebase.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+</body>
+</html>
