@@ -70,6 +70,59 @@
         </main>
 
     </div>
+<!-- LETAKKAN SKRIP INI SEBELUM </body> -->
+    <script type="module">
+        // 1. Tarik Firebase melalui CDN (Tiada npm diperlukan!)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
+        // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
+       const firebaseConfig = {
+  apiKey: "AIzaSyDhEer81oa5wGndqr5dKRwFwVeSahwaUjo",
+  authDomain: "kurikulum-skfls.firebaseapp.com",
+  projectId: "kurikulum-skfls",
+  storageBucket: "kurikulum-skfls.firebasestorage.app",
+  messagingSenderId: "401976347574",
+  appId: "1:401976347574:web:8970f2dab85aa03faf0f17"
+};
+
+        // 3. Hidupkan Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // 4. Kenal pasti elemen butang di skrin
+        const btnLogin = document.getElementById('btnLogin');
+        const txtLogin = document.getElementById('txtLogin');
+        const iconLogin = document.getElementById('iconLogin');
+
+        // 5. Logik bila butang ditekan (Log Masuk / Log Keluar)
+        btnLogin.addEventListener('click', () => {
+            if (auth.currentUser) {
+                // Jika dah log masuk, fungsi ini jadi Log Keluar
+                signOut(auth);
+            } else {
+                // Jika belum, fungsi ini buka tetingkap Google
+                signInWithPopup(auth, provider).catch((error) => {
+                    alert("Ralat log masuk: " + error.message);
+                });
+            }
+        });
+
+        // 6. Pantau status pengguna (Berubah secara automatik)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Berjaya Log Masuk! Tukar rupa butang
+                txtLogin.textContent = "Log Keluar (" + user.displayName + ")";
+                iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
+                btnLogin.classList.add('bg-red-50', 'border-red-200');
+            } else {
+                // Kembali ke mod awam
+                txtLogin.textContent = "Log Masuk (DELIMa)";
+                iconLogin.className = "fas fa-sign-in-alt mr-2";
+                btnLogin.classList.remove('bg-red-50', 'border-red-200');
+            }
+        });
+    </script>
 </body>
 </html>
