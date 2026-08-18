@@ -9,12 +9,12 @@ import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp,
 // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
 // ==========================================
 const firebaseConfig = {
-    apiKey: "LETAK_API_KEY_ANDA",
-    authDomain: "LETAK_AUTH_DOMAIN_ANDA",
-    projectId: "LETAK_PROJECT_ID",
-    storageBucket: "LETAK_STORAGE_BUCKET",
-    messagingSenderId: "LETAK_SENDER_ID",
-    appId: "LETAK_APP_ID"
+  apiKey: "AIzaSyDhEer81oa5wGndqr5dKRwFwVeSahwaUjo",
+  authDomain: "kurikulum-skfls.firebaseapp.com",
+  projectId: "kurikulum-skfls",
+  storageBucket: "kurikulum-skfls.firebasestorage.app",
+  messagingSenderId: "401976347574",
+  appId: "1:401976347574:web:8970f2dab85aa03faf0f17"
 };
 
 const app = initializeApp(firebaseConfig);
