@@ -1,30 +1,32 @@
 // ==========================================
-// 1. SEMUA IMPORT MESTI DI ATAS SEKALI
+// 1. IMPORT MODUL FIREBASE
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
 // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDhEer81oa5wGndqr5dKRwFwVeSahwaUjo",
-  authDomain: "kurikulum-skfls.firebaseapp.com",
-  projectId: "kurikulum-skfls",
-  storageBucket: "kurikulum-skfls.firebasestorage.app",
-  messagingSenderId: "401976347574",
-  appId: "1:401976347574:web:8970f2dab85aa03faf0f17"
+    apiKey: "LETAK_API_KEY_ANDA",
+    authDomain: "LETAK_AUTH_DOMAIN_ANDA",
+    projectId: "LETAK_PROJECT_ID",
+    storageBucket: "LETAK_STORAGE_BUCKET",
+    messagingSenderId: "LETAK_SENDER_ID",
+    appId: "LETAK_APP_ID"
 };
 
-// Hidupkan Sistem Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
 
+// Kita buat pembolehubah global supaya sistem tahu siapa admin
+window.isAdmin = false;
+
 // ==========================================
-// 3. LOGIK LOG MASUK & SEMAK PANGKAT (ROLE)
+// 3. LOGIK LOG MASUK & PANGKAT ADMIN
 // ==========================================
 const btnLogin = document.getElementById('btnLogin');
 const txtLogin = document.getElementById('txtLogin');
@@ -55,21 +57,124 @@ onAuthStateChanged(auth, async (user) => {
 
         // Tunjuk butang admin jika ada kebenaran
         if (userRole === 'admin' || userRole === 'pengurus') {
-            const elemenAdmin = document.querySelectorAll('.hanya-admin');
-            elemenAdmin.forEach(el => el.classList.remove('hidden'));
+            window.isAdmin = true;
+            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
         }
     } else {
         if (txtLogin) txtLogin.textContent = "Log Masuk (DELIMa)";
         if (iconLogin) iconLogin.className = "fas fa-sign-in-alt mr-2";
         if (btnLogin) btnLogin.classList.remove('bg-red-50', 'border-red-200');
         
-        const elemenAdmin = document.querySelectorAll('.hanya-admin');
-        elemenAdmin.forEach(el => el.classList.add('hidden'));
+        window.isAdmin = false;
+        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
     }
 });
 
 // ==========================================
-// 4. LOGIK MUAT NAIK (BASE64 + GAS)
+// 4. DAPATKAN MAKLUMAT MUKA SURAT SEMASA
+// ==========================================
+const urlParams = new URLSearchParams(window.location.search);
+const subjekSemasa = urlParams.get('subjek') || 'umum';
+
+const senaraiNamaPanitia = {
+    'bm': 'Panitia Bahasa Melayu',
+    'bi': 'Panitia Bahasa Inggeris',
+    'mt': 'Panitia Matematik',
+    'sn': 'Panitia Sains',
+    'pi': 'Panitia Pendidikan Islam'
+};
+
+const tajukPanitia = document.getElementById('tajukPanitia');
+if (tajukPanitia) {
+    // Tukar tajuk secara automatik (jika nama subjek tiada dalam senarai, tulis 'Senarai Bahan')
+    tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'Senarai Bahan';
+}
+
+
+// ==========================================
+// 5. BACA & PAPARKAN JADUAL SECARA LIVE
+// ==========================================
+const ruangJadual = document.getElementById('ruangJadual');
+
+if (ruangJadual) {
+    // Arahkan Firestore cari fail yang "subjek" nya sama dengan muka surat sekarang
+    const q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
+    
+    // onSnapshot akan baca data secara "Live". Kalau ada orang upload, ia terus muncul tanpa refresh!
+    onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+            ruangJadual.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
+            return;
+        }
+
+        let htmlJadual = `
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                        <th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th>
+                        <th class="p-4 font-medium hidden md:table-cell">Dimuat Naik Oleh</th>
+                        <th class="p-4 font-medium">Tarikh</th>
+                        <th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+        `;
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id; // ID unik rekod ini
+            
+            // Format Tarikh
+            let tarikhMasa = "Baru sahaja";
+            if (data.tarikh) {
+                tarikhMasa = data.tarikh.toDate().toLocaleDateString('ms-MY');
+            }
+
+            htmlJadual += `
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                    <td class="p-4 font-medium text-slate-800">
+                        <i class="fas fa-file-pdf text-red-500 mr-2 text-lg"></i> ${data.tajuk}
+                    </td>
+                    <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
+                    <td class="p-4 text-slate-500">${tarikhMasa}</td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                        <a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">
+                            <i class="fas fa-external-link-alt"></i> Buka
+                        </a>
+                        <button onclick="padamRekod('${id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam Fail">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        htmlJadual += `</tbody></table></div>`;
+        ruangJadual.innerHTML = htmlJadual;
+
+        // Pastikan butang Tong Sampah muncul jika pengguna itu adalah admin
+        if (window.isAdmin) {
+            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
+        }
+    });
+}
+
+// Fungsi Padam Rekod (Dipanggil oleh butang Tong Sampah)
+window.padamRekod = async function(id) {
+    const sah = confirm("Adakah anda pasti mahu memadam rekod ini?");
+    if (sah) {
+        try {
+            await deleteDoc(doc(db, "kandungan", id));
+            alert("Berjaya dipadam.");
+        } catch (error) {
+            alert("Ralat memadam: " + error.message);
+        }
+    }
+}
+
+// ==========================================
+// 6. LOGIK MUAT NAIK (BASE64 + GAS)
 // ==========================================
 const modalUpload = document.getElementById('modalUpload');
 const btnBukaModal = document.getElementById('btnBukaModal');
@@ -95,10 +200,6 @@ if (formUpload) {
         const user = auth.currentUser;
 
         if (!file || !user) return;
-
-        // Ambil kod subjek dari link atas
-        const urlParams = new URLSearchParams(window.location.search);
-        const subjekSemasa = urlParams.get('subjek') || 'umum';
 
         try {
             btnSubmitUpload.disabled = true;
@@ -129,7 +230,6 @@ if (formUpload) {
                 const hasilGAS = await responsGAS.json();
 
                 if (hasilGAS.status === 'success') {
-                    // Simpan ke Firestore
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk,
                         subjek: subjekSemasa,
@@ -139,7 +239,8 @@ if (formUpload) {
                         tarikh: serverTimestamp()
                     });
 
-                    alert("Berjaya! Fail anda telah selamat masuk ke Google Drive dan Firebase.");
+                    // Kita guna alert biasa, tak perlu refresh sebab jadual akan update secara LIVE
+                    alert("Berjaya! Fail anda telah selamat masuk.");
                     modalUpload.classList.add('hidden');
                     formUpload.reset();
 
