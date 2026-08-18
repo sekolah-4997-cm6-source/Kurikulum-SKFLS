@@ -94,30 +94,28 @@
             </button>
         </header>
 
-        <!-- KANDUNGAN PANITIA / SUBJEK -->
+       <!-- KANDUNGAN PANITIA / SUBJEK -->
         <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50">
-            
-            <div class="flex flex-col md:flex-row md:justify-between md:items-end mb-6 gap-4 border-b border-slate-200 pb-4">
-                <div>
-                    <h1 id="tajukPanitia" class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight"></h1>
-                    <p class="text-slate-500 text-sm mt-1">Senarai dokumen dan bahan muat naik</p>
+            <div class="max-w-7xl mx-auto">
+                
+                <!-- TAJUK & BUTANG MUAT NAIK -->
+                <div class="flex flex-col md:flex-row md:justify-between md:items-end mb-6 gap-4 border-b border-slate-200 pb-4">
+                    <div>
+                        <h1 id="tajukPanitia" class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight"></h1>
+                        <p class="text-slate-500 text-sm mt-1">Senarai dokumen dan bahan muat naik</p>
+                    </div>
+                    
+                    <button id="btnBukaModal" class="hanya-admin hidden bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md whitespace-nowrap flex items-center">
+                        <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Muat Naik Bahan
+                    </button>
                 </div>
-                
-                <button id="btnBukaModal" class="hanya-admin hidden bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md whitespace-nowrap flex items-center">
-                    <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Muat Naik Bahan
-                </button>
-            </div>
-                
-                <button id="btnBukaModal" class="hanya-admin hidden bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md whitespace-nowrap flex items-center">
-                    <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Muat Naik Bahan
-                </button>
-            </div>
 
-            <!-- RUANG JADUAL -->
-            <div id="ruangJadual" class="bg-white rounded-xl shadow-sm border border-slate-200">
-                <p class="text-center text-slate-400 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3 block"></i> Sedang menyemak pangkalan data...</p>
-            </div>
+                <!-- RUANG JADUAL -->
+                <div id="ruangJadual" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <p class="text-center text-slate-400 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3 block"></i> Sedang menyemak pangkalan data...</p>
+                </div>
 
+            </div>
         </main>
     </div>
 
