@@ -3,8 +3,7 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 // ==========================================
 // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
 // ==========================================
@@ -108,12 +107,112 @@ if (btnMenu && sidebar && overlay) {
 }
 
 // ==========================================
-// 6. BACA & PAPARKAN JADUAL SECARA LIVE
+// 6. BACA & PAPARKAN JADUAL SECARA LIVE (DENGAN FILTER & PAGINATION)
 // ==========================================
 const ruangJadual = document.getElementById('ruangJadual');
+const filterTahun = document.getElementById('filterTahun');
+let limitFail = 20; // Pagination: Mula dengan 20 fail
+let unsubscribeJadual = null;
 
-if (ruangJadual) {
-    const q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
+function panggilDataJadual() {
+    if (!ruangJadual) return;
+    
+    // Asas query: Mesti subjek semasa dan status = aktif (Bukan soft-delete)
+    let syarat = [
+        where("subjek", "==", subjekSemasa),
+        where("status", "==", "aktif"),
+        orderBy("tarikh", "desc"),
+        limit(limitFail)
+    ];
+
+    // Jika filter tahun dipilih selain 'semua'
+    if (filterTahun && filterTahun.value !== 'semua') {
+        syarat.push(where("tahun", "==", filterTahun.value));
+    }
+
+    const q = query(collection(db, "kandungan"), ...syarat);
+    
+    // Hentikan langganan (snapshot) lama jika ada
+    if (unsubscribeJadual) unsubscribeJadual();
+
+    unsubscribeJadual = onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+            ruangJadual.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik (atau tiada fail untuk tahun ini).</p>';
+            return;
+        }
+
+        let htmlJadual = `
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                        <th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th>
+                        <th class="p-4 font-medium hidden md:table-cell">Tahun</th>
+                        <th class="p-4 font-medium hidden md:table-cell">Dimuat Naik Oleh</th>
+                        <th class="p-4 font-medium">Tarikh</th>
+                        <th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+        `;
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+            let tarikhMasa = "Baru sahaja";
+            if (data.tarikh) tarikhMasa = data.tarikh.toDate().toLocaleDateString('ms-MY');
+
+            htmlJadual += `
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                    <td class="p-4 font-medium text-slate-800">
+                        <i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}
+                    </td>
+                    <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada Tag'}</span></td>
+                    <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
+                    <td class="p-4 text-slate-500">${tarikhMasa}</td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                        <a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">Buka</a>
+                        <button onclick="padamRekod('${id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        htmlJadual += `</tbody></table></div>`;
+        
+        // Letak butang Load More jika ada banyak fail
+        htmlJadual += `
+            <div class="p-4 text-center border-t border-slate-100 bg-slate-50">
+                <button onclick="tambahLimit()" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition">
+                    <i class="fas fa-chevron-down mr-1"></i> Papar Fail Lebih Lama (Maks: ${limitFail})
+                </button>
+            </div>
+        `;
+        
+        ruangJadual.innerHTML = htmlJadual;
+
+        if (window.isAdmin) {
+            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
+        }
+    });
+}
+
+// Event listener untuk apabila filter ditukar
+if(filterTahun) {
+    filterTahun.addEventListener('change', () => {
+        limitFail = 20; // Reset ke 20 setiap kali tukar filter
+        panggilDataJadual();
+    });
+}
+
+// Fungsi untuk pagination (Load More)
+window.tambahLimit = function() {
+    limitFail += 20; // Tambah 20 fail lagi
+    panggilDataJadual();
+}
+
+// Mulakan panggilan pertama
+panggilDataJadual();
     
     onSnapshot(q, (snapshot) => {
         if (snapshot.empty) {
@@ -166,9 +265,14 @@ if (ruangJadual) {
     });
 }
 
+// Tukar deleteDoc kepada updateDoc untuk Soft Delete
 window.padamRekod = async function(id) {
-    if (confirm("Pasti mahu padam?")) {
-        await deleteDoc(doc(db, "kandungan", id));
+    if (confirm("Adakah anda pasti mahu memadam fail ini? (Fail akan disimpan dalam arkib admin)")) {
+        const docRef = doc(db, "kandungan", id);
+        await updateDoc(docRef, {
+            status: "dipadam"
+        });
+        // Fail tidak di-delete sepenuhnya, hanya hilang dari pandangan guru
     }
 }
 
@@ -216,10 +320,19 @@ if (formUpload) {
                 const hasilGAS = await responsGAS.json();
 
                 if (hasilGAS.status === 'success') {
-                    await addDoc(collection(db, "kandungan"), {
-                        tajuk: tajuk, subjek: subjekSemasa, url_fail: hasilGAS.url,
-                        dimuat_naik_oleh: user.displayName, uid_pemuat_naik: user.uid, tarikh: serverTimestamp()
-                    });
+                  // Gantikan blok addDoc sedia ada dengan ini:
+const tahunDipilih = document.getElementById('inputTahun').value;
+
+await addDoc(collection(db, "kandungan"), {
+    tajuk: tajuk, 
+    subjek: subjekSemasa, 
+    url_fail: hasilGAS.url,
+    dimuat_naik_oleh: user.displayName, 
+    uid_pemuat_naik: user.uid, 
+    tarikh: serverTimestamp(),
+    tahun: tahunDipilih, // Tagging Tahun
+    status: "aktif"      // Status untuk Soft Delete
+});
                     modalUpload.classList.add('hidden');
                     formUpload.reset();
                 } else {
