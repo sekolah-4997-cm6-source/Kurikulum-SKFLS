@@ -63,21 +63,57 @@
         </header>
 
         <!-- KAWASAN DASHBOARD UTAMA -->
-        <main class="flex-1 overflow-y-auto p-6 bg-slate-50">
+        <main class="flex-1 overflow-y-auto p-6 bg-slate-50 relative">
             <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <h1 class="text-3xl font-bold text-slate-800 mb-2">Selamat Datang ke Portal Kurikulum</h1>
-                        <p class="text-slate-500">Sila pilih panitia atau modul di menu sebelah kiri untuk mula memuat turun bahan.</p>
+                        <!-- Tajuk akan berubah secara automatik nanti -->
+                        <h1 id="tajukPanitia" class="text-3xl font-bold text-slate-800 mb-2">Memuatkan...</h1>
+                        <p class="text-slate-500">Senarai bahan dan dokumen berkaitan untuk dimuat turun.</p>
                     </div>
+
+                    <!-- BUTANG RAHSIA ADMIN -->
+                    <button id="btnBukaModal" class="hanya-admin hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Tambah Bahan
+                    </button>
                 </div>
 
-                <!-- Butang Khas Admin (Sembunyi secara default) -->
-                <div class="hanya-admin hidden mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p class="text-amber-800 font-bold"><i class="fas fa-shield-alt mr-2"></i> Mod Pentadbir Aktif</p>
-                    <p class="text-sm text-amber-700">Anda kini log masuk sebagai Admin. Anda boleh menambah atau memadam fail di muka surat Panitia nanti.</p>
+                <!-- RUANG UNTUK JADUAL SENARAI FAIL (Kita buat di Fasa 6) -->
+                <div id="ruangJadual" class="mt-8 border-t border-slate-200 pt-6">
+                    <p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>
                 </div>
+            </div>
 
+            <!-- KOTAK POP-UP (MODAL) MUAT NAIK FAIL -->
+            <div id="modalUpload" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                    <div class="bg-slate-900 px-6 py-4 flex justify-between items-center">
+                        <h3 class="text-white font-bold text-lg">Muat Naik Dokumen</h3>
+                        <button id="btnTutupModal" class="text-slate-400 hover:text-white focus:outline-none">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="formUpload" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Tajuk Dokumen</label>
+                            <input type="text" id="inputTajuk" required placeholder="Cth: RPT Tingkatan 1 (2025)" 
+                                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Pilih Fail (PDF / Word / Excel)</label>
+                            <input type="file" id="inputFail" required 
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" id="btnSubmitUpload" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition flex justify-center items-center">
+                                <span id="txtSubmit">Muat Naik Sekarang</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </main>
     </div>
