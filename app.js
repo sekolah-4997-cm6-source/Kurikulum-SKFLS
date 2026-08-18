@@ -77,30 +77,54 @@ const urlParams = new URLSearchParams(window.location.search);
 const subjekSemasa = urlParams.get('subjek') || 'umum';
 
 const senaraiNamaPanitia = {
-    // Subjek Teras
-    'bm': 'Panitia Bahasa Melayu',
-    'bi': 'Panitia Bahasa Inggeris',
-    'mt': 'Panitia Matematik',
-    'sn': 'Panitia Sains',
-    'pi': 'Panitia Pendidikan Islam',
-    'pm': 'Panitia Pendidikan Moral',
+    // 1. Maklumat Induk
+    'visi_misi': 'Visi, Misi & Matlamat Sekolah',
+    'spi': 'Surat Pekeliling Ikhtisas (SPI)',
+    'dasar': 'Dasar & Penetapan Kurikulum',
+    'takwim': 'Perancangan Pelaksanaan Kurikulum',
     
-    // Subjek Elektif / Wajib
-    'sej': 'Panitia Sejarah',
-    'rbt': 'Panitia Reka Bentuk & Teknologi',
-    'psv': 'Panitia Pendidikan Seni Visual',
-    'mz': 'Panitia Pendidikan Muzik',
-    'pjpk': 'Panitia PJPK',
-    'ba': 'Panitia Bahasa Arab',
+    // 2. Mesyuarat & Masa
+    'mesyuarat_induk': 'Mesyuarat Kurikulum Induk',
+    'mmi': 'Mengurus Masa Instruksional (MMI)',
     
-    // Lain-lain Unit Kurikulum
-    'pemulihan': 'Unit Pemulihan Khas',
-    'pra': 'Pra-Sekolah',
-    'pbd': 'Pentaksiran Bilik Darjah (PBD)',
-    'jadual': 'Jadual Waktu',
-    'mesyuarat': 'Minit Mesyuarat Kurikulum',
-    'program': 'Program Kecemerlangan Akademik'
+    // 3. Panitia
+    'bm': 'Panitia Bahasa Melayu', 'bi': 'Panitia Bahasa Inggeris', 'mt': 'Panitia Matematik', 'sn': 'Panitia Sains', 'pi': 'Panitia Pendidikan Islam', 'pm': 'Panitia Pendidikan Moral',
+    'sej': 'Panitia Sejarah', 'rbt': 'Panitia Reka Bentuk & Teknologi', 'psv': 'Panitia Pendidikan Seni Visual', 'mz': 'Panitia Pendidikan Muzik', 'pjpk': 'Panitia PJPK', 'ba': 'Panitia Bahasa Arab',
+    
+    // 4. Program Khas & Intervensi
+    'plan': 'Program PLaN',
+    'pemulihan': 'Pemulihan Khas',
+    'transisi': 'Program Transisi Tahun 1',
+    'intervensi_t1': 'Intervensi Tahun 1 (3M)',
+    
+    // 5. Entiti Sokongan
+    'pss': 'Pusat Sumber Sekolah (PSS)',
+    'pra': 'Prasekolah'
 };
+
+const tajukPanitia = document.getElementById('tajukPanitia');
+if (tajukPanitia) {
+    tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'Senarai Bahan';
+}
+
+// ==========================================
+// KAWALAN MENU TELEFON PINTAR (MOBILE VIEW)
+// ==========================================
+const btnMenu = document.getElementById('btnMenu');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+
+if (btnMenu && sidebar && overlay) {
+    btnMenu.addEventListener('click', () => {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+    });
+    
+    overlay.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    });
+}
 
 const tajukPanitia = document.getElementById('tajukPanitia');
 if (tajukPanitia) {
