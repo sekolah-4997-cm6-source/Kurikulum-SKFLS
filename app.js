@@ -70,4 +70,112 @@ onAuthStateChanged(auth, async (user) => {
         const elemenAdmin = document.querySelectorAll('.hanya-admin');
         elemenAdmin.forEach(el => el.classList.add('hidden'));
     }
+  // ==========================================
+// FASA 5: LOGIK MUAT NAIK (BASE64 + GAS)
+// ==========================================
+
+// Pautkan elemen di skrin panitia.html
+const modalUpload = document.getElementById('modalUpload');
+const btnBukaModal = document.getElementById('btnBukaModal');
+const btnTutupModal = document.getElementById('btnTutupModal');
+const formUpload = document.getElementById('formUpload');
+const btnSubmitUpload = document.getElementById('btnSubmitUpload');
+const txtSubmit = document.getElementById('txtSubmit');
+
+// Fungsi Buka/Tutup Modal (Hanya jalan jika elemen ini wujud di skrin)
+if (btnBukaModal && modalUpload && btnTutupModal) {
+    btnBukaModal.addEventListener('click', () => modalUpload.classList.remove('hidden'));
+    btnTutupModal.addEventListener('click', () => {
+        modalUpload.classList.add('hidden');
+        formUpload.reset();
+    });
+}
+
+// Apabila butang Muat Naik ditekan
+if (formUpload) {
+    formUpload.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Halang website dari refresh
+        
+        const file = document.getElementById('inputFail').files[0];
+        const tajuk = document.getElementById('inputTajuk').value;
+        const user = auth.currentUser;
+
+        if (!file || !user) return;
+
+        // Ambil kod subjek dari URL (cth: panitia.html?subjek=bm -> dapat "bm")
+        const urlParams = new URLSearchParams(window.location.search);
+        const subjekSemasa = urlParams.get('subjek') || 'umum';
+
+        try {
+            // Tukar butang kepada status loading
+            btnSubmitUpload.disabled = true;
+            btnSubmitUpload.classList.replace('bg-blue-600', 'bg-slate-400');
+            txtSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memproses ke Drive...';
+
+            // --- PROSES 1: Tukar fail ke Base64 ---
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            
+            reader.onload = async function() {
+                // Buang perkataan depan (data:application/pdf;base64,)
+                const base64Data = reader.result.split(',')[1]; 
+                
+                const dataKeGAS = {
+                    filename: file.name,
+                    mimeType: file.type,
+                    base64: base64Data
+                };
+
+                // --- PROSES 2: Hantar ke Google Apps Script (GAS) ---
+                // Pautan Web App anda yang hebat itu!
+                const gasUrl = "https://script.google.com/macros/s/AKfycbxJgaxqjiSwkBcr-v9ICWtYOwc8zbtLO3qHE4ptVPPNPUkGVg86PlKcjD9K1thpz6XX5g/exec";
+                
+                txtSubmit.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Sedang memuat naik...';
+                
+                // Gunakan text/plain supaya pelayar web tak sekat (CORS bypass)
+                const responsGAS = await fetch(gasUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(dataKeGAS)
+                });
+                
+                const hasilGAS = await responsGAS.json();
+
+                if (hasilGAS.status === 'success') {
+                    // --- PROSES 3: Simpan nama fail & link Drive ke Firestore ---
+                    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+                    
+                    await addDoc(collection(db, "kandungan"), {
+                        tajuk: tajuk,
+                        subjek: subjekSemasa,
+                        url_fail: hasilGAS.url, // Link sebenar dari Google Drive!
+                        dimuat_naik_oleh: user.displayName,
+                        uid_pemuat_naik: user.uid,
+                        tarikh: serverTimestamp()
+                    });
+
+                    alert("Berjaya! Fail anda telah selamat masuk ke Google Drive dan Firebase.");
+                    modalUpload.classList.add('hidden');
+                    formUpload.reset();
+
+                } else {
+                    throw new Error(hasilGAS.message);
+                }
+
+                // Kembalikan butang kepada asal
+                btnSubmitUpload.disabled = false;
+                btnSubmitUpload.classList.replace('bg-slate-400', 'bg-blue-600');
+                txtSubmit.innerHTML = 'Muat Naik Sekarang';
+            };
+
+        } catch (error) {
+            console.error(error);
+            alert("Ralat memuat naik: " + error.message);
+            
+            btnSubmitUpload.disabled = false;
+            btnSubmitUpload.classList.replace('bg-slate-400', 'bg-blue-600');
+            txtSubmit.innerHTML = 'Cuba Lagi';
+        }
+    });
+}
 });
