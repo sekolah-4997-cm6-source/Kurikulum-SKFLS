@@ -16,37 +16,42 @@
             <p class="text-xs text-slate-400 mt-1">Portal Kurikulum Digital</p>
         </div>
 
-        <nav class="p-4 space-y-1 mb-10">
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-2 px-2">Menu Utama</p>
-            <a href="index.html" class="flex items-center space-x-3 p-2 bg-blue-600 rounded-lg text-white transition">
-                <i class="fas fa-home w-5 text-center"></i> <span class="text-sm">Dashboard</span>
-            </a>
-            <a href="maklumat-induk.html" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition">
-                <i class="fas fa-file-signature w-5 text-center"></i> <span class="text-sm">Maklumat Induk & SPI</span>
-            </a>
+      <nav class="mt-6 flex-1 px-4 space-y-2 overflow-y-auto pb-6">
+    <!-- MENU UTAMA -->
+    <a href="index.html" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition">
+        <i class="fas fa-home w-5"></i>
+        <span>Dashboard Utama</span>
+    </a>
 
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-2">Panitia Subjek Teras</p>
-            <a href="panitia.html?subjek=bm" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition">
-                <i class="fas fa-book w-5 text-center"></i> <span class="text-sm">Bahasa Melayu</span>
-            </a>
-            <a href="panitia.html?subjek=bi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition">
-                <i class="fas fa-language w-5 text-center"></i> <span class="text-sm">Bahasa Inggeris</span>
-            </a>
-            <a href="panitia.html?subjek=mt" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition">
-                <i class="fas fa-calculator w-5 text-center"></i> <span class="text-sm">Matematik</span>
-            </a>
-            <a href="panitia.html?subjek=sn" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition">
-                <i class="fas fa-flask w-5 text-center"></i> <span class="text-sm">Sains</span>
-            </a>
-            <a href="panitia.html?subjek=pi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition">
-                <i class="fas fa-mosque w-5 text-center"></i> <span class="text-sm">Pendidikan Islam</span>
-            </a>
+    <div class="pt-4 pb-2">
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Subjek Teras</p>
+    </div>
+    <a href="panitia.html?subjek=bm" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-book w-5"></i><span>Bahasa Melayu</span></a>
+    <a href="panitia.html?subjek=bi" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-globe w-5"></i><span>Bahasa Inggeris</span></a>
+    <a href="panitia.html?subjek=mt" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-calculator w-5"></i><span>Matematik</span></a>
+    <a href="panitia.html?subjek=sn" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-flask w-5"></i><span>Sains</span></a>
+    <a href="panitia.html?subjek=pi" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-moon w-5"></i><span>Pend. Islam</span></a>
+    <a href="panitia.html?subjek=pm" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-hands-helping w-5"></i><span>Pend. Moral</span></a>
 
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-2">Lain-Lain Modul</p>
-            <a href="program.html" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition">
-                <i class="fas fa-users-cog w-5 text-center"></i> <span class="text-sm">Program & Intervensi</span>
-            </a>
-        </nav>
+    <div class="pt-4 pb-2">
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Subjek Wajib / Elektif</p>
+    </div>
+    <a href="panitia.html?subjek=sej" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-landmark w-5"></i><span>Sejarah</span></a>
+    <a href="panitia.html?subjek=rbt" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-tools w-5"></i><span>RBT</span></a>
+    <a href="panitia.html?subjek=psv" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-palette w-5"></i><span>Pendidikan Seni Visual</span></a>
+    <a href="panitia.html?subjek=mz" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-music w-5"></i><span>Muzik</span></a>
+    <a href="panitia.html?subjek=pjpk" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-running w-5"></i><span>PJPK</span></a>
+    <a href="panitia.html?subjek=ba" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-language w-5"></i><span>Bahasa Arab</span></a>
+
+    <div class="pt-4 pb-2">
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pengurusan Kurikulum</p>
+    </div>
+    <a href="panitia.html?subjek=pemulihan" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-chalkboard-teacher w-5"></i><span>Pemulihan Khas</span></a>
+    <a href="panitia.html?subjek=pra" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-child w-5"></i><span>Pra-Sekolah</span></a>
+    <a href="panitia.html?subjek=pbd" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-chart-line w-5"></i><span>PBD</span></a>
+    <a href="panitia.html?subjek=jadual" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-calendar-alt w-5"></i><span>Jadual Waktu</span></a>
+    <a href="panitia.html?subjek=mesyuarat" class="flex items-center space-x-3 text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-lg transition"><i class="fas fa-users w-5"></i><span>Minit Mesyuarat</span></a>
+</nav>
     </aside>
 
     <!-- BAHAGIAN KANAN: KANDUNGAN UTAMA -->
