@@ -77,11 +77,29 @@ const urlParams = new URLSearchParams(window.location.search);
 const subjekSemasa = urlParams.get('subjek') || 'umum';
 
 const senaraiNamaPanitia = {
+    // Subjek Teras
     'bm': 'Panitia Bahasa Melayu',
     'bi': 'Panitia Bahasa Inggeris',
     'mt': 'Panitia Matematik',
     'sn': 'Panitia Sains',
-    'pi': 'Panitia Pendidikan Islam'
+    'pi': 'Panitia Pendidikan Islam',
+    'pm': 'Panitia Pendidikan Moral',
+    
+    // Subjek Elektif / Wajib
+    'sej': 'Panitia Sejarah',
+    'rbt': 'Panitia Reka Bentuk & Teknologi',
+    'psv': 'Panitia Pendidikan Seni Visual',
+    'mz': 'Panitia Pendidikan Muzik',
+    'pjpk': 'Panitia PJPK',
+    'ba': 'Panitia Bahasa Arab',
+    
+    // Lain-lain Unit Kurikulum
+    'pemulihan': 'Unit Pemulihan Khas',
+    'pra': 'Pra-Sekolah',
+    'pbd': 'Pentaksiran Bilik Darjah (PBD)',
+    'jadual': 'Jadual Waktu',
+    'mesyuarat': 'Minit Mesyuarat Kurikulum',
+    'program': 'Program Kecemerlangan Akademik'
 };
 
 const tajukPanitia = document.getElementById('tajukPanitia');
