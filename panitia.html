@@ -131,11 +131,42 @@
 
                 <!-- RUANG JADUAL -->
                <!-- JADUAL TRACKER PANITIA (KESELURUHAN) -->
-<div id="kotakTrackerPanitia" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-    <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
-        <h3 class="font-bold text-lg"><i class="fas fa-chart-line text-blue-400 mr-2"></i> Status Kelengkapan Fail Panitia</h3>
-        <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">Sesi <span id="labelTahunTracker">2026/2027</span></span>
+<!-- KAWASAN FAIL 1 -->
+<div class="mb-8">
+    <div class="flex justify-between items-center bg-slate-100 p-4 rounded-t-lg">
+        <h3 class="font-bold text-slate-800">Fail 1: Fail Induk (3.1.1.1)</h3>
+        <!-- Perhatikan class 'btn-muat-naik' dan atribut 'data-folder' -->
+        <button class="btn-muat-naik bg-blue-600 text-white px-4 py-2 rounded-lg text-sm" data-folder="fail_1">Muat Naik</button>
     </div>
+    <div id="ruangFail1" class="border border-slate-200 rounded-b-lg p-4"></div>
+</div>
+
+<!-- KAWASAN FAIL 2 -->
+<div class="mb-8">
+    <div class="flex justify-between items-center bg-slate-100 p-4 rounded-t-lg">
+        <h3 class="font-bold text-slate-800">Fail 2: Pengurusan Mata Pelajaran (3.1.2.1)</h3>
+        <button class="btn-muat-naik bg-blue-600 text-white px-4 py-2 rounded-lg text-sm" data-folder="fail_2">Muat Naik</button>
+    </div>
+    <div id="ruangFail2" class="border border-slate-200 rounded-b-lg p-4"></div>
+</div>
+
+<!-- KAWASAN FAIL 3 -->
+<div class="mb-8">
+    <div class="flex justify-between items-center bg-slate-100 p-4 rounded-t-lg">
+        <h3 class="font-bold text-slate-800">Fail 3: Peningkatan Kualiti Pengajaran Guru (3.1.2.2)</h3>
+        <button class="btn-muat-naik bg-blue-600 text-white px-4 py-2 rounded-lg text-sm" data-folder="fail_3">Muat Naik</button>
+    </div>
+    <div id="ruangFail3" class="border border-slate-200 rounded-b-lg p-4"></div>
+</div>
+
+<!-- KAWASAN FAIL 4 -->
+<div class="mb-8">
+    <div class="flex justify-between items-center bg-slate-100 p-4 rounded-t-lg">
+        <h3 class="font-bold text-slate-800">Fail 4: Peningkatan Pencapaian Murid</h3>
+        <button class="btn-muat-naik bg-blue-600 text-white px-4 py-2 rounded-lg text-sm" data-folder="fail_4">Muat Naik</button>
+    </div>
+    <div id="ruangFail4" class="border border-slate-200 rounded-b-lg p-4"></div>
+</div>
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
