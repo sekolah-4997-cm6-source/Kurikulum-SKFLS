@@ -28,9 +28,6 @@ window.isAdmin = false;
 // Pastikan baris import auth ada di bahagian paling atas fail app.js anda (Bahagian 1)
 // import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-const auth = getAuth();
-const provider = new GoogleAuthProvider();
-
 // Senarai emel admin (Tukar kepada emel DELIMa sebenar Cikgu / Admin)
 const senaraiAdmin = [
     "sekolah-4997-cm6@moe-dl.edu.my", 
