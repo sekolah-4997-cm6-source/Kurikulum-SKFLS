@@ -536,8 +536,7 @@ async function panggilDataTracker() {
     }
 }
 // ==========================================
-// ==========================================
-// 11. LOGIK AUTOMATIK TRACKER PANITIA (BERDASARKAN TAGGING)
+// 11. LOGIK AUTOMATIK TRACKER PANITIA (BERDASARKAN KIRAAN 4 FAIL)
 // ==========================================
 const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBody');
 const labelTahunTracker = document.getElementById('labelTahunTracker');
@@ -553,7 +552,6 @@ async function janaTrackerPanitia(tahun) {
     const urlParams = new URLSearchParams(window.location.search);
     const subjekSemasaSistem = urlParams.get('subjek');
     
-    // Senarai ID khusus untuk rujukan nama Panitia
     const senaraiPanitia = [
         { id: "bm", nama: "Panitia Bahasa Melayu" },
         { id: "bi", nama: "Panitia Bahasa Inggeris" },
@@ -569,68 +567,65 @@ async function janaTrackerPanitia(tahun) {
         { id: "ba", nama: "Panitia Bahasa Arab" }
     ];
 
-    // Cari adakah URL subjek ini tersenarai dalam senaraiPanitia
     const infoPanitiaSistem = senaraiPanitia.find(p => p.id === subjekSemasaSistem);
 
-    // Jika BUKAN panitia, sorok jadual & hentikan fungsi
     if (!infoPanitiaSistem) {
         kotakTracker.style.display = 'none'; 
         return; 
     } else {
-        kotakTracker.style.display = 'block'; // Papar jika ia Panitia
+        kotakTracker.style.display = 'block'; 
     }
 
-    // 2. LOGIK PENGIRAAN FIREBASE (HANYA UNTUK PANITIA SEMASA)
-    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menganalisis pangkalan data panitia...</td></tr>';
+    // 2. KIRAAN DATA DARI FIREBASE
+    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Mengira jumlah fail...</td></tr>';
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
 
     try {
-        // Kita tambah tapisan (where) supaya Firebase hanya cari dokumen untuk Subjek ini sahaja!
         const qTracker = query(
             collection(db, "kandungan"), 
             where("status", "==", "aktif"), 
             where("tahun", "==", tahun),
-            where("subjek", "==", subjekSemasaSistem) // <--- PENAMBAHBAIKAN DI SINI
+            where("subjek", "==", subjekSemasaSistem)
         );
         const querySnapshot = await getDocs(qTracker);
 
-        // Sediakan kotak kosong untuk disemak
-        let status = { dskp: false, rpt: false, minit: 0, kertas_kerja: false };
+        // Sediakan kotak pengiraan kosong untuk 4 folder
+        let kiraan = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
-        // Tanda 'true' jika dokumen wujud
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            const kategoriFail = data.kategori;
+            const folder = data.folder_destinasi; // Ambil tag folder semasa dimuat naik
 
-            if (kategoriFail === "dskp") status.dskp = true;
-            if (kategoriFail === "rpt") status.rpt = true;
-            if (kategoriFail === "minit") status.minit += 1;
-            if (kategoriFail === "kertas_kerja") status.kertas_kerja = true;
+            // Tambah +1 pada folder yang berkaitan
+            if (folder === "fail_1") kiraan.fail_1++;
+            if (folder === "fail_2") kiraan.fail_2++;
+            if (folder === "fail_3") kiraan.fail_3++;
+            if (folder === "fail_4") kiraan.fail_4++;
         });
 
-        // 3. LUKIS HTML UNTUK SATU BARIS SAHAJA
-        const iconHijau = '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full bg-white"></i>';
-        const iconMerah = '<i class="fas fa-times-circle text-red-200 text-lg"></i>';
+        // 3. FUNGSI HIASAN (UI) UNTUK PAPARAN BILANGAN
+        const formatBadge = (jumlah) => {
+            if (jumlah > 0) {
+                return `<span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-bold border border-blue-200 shadow-sm">${jumlah} Fail</span>`;
+            } else {
+                return `<span class="bg-slate-50 text-slate-400 px-3 py-1 rounded-md text-sm">0</span>`;
+            }
+        };
 
-        const dskpIcon = status.dskp ? iconHijau : iconMerah;
-        const rptIcon = status.rpt ? iconHijau : iconMerah;
-        const kertasIcon = status.kertas_kerja ? iconHijau : iconMerah;
-        
-        let kelasMinit = status.minit >= 4 ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-50';
-        let minitTeks = `<span class="font-bold px-2 py-1 rounded-md ${kelasMinit}">${status.minit} / 4</span>`;
-        
-        const lengkap = status.dskp && status.rpt && (status.minit >= 4) && status.kertas_kerja;
+        // Syarat Lengkap: Keempat-empat folder mesti ada sekurang-kurangnya 1 dokumen
+        const lengkap = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
         const badgeStatus = lengkap 
-            ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-star mr-1 text-amber-400"></i>Lengkap</span>' 
-            : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Sedang Berjalan</span>';
+            ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Lengkap</span>' 
+            : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Belum Lengkap</span>';
 
+        // LUKIS HTML KE JADUAL
         const htmlTracker = `
             <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
                 <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${infoPanitiaSistem.nama}</td>
-                <td class="p-3 text-center border-r border-slate-50">${dskpIcon}</td>
-                <td class="p-3 text-center border-r border-slate-50">${rptIcon}</td>
-                <td class="p-3 text-center border-r border-slate-50">${minitTeks}</td>
-                <td class="p-3 text-center border-r border-slate-50">${kertasIcon}</td>
+                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_1)}</td>
+                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_2)}</td>
+                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_3)}</td>
+                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_4)}</td>
                 <td class="p-3 text-center">${badgeStatus}</td>
             </tr>
         `;
@@ -639,13 +634,7 @@ async function janaTrackerPanitia(tahun) {
 
     } catch (error) {
         console.error("Ralat Tracker Panitia:", error);
-        
-        // Membantu admin jika Firebase minta Index baharu
-        if(error.message.includes("index") || error.message.includes("Index")) {
-            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-amber-600 font-medium text-sm">Sistem sedang memproses Index Firebase baharu. Ralat: ${error.message} (Lihat Console F12 untuk link index)</td></tr>`;
-        } else {
-            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
-        }
+        jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
     }
 }
 // ==========================================
