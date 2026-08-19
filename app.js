@@ -23,49 +23,109 @@ const db = getFirestore(app);
 window.isAdmin = false;
 
 // ==========================================
-// 3. LOGIK LOG MASUK & PANGKAT ADMIN
+// 3. LOGIK LOG MASUK (GOOGLE AUTH) & PANGKAT ADMIN
 // ==========================================
+// Pastikan baris import auth ada di bahagian paling atas fail app.js anda (Bahagian 1)
+// import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+const auth = getAuth();
+const provider = new GoogleAuthProvider();
+
+// Senarai emel admin (Tukar kepada emel DELIMa sebenar Cikgu / Admin)
+const senaraiAdmin = [
+    "sekolah-4997-cm6@moe-dl.edu.my", 
+    "g-12345678@moe-dl.edu.my" 
+];
+
+window.isAdmin = false;
+window.userSemasa = null;
+
 const btnLogin = document.getElementById('btnLogin');
 const txtLogin = document.getElementById('txtLogin');
 const iconLogin = document.getElementById('iconLogin');
 
-if (btnLogin) {
-    btnLogin.addEventListener('click', () => {
-        if (auth.currentUser) signOut(auth);
-        else signInWithPopup(auth, provider).catch(e => alert(e.message));
-    });
+// Fungsi Semak Admin (Dikemaskini untuk menyokong admin.html)
+function semakStatusAdmin(email) {
+    if (senaraiAdmin.includes(email)) {
+        window.isAdmin = true;
+        
+        // Panggil fungsi sahkan halaman jika berada di page admin.html
+        if (typeof sahkanHalamanAdmin === "function") {
+            sahkanHalamanAdmin();
+        }
+        
+        // Tunjuk semua butang admin di paparan awam
+        document.querySelectorAll('.hanya-admin').forEach(el => {
+            el.classList.remove('hidden');
+        });
+    } else {
+        window.isAdmin = false;
+        
+        // Halang bukan admin masuk ke admin.html dan tendang ke index.html
+        if (window.location.pathname.includes('admin.html')) {
+            alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir sistem.");
+            window.location.href = "index.html";
+        }
+        
+        // Sembunyikan butang admin untuk user biasa
+        document.querySelectorAll('.hanya-admin').forEach(el => {
+            el.classList.add('hidden');
+        });
+    }
 }
 
-onAuthStateChanged(auth, async (user) => {
+// Pantau status log masuk pengguna (Live)
+onAuthStateChanged(auth, (user) => {
     if (user) {
-        if (txtLogin) txtLogin.textContent = "Log Keluar (" + user.displayName + ")";
+        // Jika User sudah log masuk
+        window.userSemasa = user;
+        if (txtLogin) txtLogin.innerText = "Log Keluar";
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
-        if (btnLogin) btnLogin.classList.add('bg-red-50', 'border-red-200');
-
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        let userRole = 'awam';
-        if (userSnap.exists()) {
-            userRole = userSnap.data().role;
-        } else {
-            await setDoc(userRef, { nama: user.displayName, email: user.email, role: 'awam' });
-        }
-
-        if (userRole === 'admin' || userRole === 'pengurus') {
-            window.isAdmin = true;
-            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
-        }
-    } else {
-        if (txtLogin) txtLogin.textContent = "Log Masuk (DELIMa)";
-        if (iconLogin) iconLogin.className = "fas fa-sign-in-alt mr-2";
-        if (btnLogin) btnLogin.classList.remove('bg-red-50', 'border-red-200');
         
+        // Semak adakah user ini admin
+        semakStatusAdmin(user.email);
+        
+    } else {
+        // Jika User belum log masuk
+        window.userSemasa = null;
         window.isAdmin = false;
-        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
+        if (txtLogin) txtLogin.innerText = "Log Masuk (DELIMa)";
+        if (iconLogin) iconLogin.className = "fas fa-sign-in-alt mr-2 text-slate-600";
+        
+        // Halang sesiapa yang tak login dari akses admin.html
+        if (window.location.pathname.includes('admin.html')) {
+            alert("Sila log masuk menggunakan e-mel DELIMa terlebih dahulu.");
+            window.location.href = "index.html";
+        }
+        
+        // Sembunyikan butang admin
+        document.querySelectorAll('.hanya-admin').forEach(el => {
+            el.classList.add('hidden');
+        });
     }
 });
 
+// Fungsi klik butang Log Masuk / Log Keluar
+if (btnLogin) {
+    btnLogin.addEventListener('click', () => {
+        if (window.userSemasa) {
+            // Proses log keluar
+            signOut(auth).then(() => {
+                alert("Anda telah log keluar dengan berjaya.");
+            }).catch((error) => {
+                console.error("Ralat log keluar:", error);
+            });
+        } else {
+            // Proses log masuk
+            signInWithPopup(auth, provider).then((result) => {
+                // Log masuk berjaya, onAuthStateChanged akan uruskan UI
+            }).catch((error) => {
+                console.error("Ralat log masuk:", error);
+                alert("Gagal log masuk: " + error.message);
+            });
+        }
+    });
+}
 // ==========================================
 // 4. KAWALAN TAJUK MUKA SURAT BESAR
 // ==========================================
@@ -354,4 +414,91 @@ if (inputCarian && modalCarian) {
     });
 }
     });
+  // ==========================================
+// 9. LOGIK ADMIN CONSOLE (ARKIB & TRACKER)
+// ==========================================
+const adminContent = document.getElementById('adminContent');
+const ruangArkib = document.getElementById('ruangArkib');
+
+// Fungsi untuk cek adakah user berada di page admin dan adakah dia benar-benar admin
+function sahkanHalamanAdmin() {
+    if (window.location.pathname.includes('admin.html')) {
+        if (window.isAdmin) {
+            // Jika dia admin, tunjukkan kandungan
+            if(adminContent) adminContent.style.display = 'block';
+            panggilDataArkib();
+        } else {
+            // Jika bukan admin, beri amaran dan halau balik ke index
+            alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir (Admin) sistem.");
+            window.location.href = "index.html";
+        }
+    }
+}
+
+// Fungsi panggil fail yang berstatus "dipadam"
+function panggilDataArkib() {
+    if (!ruangArkib) return;
+    
+    const qArkib = query(collection(db, "kandungan"), where("status", "==", "dipadam"), orderBy("tarikh", "desc"));
+    
+    onSnapshot(qArkib, (snapshot) => {
+        if (snapshot.empty) {
+            ruangArkib.innerHTML = '<p class="text-center text-slate-500 py-10">Tiada fail di dalam tong sampah setakat ini.</p>';
+            return;
+        }
+
+        let htmlArkib = `
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                        <th class="p-4 font-medium">Tajuk Fail (Asal)</th>
+                        <th class="p-4 font-medium hidden md:table-cell">Dipadam Oleh</th>
+                        <th class="p-4 font-medium text-right">Tindakan Admin</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+        `;
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+
+            htmlArkib += `
+                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                    <td class="p-4">
+                        <p class="font-bold text-slate-800">${data.tajuk}</p>
+                        <p class="text-xs text-slate-500">Folder Asal: ${data.subjek} | Tahun: ${data.tahun}</p>
+                    </td>
+                    <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                        <button onclick="kembalikanFail('${id}')" class="bg-emerald-100 text-emerald-700 px-3 py-2 rounded-md hover:bg-emerald-200 transition text-xs font-bold mr-2"><i class="fas fa-undo mr-1"></i>Pulihkan</button>
+                        <button onclick="padamKekalFail('${id}')" class="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition text-xs font-bold"><i class="fas fa-trash mr-1"></i>Padam Kekal</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        htmlArkib += `</tbody></table></div>`;
+        ruangArkib.innerHTML = htmlArkib;
+    });
+}
+
+// Fungsi Pulihkan Fail (Tukar status kembali kepada 'aktif')
+window.kembalikanFail = async function(id) {
+    if (confirm("Adakah anda pasti mahu memulihkan fail ini? Ia akan dikembalikan ke folder asalnya.")) {
+        const docRef = doc(db, "kandungan", id);
+        await updateDoc(docRef, { status: "aktif" });
+        alert("Berjaya dipulihkan.");
+    }
+}
+
+// Fungsi Padam Kekal dari Database
+window.padamKekalFail = async function(id) {
+    if (confirm("AMARAN: Fail akan dipadam sepenuhnya dari pangkalan data dan tidak boleh dikembalikan. Teruskan?")) {
+        const docRef = doc(db, "kandungan", id);
+        await deleteDoc(docRef);
+        alert("Fail telah dipadam kekal.");
+    }
+}
 }
