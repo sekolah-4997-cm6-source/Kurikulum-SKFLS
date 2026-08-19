@@ -236,7 +236,7 @@ if (formUpload) {
         if (!file || !user) return;
 
         // 1. KAWALAN KESELAMATAN: Had Saiz Fail (5MB)
-        const saizMaksimum = 5 * 1024 * 1024; // 5 Megabytes
+        const saizMaksimum = 15 * 1024 * 1024; // 15 Megabytes
         if (file.size > saizMaksimum) {
             alert("Ralat: Saiz fail terlalu besar! Sila pastikan dokumen anda di bawah 5MB untuk mengelakkan Google Drive penuh.");
             return; // Hentikan proses muat naik
