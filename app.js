@@ -20,6 +20,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+    hd: "moe-dl.edu.my"
+});
 const db = getFirestore(app);
 
 window.isAdmin = false;
@@ -675,7 +678,6 @@ async function janaTrackerPanitia(tahun) {
     } catch (error) {
         console.error("Ralat Tracker Panitia:", error);
     }
-}
 }
 // ==========================================
 // 12. PENGGERAK AUTOMATIK JADUAL TRACKER
