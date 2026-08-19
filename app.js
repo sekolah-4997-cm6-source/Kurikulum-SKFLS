@@ -433,22 +433,45 @@ window.padamKekalFail = async function(id) {
 }
 
 // ==========================================
-// 10. LOGIK AUTOMATIK CHECKLIST TRACKER
+// 10. LOGIK AUTOMATIK CHECKLIST TRACKER (KEMAS KINI PENUH)
 // ==========================================
 const jadualTracker = document.getElementById('jadualTracker');
+const filterTahunTracker = document.getElementById('filterTahunTracker'); // Jika nak letak dropdown filter tahun nanti
 
 async function panggilDataTracker() {
     if (!jadualTracker) return;
 
-    jadualTracker.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Sedang menyemak fail panitia...</td></tr>';
+    // Keluarkan mesej loading dan buang nota statik lama
+    jadualTracker.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Sedang mengimbas semua fail dokumen...</td></tr>';
 
-    const sesiSemasa = "2026/2027"; 
+    const sesiSemasa = "2026/2027"; // Boleh diubah atau dipautkan dengan dropdown filter nanti
 
+    // Senarai penuh kesemua 24 pengurusan dan panitia
     const senaraiSubjek = [
-        { id: "bm", nama: "Bahasa Melayu" },
-        { id: "bi", nama: "Bahasa Inggeris" },
-        { id: "mt", nama: "Matematik" },
-        { id: "sn", nama: "Sains" }
+        { id: "visi_misi", nama: "Visi, Misi & Matlamat Sekolah" },
+        { id: "spi", nama: "Surat Pekeliling Ikhtisas (SPI)" },
+        { id: "dasar", nama: "Dasar & Penetapan Kurikulum" },
+        { id: "takwim", nama: "Perancangan Kurikulum" },
+        { id: "mesyuarat_induk", nama: "Mesyuarat Kurikulum Induk" },
+        { id: "mmi", nama: "Mengurus Masa Instruksional" },
+        { id: "bm", nama: "Panitia Bahasa Melayu" },
+        { id: "bi", nama: "Panitia Bahasa Inggeris" },
+        { id: "mt", nama: "Panitia Matematik" },
+        { id: "sn", nama: "Panitia Sains" },
+        { id: "pi", nama: "Panitia Pendidikan Islam" },
+        { id: "pm", nama: "Panitia Pendidikan Moral" },
+        { id: "sej", nama: "Panitia Sejarah" },
+        { id: "rbt", nama: "Panitia Reka Bentuk & Teknologi" },
+        { id: "psv", nama: "Panitia Pendidikan Seni Visual" },
+        { id: "mz", nama: "Panitia Pendidikan Muzik" },
+        { id: "pjpk", nama: "Panitia PJPK" },
+        { id: "ba", nama: "Panitia Bahasa Arab" },
+        { id: "plan", nama: "Program PLaN" },
+        { id: "pemulihan", nama: "Pemulihan Khas" },
+        { id: "transisi", nama: "Program Transisi Tahun 1" },
+        { id: "intervensi_t1", nama: "Intervensi Tahun 1 (3M)" },
+        { id: "pss", nama: "Pusat Sumber Sekolah (PSS)" },
+        { id: "pra", nama: "Prasekolah" }
     ];
 
     try {
@@ -466,13 +489,14 @@ async function panggilDataTracker() {
             const tajuk = data.tajuk.toLowerCase();
 
             if (statusPanitia[subjekFail]) {
-                if (tajuk.includes("rpt") || tajuk.includes("dskp") || tajuk.includes("rancangan pelajaran")) {
+                // Logik Pengesanan Kata Kunci pada Tajuk Fail
+                if (tajuk.includes("rpt") || tajuk.includes("dskp") || tajuk.includes("rancangan") || tajuk.includes("perancangan")) {
                     statusPanitia[subjekFail].rpt = true;
                 }
-                if (tajuk.includes("minit") || tajuk.includes("mesyuarat")) {
+                if (tajuk.includes("minit") || tajuk.includes("mesyuarat") || tajuk.includes("notis") || tajuk.includes("kehadiran")) {
                     statusPanitia[subjekFail].minit = true;
                 }
-                if (tajuk.includes("kertas kerja") || tajuk.includes("kertaskerja")) {
+                if (tajuk.includes("kertas kerja") || tajuk.includes("kertaskerja") || tajuk.includes("laporan") || tajuk.includes("program")) {
                     statusPanitia[subjekFail].kertasKerja = true;
                 }
             }
@@ -496,7 +520,7 @@ async function panggilDataTracker() {
 
             htmlTracker += `
                 <tr class="hover:bg-slate-50 transition border-b border-slate-200">
-                    <td class="p-3 border-x border-slate-200 font-bold text-slate-700">${sub.nama}</td>
+                    <td class="p-3 border-x border-slate-200 text-slate-800 text-sm">${sub.nama}</td>
                     <td class="p-3 border-r border-slate-200 text-center">${rptIcon}</td>
                     <td class="p-3 border-r border-slate-200 text-center">${minitIcon}</td>
                     <td class="p-3 border-r border-slate-200 text-center">${kertasIcon}</td>
@@ -510,7 +534,7 @@ async function panggilDataTracker() {
     } catch (error) {
         console.error("Ralat Tracker:", error);
         if(error.message.includes("index")) {
-            jadualTracker.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-amber-600">Sistem perlukan Index Firebase. Sila klik pautan biru di Console (F12) untuk bina index.</td></tr>`;
+            jadualTracker.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-amber-600 font-medium">Sistem perlukan Index Firebase. Sila klik pautan biru di Console (F12) untuk bina index.</td></tr>`;
         } else {
             jadualTracker.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
         }
