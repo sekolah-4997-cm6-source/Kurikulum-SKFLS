@@ -229,20 +229,47 @@ if (formUpload) {
         e.preventDefault(); 
         const file = document.getElementById('inputFail').files[0];
         const tajuk = document.getElementById('inputTajuk').value;
+        const tahunDipilih = document.getElementById('inputTahun').value;
+        const kategoriDipilih = document.getElementById('inputKategori').value; // Tangkap nilai kategori
         const user = auth.currentUser;
 
         if (!file || !user) return;
 
+        // 1. KAWALAN KESELAMATAN: Had Saiz Fail (5MB)
+        const saizMaksimum = 5 * 1024 * 1024; // 5 Megabytes
+        if (file.size > saizMaksimum) {
+            alert("Ralat: Saiz fail terlalu besar! Sila pastikan dokumen anda di bawah 5MB untuk mengelakkan Google Drive penuh.");
+            return; // Hentikan proses muat naik
+        }
+
+        // 2. KAWALAN KESELAMATAN: Had Jenis Fail (Hanya Dokumen)
+        const jenisDibenarkan = [
+            "application/pdf", 
+            "application/msword", // .doc
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+            "application/vnd.ms-excel", // .xls
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+            "application/vnd.ms-powerpoint", // .ppt
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation" // .pptx
+        ];
+
+        if (!jenisDibenarkan.includes(file.type)) {
+            alert("Ralat: Format fail tidak disokong! Sila muat naik fail PDF, Word, Excel, atau PowerPoint sahaja.");
+            return; // Hentikan proses muat naik
+        }
+
         try {
             btnSubmitUpload.disabled = true;
             btnSubmitUpload.classList.replace('bg-blue-600', 'bg-slate-400');
-            txtSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...';
+            txtSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memproses & Menyemak...';
 
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = async function() {
                 const base64Data = reader.result.split(',')[1]; 
-                const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
+                
+                // Pastikan pautan GAS ini adalah versi "Anyone" yang telah anda kemas kini
+                const gasUrl = "https://script.google.com/macros/s/AKfycbxJgaxqjiSwkBcr-v9ICWtYOwc8zbtLO3qHE4ptVPPNPUkGVg86PlKcjD9K1thpz6XX5g/exec";
                 
                 const responsGAS = await fetch(gasUrl, {
                     method: "POST",
@@ -253,7 +280,7 @@ if (formUpload) {
                 const hasilGAS = await responsGAS.json();
 
                 if (hasilGAS.status === 'success') {
-                    const tahunDipilih = document.getElementById('inputTahun').value;
+                    // Simpan data ke Firestore berserta tag kategori
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
                         subjek: subjekSemasa, 
@@ -262,19 +289,22 @@ if (formUpload) {
                         uid_pemuat_naik: user.uid, 
                         tarikh: serverTimestamp(),
                         tahun: tahunDipilih,
+                        kategori: kategoriDipilih, // Tagging masuk ke pangkalan data
                         status: "aktif"
                     });
+                    
+                    alert("Muat naik berjaya!");
                     modalUpload.classList.add('hidden');
                     formUpload.reset();
                 } else {
-                    alert("Ralat Drive: " + hasilGAS.message);
+                    alert("Ralat memuat naik ke Drive: " + hasilGAS.message);
                 }
                 btnSubmitUpload.disabled = false;
                 btnSubmitUpload.classList.replace('bg-slate-400', 'bg-blue-600');
                 txtSubmit.innerHTML = 'Muat Naik Sekarang';
             };
         } catch (error) {
-            alert("Ralat: " + error.message);
+            alert("Ralat sistem: " + error.message);
             btnSubmitUpload.disabled = false;
             btnSubmitUpload.classList.replace('bg-slate-400', 'bg-blue-600');
             txtSubmit.innerHTML = 'Cuba Lagi';
