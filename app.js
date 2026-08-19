@@ -577,14 +577,31 @@ const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBo
 const labelTahunTracker = document.getElementById('labelTahunTracker');
 
 async function janaTrackerPanitia(tahun) {
-    // Fungsi ini hanya akan berjalan jika kita berada di halaman yang ada jadual ini
-    if (!jadualTrackerPanitiaBody) return; 
+    const kotakTracker = document.getElementById('kotakTrackerPanitia');
+    const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBody');
+    const labelTahunTracker = document.getElementById('labelTahunTracker');
 
-    // Paparan 'loading' sementara data diambil
+    if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
+
+    // 1. SEMAKAN URL (Sorok jika bukan Panitia)
+    const urlParams = new URLSearchParams(window.location.search);
+    const subjekSemasaSistem = urlParams.get('subjek');
+    
+    // Senarai ID khusus untuk Panitia sahaja
+    const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
+
+    // Jika yang dibuka BUKAN panitia (contoh: visi_misi, pss, plan), sorok jadual & hentikan fungsi
+    if (!senaraiIDPanitia.includes(subjekSemasaSistem)) {
+        kotakTracker.style.display = 'none'; // Sorok kotak tracker
+        return; 
+    } else {
+        kotakTracker.style.display = 'block'; // Papar kotak tracker jika ia adalah Panitia
+    }
+
+    // 2. LOGIK PENGIRAAN FIREBASE KEKAL SAMA
     jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menganalisis pangkalan data panitia...</td></tr>';
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
 
-    // Senarai 12 Panitia Subjek (Boleh ditambah/diubah nanti)
     const senaraiPanitia = [
         { id: "bm", nama: "Panitia Bahasa Melayu" },
         { id: "bi", nama: "Panitia Bahasa Inggeris" },
@@ -601,17 +618,14 @@ async function janaTrackerPanitia(tahun) {
     ];
 
     try {
-        // Minta data dari Firebase (hanya fail aktif dan pada tahun yang dipilih)
         const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"), where("tahun", "==", tahun));
         const querySnapshot = await getDocs(qTracker);
 
-        // 1. Sediakan 'bekas kosong' untuk semua subjek
         let dataSemakan = {};
         senaraiPanitia.forEach(sub => {
             dataSemakan[sub.id] = { dskp: false, rpt: false, minit: 0, kertas_kerja: false };
         });
 
-        // 2. Kumpul dan kira data berdasarkan Tagging (Kategori)
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const subjekFail = data.subjek;
@@ -620,14 +634,13 @@ async function janaTrackerPanitia(tahun) {
             if (dataSemakan[subjekFail]) {
                 if (kategoriFail === "dskp") dataSemakan[subjekFail].dskp = true;
                 if (kategoriFail === "rpt") dataSemakan[subjekFail].rpt = true;
-                if (kategoriFail === "minit") dataSemakan[subjekFail].minit += 1; // Kiraan +1 setiap kali jumpa minit
+                if (kategoriFail === "minit") dataSemakan[subjekFail].minit += 1;
                 if (kategoriFail === "kertas_kerja") dataSemakan[subjekFail].kertas_kerja = true;
             }
         });
 
-        // 3. Bina paparan Jadual HTML baharu
         let htmlTracker = "";
-        const iconHijau = '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full"></i>';
+        const iconHijau = '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full bg-white"></i>';
         const iconMerah = '<i class="fas fa-times-circle text-red-200 text-lg"></i>';
 
         senaraiPanitia.forEach(sub => {
@@ -637,11 +650,9 @@ async function janaTrackerPanitia(tahun) {
             const rptIcon = status.rpt ? iconHijau : iconMerah;
             const kertasIcon = status.kertas_kerja ? iconHijau : iconMerah;
             
-            // Logik Minit: Warna hijau jika cukup 4 kali, oren jika kurang
             let kelasMinit = status.minit >= 4 ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-50';
             let minitTeks = `<span class="font-bold px-2 py-1 rounded-md ${kelasMinit}">${status.minit} / 4</span>`;
             
-            // Status Keseluruhan: Mesti ada semua benda baru dapat cap "Lengkap"
             const lengkap = status.dskp && status.rpt && (status.minit >= 4) && status.kertas_kerja;
             const badgeStatus = lengkap 
                 ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-star mr-1 text-amber-400"></i>Lengkap</span>' 
@@ -659,17 +670,12 @@ async function janaTrackerPanitia(tahun) {
             `;
         });
 
-        // Masukkan html ke dalam jadual
         jadualTrackerPanitiaBody.innerHTML = htmlTracker;
 
     } catch (error) {
         console.error("Ralat Tracker Panitia:", error);
-        if(error.message.includes("index")) {
-            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-amber-600 font-medium bg-amber-50 rounded-lg">Firebase sedang membina Index. Sila tunggu 2 minit dan muat semula halaman ini.</td></tr>`;
-        } else {
-            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
-        }
     }
+}
 }
 // ==========================================
 // 12. PENGGERAK AUTOMATIK JADUAL TRACKER
