@@ -424,6 +424,7 @@ function sahkanHalamanAdmin() {
             // Jika dia admin, tunjukkan kandungan
             if(adminContent) adminContent.style.display = 'block';
             panggilDataArkib();
+            panggilDataTracker();
         } else {
             // Jika bukan admin, beri amaran dan halau balik ke index
             alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir (Admin) sistem.");
@@ -496,6 +497,100 @@ window.padamKekalFail = async function(id) {
         const docRef = doc(db, "kandungan", id);
         await deleteDoc(docRef);
         alert("Fail telah dipadam kekal.");
+    }
+}
+  // ==========================================
+// 10. LOGIK AUTOMATIK CHECKLIST TRACKER
+// ==========================================
+const jadualTracker = document.getElementById('jadualTracker');
+
+async function panggilDataTracker() {
+    if (!jadualTracker) return;
+
+    // Tunjuk animasi loading sementara menyemak fail
+    jadualTracker.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Sedang menyemak fail panitia...</td></tr>';
+
+    const tahunSemasa = new Date().getFullYear().toString(); // Akan ambil tahun 2026 secara automatik
+
+    // Senarai ID folder subjek yang sistem perlu pantau
+    // (Nota: Pastikan 'id' ini sama dengan value yang anda set dalam dropdown muat naik fail)
+    const senaraiSubjek = [
+        { id: "bm", nama: "Bahasa Melayu" },
+        { id: "bi", nama: "Bahasa Inggeris" },
+        { id: "mt", nama: "Matematik" },
+        { id: "sn", nama: "Sains" }
+        // Anda boleh tambah subjek lain seperti sejarah, pjk dll di sini nanti
+    ];
+
+    try {
+        // Minta pangkalan data keluarkan HANYA fail tahun 2026 yang 'aktif' untuk jimat kuota
+        const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"), where("tahun", "==", tahunSemasa));
+        const querySnapshot = await getDocs(qTracker);
+
+        // Sediakan "Kertas Kosong" (Objek) untuk catat status setiap subjek
+        let statusPanitia = {};
+        senaraiSubjek.forEach(sub => {
+            statusPanitia[sub.id] = { rpt: false, minit: false, kertasKerja: false };
+        });
+
+        // Loop setiap fail yang dijumpai dan semak tajuknya
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const subjekFail = data.subjek;
+            const tajuk = data.tajuk.toLowerCase(); // Tukar huruf kecil supaya carian tepat
+
+            // Jika fail itu kepunyaan subjek yang ada dalam senarai pemantauan
+            if (statusPanitia[subjekFail]) {
+                // Semak kata kunci dalam tajuk fail
+                if (tajuk.includes("rpt") || tajuk.includes("dskp") || tajuk.includes("rancangan pelajaran")) {
+                    statusPanitia[subjekFail].rpt = true;
+                }
+                if (tajuk.includes("minit") || tajuk.includes("mesyuarat")) {
+                    statusPanitia[subjekFail].minit = true;
+                }
+                if (tajuk.includes("kertas kerja")) {
+                    statusPanitia[subjekFail].kertasKerja = true;
+                }
+            }
+        });
+
+        // Selepas selesai semak semua fail, mari kita bina baris jadual (HTML)
+        let htmlTracker = "";
+        
+        senaraiSubjek.forEach(sub => {
+            const status = statusPanitia[sub.id];
+            
+            // Tetapan Ikon
+            const iconHijau = '<i class="fas fa-check-circle text-lg text-emerald-600"></i>';
+            const iconMerah = '<i class="fas fa-times-circle text-lg text-red-300"></i>';
+
+            const rptIcon = status.rpt ? iconHijau : iconMerah;
+            const minitIcon = status.minit ? iconHijau : iconMerah;
+            const kertasIcon = status.kertasKerja ? iconHijau : iconMerah;
+
+            // Semak status keseluruhan (Jika ketiga-tiganya True = Lengkap)
+            const lengkap = status.rpt && status.minit && status.kertasKerja;
+            const badgeStatus = lengkap 
+                ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-star mr-1"></i>Lengkap</span>' 
+                : '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">Tidak Lengkap</span>';
+
+            htmlTracker += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 border border-slate-200 font-bold text-slate-700">${sub.nama}</td>
+                    <td class="p-3 border border-slate-200 text-center">${rptIcon}</td>
+                    <td class="p-3 border border-slate-200 text-center">${minitIcon}</td>
+                    <td class="p-3 border border-slate-200 text-center">${kertasIcon}</td>
+                    <td class="p-3 border border-slate-200 text-center">${badgeStatus}</td>
+                </tr>
+            `;
+        });
+
+        // Masukkan HTML ke dalam jadual
+        jadualTracker.innerHTML = htmlTracker;
+
+    } catch (error) {
+        console.error("Ralat Tracker:", error);
+        jadualTracker.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">Gagal memuatkan rekod pemantauan: ${error.message}</td></tr>`;
     }
 }
 }
