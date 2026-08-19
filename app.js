@@ -485,112 +485,59 @@ window.padamKekalFail = async function(id) {
 }
 
 // ==========================================
-// 10. LOGIK AUTOMATIK CHECKLIST TRACKER (KEMAS KINI PENUH)
+// 10. FUNGSI ADMIN - JANA JADUAL TRACKER (FAIL 1 - FAIL 4)
 // ==========================================
-const jadualTracker = document.getElementById('jadualTracker');
-const filterTahunTracker = document.getElementById('filterTahunTracker'); // Jika nak letak dropdown filter tahun nanti
 
-async function panggilDataTracker() {
-    if (!jadualTracker) return;
+// Cari kod yang memanggil onSnapshot untuk jadualTrackerBody (di admin.html)
+const tbodyAdmin = document.getElementById("jadualTrackerBody");
 
-    // Keluarkan mesej loading dan buang nota statik lama
-    jadualTracker.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Sedang mengimbas semua fail dokumen...</td></tr>';
+if (tbodyAdmin) {
+    onSnapshot(collection(db, "kandungan"), (querySnapshot) => {
+        let trackerData = {};
 
-    const sesiSemasa = "2026/2027"; // Boleh diubah atau dipautkan dengan dropdown filter nanti
+        // 1. Kumpul data berdasarkan Subjek dan Folder Destinasi (Fail 1-4)
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            
+            // Abaikan fail di tong sampah
+            if (data.status === "dipadam") return; 
 
-    // Senarai penuh kesemua 24 pengurusan dan panitia
-    const senaraiSubjek = [
-        { id: "visi_misi", nama: "Visi, Misi & Matlamat Sekolah" },
-        { id: "spi", nama: "Surat Pekeliling Ikhtisas (SPI)" },
-        { id: "dasar", nama: "Dasar & Penetapan Kurikulum" },
-        { id: "takwim", nama: "Perancangan Kurikulum" },
-        { id: "mesyuarat_induk", nama: "Mesyuarat Kurikulum Induk" },
-        { id: "mmi", nama: "Mengurus Masa Instruksional" },
-        { id: "bm", nama: "Panitia Bahasa Melayu" },
-        { id: "bi", nama: "Panitia Bahasa Inggeris" },
-        { id: "mt", nama: "Panitia Matematik" },
-        { id: "sn", nama: "Panitia Sains" },
-        { id: "pi", nama: "Panitia Pendidikan Islam" },
-        { id: "pm", nama: "Panitia Pendidikan Moral" },
-        { id: "sej", nama: "Panitia Sejarah" },
-        { id: "rbt", nama: "Panitia Reka Bentuk & Teknologi" },
-        { id: "psv", nama: "Panitia Pendidikan Seni Visual" },
-        { id: "mz", nama: "Panitia Pendidikan Muzik" },
-        { id: "pjpk", nama: "Panitia PJPK" },
-        { id: "ba", nama: "Panitia Bahasa Arab" },
-        { id: "plan", nama: "Program PLaN" },
-        { id: "pemulihan", nama: "Pemulihan Khas" },
-        { id: "transisi", nama: "Program Transisi Tahun 1" },
-        { id: "intervensi_t1", nama: "Intervensi Tahun 1 (3M)" },
-        { id: "pss", nama: "Pusat Sumber Sekolah (PSS)" },
-        { id: "pra", nama: "Prasekolah" }
-    ];
-
-    try {
-        const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"), where("tahun", "==", sesiSemasa));
-        const querySnapshot = await getDocs(qTracker);
-
-        let statusPanitia = {};
-        senaraiSubjek.forEach(sub => {
-            statusPanitia[sub.id] = { rpt: false, minit: false, kertasKerja: false };
-        });
-
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const subjekFail = data.subjek;
-            const tajuk = data.tajuk.toLowerCase();
-
-            if (statusPanitia[subjekFail]) {
-                // Logik Pengesanan Kata Kunci pada Tajuk Fail
-                if (tajuk.includes("rpt") || tajuk.includes("dskp") || tajuk.includes("rancangan") || tajuk.includes("perancangan")) {
-                    statusPanitia[subjekFail].rpt = true;
-                }
-                if (tajuk.includes("minit") || tajuk.includes("mesyuarat") || tajuk.includes("notis") || tajuk.includes("kehadiran")) {
-                    statusPanitia[subjekFail].minit = true;
-                }
-                if (tajuk.includes("kertas kerja") || tajuk.includes("kertaskerja") || tajuk.includes("laporan") || tajuk.includes("program")) {
-                    statusPanitia[subjekFail].kertasKerja = true;
-                }
+            const subjek = data.subjek;
+            
+            // Wujudkan subjek dalam senarai jika belum ada
+            if (!trackerData[subjek]) {
+                trackerData[subjek] = { fail1: false, fail2: false, fail3: false, fail4: false };
             }
+
+            const folder = data.folder_destinasi; 
+            
+            // Tanda true jika fail wujud dalam folder tersebut
+            if (folder === "fail_1") trackerData[subjek].fail1 = true;
+            if (folder === "fail_2") trackerData[subjek].fail2 = true;
+            if (folder === "fail_3") trackerData[subjek].fail3 = true;
+            if (folder === "fail_4") trackerData[subjek].fail4 = true;
         });
 
-        let htmlTracker = "";
+        // 2. Kosongkan jadual lama dan masukkan data baharu
+        tbodyAdmin.innerHTML = "";
         
-        senaraiSubjek.forEach(sub => {
-            const status = statusPanitia[sub.id];
-            const iconHijau = '<i class="fas fa-check-circle text-lg text-emerald-600"></i>';
-            const iconMerah = '<i class="fas fa-times-circle text-lg text-red-300"></i>';
+        for (const [subjek, status] of Object.entries(trackerData)) {
+            // Abaikan menu yang bukan panitia (contoh: takwim, spi, kokurikulum)
+            if (subjek === "takwim" || subjek === "spi" || subjek === "pbd") continue; 
 
-            const rptIcon = status.rpt ? iconHijau : iconMerah;
-            const minitIcon = status.minit ? iconHijau : iconMerah;
-            const kertasIcon = status.kertasKerja ? iconHijau : iconMerah;
-
-            const lengkap = status.rpt && status.minit && status.kertasKerja;
-            const badgeStatus = lengkap 
-                ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-star mr-1"></i>Lengkap</span>' 
-                : '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">Tidak Lengkap</span>';
-
-            htmlTracker += `
-                <tr class="hover:bg-slate-50 transition border-b border-slate-200">
-                    <td class="p-3 border-x border-slate-200 text-slate-800 text-sm">${sub.nama}</td>
-                    <td class="p-3 border-r border-slate-200 text-center">${rptIcon}</td>
-                    <td class="p-3 border-r border-slate-200 text-center">${minitIcon}</td>
-                    <td class="p-3 border-r border-slate-200 text-center">${kertasIcon}</td>
-                    <td class="p-3 border-r border-slate-200 text-center">${badgeStatus}</td>
+            // Hasilkan baris (row) untuk jadual
+            let row = `
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-bold text-gray-800 capitalize">${subjek.replace('_', ' ')}</td>
+                    <td class="px-4 py-3 text-center">${status.fail1 ? '✅' : '❌'}</td>
+                    <td class="px-4 py-3 text-center">${status.fail2 ? '✅' : '❌'}</td>
+                    <td class="px-4 py-3 text-center">${status.fail3 ? '✅' : '❌'}</td>
+                    <td class="px-4 py-3 text-center">${status.fail4 ? '✅' : '❌'}</td>
                 </tr>
             `;
-        });
-
-        jadualTracker.innerHTML = htmlTracker;
-
-    } catch (error) {
-        console.error("Ralat Tracker:", error);
-        if(error.message.includes("index")) {
-            jadualTracker.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-amber-600 font-medium">Sistem perlukan Index Firebase. Sila klik pautan biru di Console (F12) untuk bina index.</td></tr>`;
-        } else {
-            jadualTracker.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
+            tbodyAdmin.innerHTML += row;
         }
-    }
+    });
 }
 // ==========================================
 // 11. LOGIK AUTOMATIK TRACKER PANITIA (BERDASARKAN KIRAAN 4 FAIL)
