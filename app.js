@@ -570,3 +570,123 @@ async function panggilDataTracker() {
         }
     }
 }
+// ==========================================
+// 11. LOGIK AUTOMATIK TRACKER PANITIA (BERDASARKAN TAGGING)
+// ==========================================
+const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBody');
+const labelTahunTracker = document.getElementById('labelTahunTracker');
+
+async function janaTrackerPanitia(tahun) {
+    // Fungsi ini hanya akan berjalan jika kita berada di halaman yang ada jadual ini
+    if (!jadualTrackerPanitiaBody) return; 
+
+    // Paparan 'loading' sementara data diambil
+    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menganalisis pangkalan data panitia...</td></tr>';
+    if (labelTahunTracker) labelTahunTracker.innerText = tahun;
+
+    // Senarai 12 Panitia Subjek (Boleh ditambah/diubah nanti)
+    const senaraiPanitia = [
+        { id: "bm", nama: "Panitia Bahasa Melayu" },
+        { id: "bi", nama: "Panitia Bahasa Inggeris" },
+        { id: "mt", nama: "Panitia Matematik" },
+        { id: "sn", nama: "Panitia Sains" },
+        { id: "pi", nama: "Panitia Pendidikan Islam" },
+        { id: "pm", nama: "Panitia Pendidikan Moral" },
+        { id: "sej", nama: "Panitia Sejarah" },
+        { id: "rbt", nama: "Panitia Reka Bentuk & Teknologi" },
+        { id: "psv", nama: "Panitia Pendidikan Seni Visual" },
+        { id: "mz", nama: "Panitia Pendidikan Muzik" },
+        { id: "pjpk", nama: "Panitia PJPK" },
+        { id: "ba", nama: "Panitia Bahasa Arab" }
+    ];
+
+    try {
+        // Minta data dari Firebase (hanya fail aktif dan pada tahun yang dipilih)
+        const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"), where("tahun", "==", tahun));
+        const querySnapshot = await getDocs(qTracker);
+
+        // 1. Sediakan 'bekas kosong' untuk semua subjek
+        let dataSemakan = {};
+        senaraiPanitia.forEach(sub => {
+            dataSemakan[sub.id] = { dskp: false, rpt: false, minit: 0, kertas_kerja: false };
+        });
+
+        // 2. Kumpul dan kira data berdasarkan Tagging (Kategori)
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const subjekFail = data.subjek;
+            const kategoriFail = data.kategori;
+
+            if (dataSemakan[subjekFail]) {
+                if (kategoriFail === "dskp") dataSemakan[subjekFail].dskp = true;
+                if (kategoriFail === "rpt") dataSemakan[subjekFail].rpt = true;
+                if (kategoriFail === "minit") dataSemakan[subjekFail].minit += 1; // Kiraan +1 setiap kali jumpa minit
+                if (kategoriFail === "kertas_kerja") dataSemakan[subjekFail].kertas_kerja = true;
+            }
+        });
+
+        // 3. Bina paparan Jadual HTML baharu
+        let htmlTracker = "";
+        const iconHijau = '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full"></i>';
+        const iconMerah = '<i class="fas fa-times-circle text-red-200 text-lg"></i>';
+
+        senaraiPanitia.forEach(sub => {
+            const status = dataSemakan[sub.id];
+            
+            const dskpIcon = status.dskp ? iconHijau : iconMerah;
+            const rptIcon = status.rpt ? iconHijau : iconMerah;
+            const kertasIcon = status.kertas_kerja ? iconHijau : iconMerah;
+            
+            // Logik Minit: Warna hijau jika cukup 4 kali, oren jika kurang
+            let kelasMinit = status.minit >= 4 ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-50';
+            let minitTeks = `<span class="font-bold px-2 py-1 rounded-md ${kelasMinit}">${status.minit} / 4</span>`;
+            
+            // Status Keseluruhan: Mesti ada semua benda baru dapat cap "Lengkap"
+            const lengkap = status.dskp && status.rpt && (status.minit >= 4) && status.kertas_kerja;
+            const badgeStatus = lengkap 
+                ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-star mr-1 text-amber-400"></i>Lengkap</span>' 
+                : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Sedang Berjalan</span>';
+
+            htmlTracker += `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
+                    <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${sub.nama}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${dskpIcon}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${rptIcon}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${minitTeks}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${kertasIcon}</td>
+                    <td class="p-3 text-center">${badgeStatus}</td>
+                </tr>
+            `;
+        });
+
+        // Masukkan html ke dalam jadual
+        jadualTrackerPanitiaBody.innerHTML = htmlTracker;
+
+    } catch (error) {
+        console.error("Ralat Tracker Panitia:", error);
+        if(error.message.includes("index")) {
+            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-amber-600 font-medium bg-amber-50 rounded-lg">Firebase sedang membina Index. Sila tunggu 2 minit dan muat semula halaman ini.</td></tr>`;
+        } else {
+            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
+        }
+    }
+}
+// ==========================================
+// 12. PENGGERAK AUTOMATIK JADUAL TRACKER
+// ==========================================
+
+// A. Panggil jadual sebaik sahaja sistem disahkan log masuk
+onAuthStateChanged(auth, (user) => {
+    if (user && document.getElementById('jadualTrackerPanitiaBody')) {
+        const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
+        janaTrackerPanitia(tahunSemasa);
+    }
+});
+
+// B. Ubah jadual secara automatik bila cikgu tukar tahun pada dropdown
+const filterTahunSistem = document.getElementById('filterTahun');
+if (filterTahunSistem) {
+    filterTahunSistem.addEventListener('change', (e) => {
+        janaTrackerPanitia(e.target.value);
+    });
+}
