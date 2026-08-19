@@ -660,3 +660,33 @@ if (filterTahunSistem) {
         janaTrackerPanitia(e.target.value);
     });
 }
+// ==========================================
+// FUNGSI KHAS: TRACKER PANITIA SEMASA (FAIL 1-4)
+// ==========================================
+function kemaskiniTrackerPanitiaSemasa(querySnapshot) {
+    const tbody = document.getElementById("jadualTrackerPanitiaBody");
+    if (!tbody) return;
+
+    let statusSemasa = { fail1: false, fail2: false, fail3: false, fail4: false };
+
+    querySnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === "dipadam") return;
+        
+        // Semak folder_destinasi
+        if (data.folder_destinasi === "fail_1") statusSemasa.fail1 = true;
+        if (data.folder_destinasi === "fail_2") statusSemasa.fail2 = true;
+        if (data.folder_destinasi === "fail_3") statusSemasa.fail3 = true;
+        if (data.folder_destinasi === "fail_4") statusSemasa.fail4 = true;
+    });
+
+    // Paparkan keputusan dalam 1 baris
+    tbody.innerHTML = `
+        <tr class="bg-white border-b">
+            <td class="px-4 py-3 text-center">${statusSemasa.fail1 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
+            <td class="px-4 py-3 text-center">${statusSemasa.fail2 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
+            <td class="px-4 py-3 text-center">${statusSemasa.fail3 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
+            <td class="px-4 py-3 text-center">${statusSemasa.fail4 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
+        </tr>
+    `;
+}
