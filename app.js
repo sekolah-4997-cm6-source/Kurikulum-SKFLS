@@ -3,8 +3,7 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-// ==========================================
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";// ==========================================
 // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
 // ==========================================
 const firebaseConfig = {
@@ -287,5 +286,72 @@ await addDoc(collection(db, "kandungan"), {
             btnSubmitUpload.classList.replace('bg-slate-400', 'bg-blue-600');
             txtSubmit.innerHTML = 'Cuba Lagi';
         }
+      // ==========================================
+// 8. LOGIK CARIAN GLOBAL
+// ==========================================
+const inputCarian = document.getElementById('inputCarian');
+const modalCarian = document.getElementById('modalCarian');
+const btnTutupCarian = document.getElementById('btnTutupCarian');
+const ruangHasilCarian = document.getElementById('ruangHasilCarian');
+
+if (inputCarian && modalCarian) {
+    inputCarian.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            const keyword = inputCarian.value.toLowerCase();
+            if(keyword.length < 3) {
+                alert("Sila taip sekurang-kurangnya 3 huruf untuk mencari.");
+                return;
+            }
+            
+            modalCarian.classList.remove('hidden');
+            ruangHasilCarian.innerHTML = '<p class="text-center text-slate-500 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3 block"></i>Sedang menapis dokumen...</p>';
+            
+            try {
+                // Tarik fail aktif dan tapis
+                const qSearch = query(collection(db, "kandungan"), where("status", "==", "aktif"));
+                const querySnapshot = await getDocs(qSearch);
+                
+                let hasilHTML = `<table class="w-full text-left border-collapse"><tbody>`;
+                let jumlahJumpa = 0;
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const tajukKecil = data.tajuk.toLowerCase();
+                    
+                    if(tajukKecil.includes(keyword)) {
+                        jumlahJumpa++;
+                        hasilHTML += `
+                            <tr class="border-b hover:bg-slate-50">
+                                <td class="p-3">
+                                    <p class="font-bold text-slate-800 text-base">${data.tajuk}</p>
+                                    <p class="text-xs text-slate-500 mt-1">
+                                        <span class="bg-slate-200 px-2 py-0.5 rounded mr-2">Folder: ${data.subjek}</span> 
+                                        Tahun: ${data.tahun || 'Tiada'}
+                                    </p>
+                                </td>
+                                <td class="p-3 text-right">
+                                    <a href="${data.url_fail}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Buka Dokumen</a>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                if(jumlahJumpa === 0) {
+                    ruangHasilCarian.innerHTML = '<div class="text-center py-10"><i class="fas fa-search-minus text-4xl text-slate-300 mb-3 block"></i><p class="text-slate-500">Tiada fail dijumpai dengan kata kunci tersebut.</p></div>';
+                } else {
+                    hasilHTML += `</tbody></table>`;
+                    ruangHasilCarian.innerHTML = `<div class="bg-emerald-50 text-emerald-700 p-3 rounded-lg mb-4 text-sm font-bold border border-emerald-200"><i class="fas fa-check-circle mr-2"></i> ${jumlahJumpa} dokumen dijumpai.</div>` + hasilHTML;
+                }
+            } catch (error) {
+                ruangHasilCarian.innerHTML = `<p class="text-red-500 text-center py-10">Ralat carian: ${error.message}</p>`;
+            }
+        }
+    });
+
+    btnTutupCarian.addEventListener('click', () => {
+        modalCarian.classList.add('hidden');
+    });
+}
     });
 }
