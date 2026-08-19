@@ -129,12 +129,19 @@ if (btnMenu && sidebar && overlay) {
 }
 
 // ==========================================
-// 6. BACA & PAPARKAN JADUAL SECARA LIVE (4 FOLDER BERASINGAN)
+// 6. BACA & PAPARKAN JADUAL SECARA LIVE (PINTAR: PANITIA vs INDUK)
 // ==========================================
 let unsubscribeJadual = null;
 
 function panggilDataJadual() {
-    const syarat = [
+    const ruangJadualLama = document.getElementById('ruangJadual'); // Ruang biasa untuk Induk/Pengurusan
+    const ruangFail1 = document.getElementById('ruangFail1');       // Ruang 4 Fail untuk Panitia
+
+    // Senarai ID rasmi khusus untuk Panitia Subjek sahaja
+    const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
+    const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
+
+    let syarat = [
         where("subjek", "==", subjekSemasa),
         where("status", "==", "aktif"),
         orderBy("tarikh", "desc")
@@ -145,58 +152,107 @@ function panggilDataJadual() {
     if (unsubscribeJadual) unsubscribeJadual();
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
-        // Sediakan ruang kosong untuk 4 fail
-        let htmlFail = {
-            fail_1: "", fail_2: "", fail_3: "", fail_4: ""
-        };
-        let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
-        snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const id = docSnap.id;
-            let tarikhMasa = data.tarikh ? data.tarikh.toDate().toLocaleDateString('ms-MY') : "Baru sahaja";
-            const folderDocs = data.folder_destinasi || 'fail_1'; // fallback
+        // ----------------------------------------------------
+        // KES 1: JIKA HALAMAN INI ADALAH PANITIA SUBJEK (4 FAIL)
+        // ----------------------------------------------------
+        if (adakahPanitia && ruangFail1) {
+            let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
+            let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
-            let rowHTML = `
-                <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50">
-                    <div>
-                        <p class="font-medium text-slate-800"><i class="fas fa-file-pdf text-red-500 mr-2"></i> ${data.tajuk}</p>
-                        <p class="text-xs text-slate-500">Tahun: ${data.tahun || '-'} | Oleh: ${data.dimuat_naik_oleh} | ${tarikhMasa}</p>
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                let tarikhMasa = data.tarikh ? data.tarikh.toDate().toLocaleDateString('ms-MY') : "Baru sahaja";
+                const folderDocs = data.folder_destinasi || 'fail_1';
+
+                let rowHTML = `
+                    <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50">
+                        <div>
+                            <p class="font-medium text-slate-800"><i class="fas fa-file-pdf text-red-500 mr-2"></i> ${data.tajuk}</p>
+                            <p class="text-xs text-slate-500">Tahun: ${data.tahun || '-'} | Oleh: ${data.dimuat_naik_oleh} | ${tarikhMasa}</p>
+                        </div>
+                        <div class="whitespace-nowrap ml-4">
+                            <a href="${data.url_fail}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-bold mr-3">Buka</a>
+                            <button onclick="padamRekod('${id}')" class="hanya-admin hidden text-red-600 hover:text-red-800 text-sm font-bold" title="Padam">Padam</button>
+                        </div>
                     </div>
-                    <div class="whitespace-nowrap ml-4">
-                        <a href="${data.url_fail}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-bold mr-3">Buka</a>
-                        <button onclick="padamRekod('${id}')" class="hanya-admin hidden text-red-600 hover:text-red-800 text-sm font-bold" title="Padam">Padam</button>
-                    </div>
-                </div>
+                `;
+                
+                if (htmlFail[folderDocs] !== undefined) {
+                    htmlFail[folderDocs] += rowHTML;
+                    jumlahFail[folderDocs]++;
+                }
+            });
+
+            // Agihkan ke 4 ruang kawasan fail
+            ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
+                const ruang = document.getElementById(`ruangFail${index + 1}`);
+                if (ruang) {
+                    ruang.innerHTML = jumlahFail[f] > 0 
+                        ? htmlFail[f] 
+                        : '<p class="text-center text-slate-400 py-4 text-xs">Belum ada bahan dimuat naik.</p>';
+                }
+            });
+        } 
+        
+        // ----------------------------------------------------
+        // KES 2: JIKA HALAMAN INI BUKAN PANITIA (JADUAL TUNGGAL biasa)
+        // ----------------------------------------------------
+        else if (ruangJadualLama) {
+            if (snapshot.empty) {
+                ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
+                return;
+            }
+
+            let htmlJadual = `
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                            <th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th>
+                            <th class="p-4 font-medium hidden md:table-cell">Tahun</th>
+                            <th class="p-4 font-medium hidden md:table-cell">Dimuat Naik Oleh</th>
+                            <th class="p-4 font-medium">Tarikh</th>
+                            <th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
             `;
-            
-            if (htmlFail[folderDocs] !== undefined) {
-                htmlFail[folderDocs] += rowHTML;
-                jumlahFail[folderDocs]++;
-            }
-        });
 
-        // Masukkan HTML ke dalam ruangan masing-masing
-        ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
-            const ruang = document.getElementById(`ruangFail${index + 1}`);
-            if (ruang) {
-                ruang.innerHTML = jumlahFail[f] > 0 
-                    ? htmlFail[f] 
-                    : '<p class="text-center text-slate-400 py-4">Belum ada bahan dimuat naik.</p>';
-            }
-        });
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                let tarikhMasa = data.tarikh ? data.tarikh.toDate().toLocaleDateString('ms-MY') : "Baru sahaja";
+
+                htmlJadual += `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                        <td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td>
+                        <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada Tag'}</span></td>
+                        <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
+                        <td class="p-4 text-slate-500">${tarikhMasa}</td>
+                        <td class="p-4 text-right whitespace-nowrap">
+                            <a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">Buka</a>
+                            <button onclick="padamRekod('${id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            htmlJadual += `</tbody></table></div>`;
+            ruangJadualLama.innerHTML = htmlJadual;
+        }
 
         if (window.isAdmin) document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
     });
 }
 
 window.padamRekod = async function(id) {
-    if (confirm("Padam fail ini? (Disimpan dalam arkib)")) {
+    if (confirm("Adakah anda pasti mahu memadam fail ini?")) {
         await updateDoc(doc(db, "kandungan", id), { status: "dipadam" });
     }
 }
 panggilDataJadual();
-
 // ==========================================
 // 7. LOGIK MUAT NAIK FAIL (PENGASINGAN FOLDER)
 // ==========================================
