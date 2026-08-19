@@ -254,19 +254,17 @@ window.padamRekod = async function(id) {
 }
 panggilDataJadual();
 // ==========================================
-// 7. LOGIK MUAT NAIK FAIL (PENGASINGAN FOLDER)
+// 7. LOGIK MUAT NAIK FAIL (PENGASINGAN FOLDER & KATEGORI)
 // ==========================================
 const modalUpload = document.getElementById('modalUpload');
 const btnTutupModal = document.getElementById('btnTutupModal');
 const formUpload = document.getElementById('formUpload');
 const btnSubmitUpload = document.getElementById('btnSubmitUpload');
 const txtSubmit = document.getElementById('txtSubmit');
-let folderSasaranSemasa = "fail_1"; // Pembolehubah global simpan butang mana ditekan
+let folderSasaranSemasa = "fail_1"; 
 
-// Daftarkan event pada SEMUA 4 butang muat naik
 document.querySelectorAll('.btn-muat-naik').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        // Tangkap nama folder dari data-folder HTML
         folderSasaranSemasa = e.target.getAttribute('data-folder'); 
         modalUpload.classList.remove('hidden');
     });
@@ -284,10 +282,12 @@ if (formUpload) {
         e.preventDefault(); 
         const file = document.getElementById('inputFail').files[0];
         const tajuk = document.getElementById('inputTajuk').value;
+        const kategori = document.getElementById('inputKategori').value; // <-- TAMBAHAN: Tangkap nilai kategori
         const tahunDipilih = document.getElementById('inputTahun').value;
         const user = auth.currentUser;
 
         if (!file || !user) return;
+        if (!kategori) return alert("Sila pilih Kategori Dokumen!"); // <-- TAMBAHAN: Semakan jika kategori kosong
         if (file.size > (15 * 1024 * 1024)) return alert("Saiz fail melebihi 15MB.");
 
         try {
@@ -308,11 +308,12 @@ if (formUpload) {
                 const hasilGAS = await responsGAS.json();
 
                 if (hasilGAS.status === 'success') {
-                    // Tambah rekod ke Firebase berserta FOLDER mana ia dimuat naik
+                    // Tambah rekod ke Firebase berserta medan 'kategori'
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
+                        kategori: kategori, // <-- TAMBAHAN: Simpan medan kategori ke pangkalan data
                         subjek: subjekSemasa, 
-                        folder_destinasi: folderSasaranSemasa, // <--- Kunci pengasingan jadual
+                        folder_destinasi: folderSasaranSemasa, 
                         url_fail: hasilGAS.url,
                         dimuat_naik_oleh: user.displayName, 
                         tarikh: serverTimestamp(),
