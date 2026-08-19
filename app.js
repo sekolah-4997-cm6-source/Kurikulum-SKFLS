@@ -26,6 +26,7 @@ provider.setCustomParameters({
 const db = getFirestore(app);
 
 window.isAdmin = false;
+window.userSemasa = null;
 
 // ==========================================
 // 3. LOGIK LOG MASUK (GOOGLE AUTH) & PANGKAT ADMIN
@@ -34,8 +35,6 @@ const senaraiAdmin = [
     "sekolah-4997-cm6@moe-dl.edu.my", 
     "g-12345678@moe-dl.edu.my" 
 ];
-
-window.userSemasa = null;
 
 const btnLogin = document.getElementById('btnLogin');
 const txtLogin = document.getElementById('txtLogin');
@@ -129,23 +128,31 @@ if (btnMenu && sidebar && overlay) {
 }
 
 // ==========================================
-// 6. BACA & PAPARKAN JADUAL SECARA LIVE (PINTAR: PANITIA vs INDUK)
+// 6 & BAHAGIAN B: BACA & PAPARKAN JADUAL BERSERTA PENAPISAN (FILTER) TAHUN
 // ==========================================
 let unsubscribeJadual = null;
 
-function panggilDataJadual() {
-    const ruangJadualLama = document.getElementById('ruangJadual'); // Ruang biasa untuk Induk/Pengurusan
-    const ruangFail1 = document.getElementById('ruangFail1');       // Ruang 4 Fail untuk Panitia
+// Kita tambah parameter "tahunFilter" supaya jadual boleh ditapis
+function panggilDataJadual(tahunFilter = "Semua") {
+    const ruangJadualLama = document.getElementById('ruangJadual'); 
+    const ruangFail1 = document.getElementById('ruangFail1');       
 
-    // Senarai ID rasmi khusus untuk Panitia Subjek sahaja
     const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
     const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
 
+    // Asas query
     let syarat = [
         where("subjek", "==", subjekSemasa),
-        where("status", "==", "aktif"),
-        orderBy("tarikh", "desc")
+        where("status", "==", "aktif")
     ];
+
+    // BAHAGIAN B: Jika Tahun dipilih bukan "Semua", kita tapis ikut Tahun
+    if (tahunFilter !== "Semua") {
+        syarat.push(where("tahun", "==", tahunFilter));
+    }
+    
+    // Susun jadual mengikut tarikh terkini
+    syarat.push(orderBy("tarikh", "desc"));
 
     const q = query(collection(db, "kandungan"), ...syarat);
     
@@ -153,9 +160,7 @@ function panggilDataJadual() {
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
 
-        // ----------------------------------------------------
-        // KES 1: JIKA HALAMAN INI ADALAH PANITIA SUBJEK (4 FAIL)
-        // ----------------------------------------------------
+        // --- KES 1: HALAMAN PANITIA SUBJEK (4 FAIL) ---
         if (adakahPanitia && ruangFail1) {
             let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
@@ -170,7 +175,7 @@ function panggilDataJadual() {
                     <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50">
                         <div>
                             <p class="font-medium text-slate-800"><i class="fas fa-file-pdf text-red-500 mr-2"></i> ${data.tajuk}</p>
-                            <p class="text-xs text-slate-500">Tahun: ${data.tahun || '-'} | Oleh: ${data.dimuat_naik_oleh} | ${tarikhMasa}</p>
+                            <p class="text-xs text-slate-500">Kategori: ${data.kategori || '-'} | Tahun: ${data.tahun || '-'} | Oleh: ${data.dimuat_naik_oleh}</p>
                         </div>
                         <div class="whitespace-nowrap ml-4">
                             <a href="${data.url_fail}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-bold mr-3">Buka</a>
@@ -185,20 +190,17 @@ function panggilDataJadual() {
                 }
             });
 
-            // Agihkan ke 4 ruang kawasan fail
             ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
                 const ruang = document.getElementById(`ruangFail${index + 1}`);
                 if (ruang) {
                     ruang.innerHTML = jumlahFail[f] > 0 
                         ? htmlFail[f] 
-                        : '<p class="text-center text-slate-400 py-4 text-xs">Belum ada bahan dimuat naik.</p>';
+                        : `<p class="text-center text-slate-400 py-4 text-xs">Tiada dokumen untuk tahun ${tahunFilter !== 'Semua' ? tahunFilter : 'ini'}.</p>`;
                 }
             });
         } 
         
-        // ----------------------------------------------------
-        // KES 2: JIKA HALAMAN INI BUKAN PANITIA (JADUAL TUNGGAL biasa)
-        // ----------------------------------------------------
+        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL) ---
         else if (ruangJadualLama) {
             if (snapshot.empty) {
                 ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
@@ -212,6 +214,7 @@ function panggilDataJadual() {
                         <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
                             <th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th>
                             <th class="p-4 font-medium hidden md:table-cell">Tahun</th>
+                            <th class="p-4 font-medium hidden md:table-cell">Kategori</th>
                             <th class="p-4 font-medium hidden md:table-cell">Dimuat Naik Oleh</th>
                             <th class="p-4 font-medium">Tarikh</th>
                             <th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th>
@@ -228,7 +231,8 @@ function panggilDataJadual() {
                 htmlJadual += `
                     <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
                         <td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td>
-                        <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada Tag'}</span></td>
+                        <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada'}</span></td>
+                        <td class="p-4 text-slate-500 hidden md:table-cell">${data.kategori || '-'}</td>
                         <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
                         <td class="p-4 text-slate-500">${tarikhMasa}</td>
                         <td class="p-4 text-right whitespace-nowrap">
@@ -252,7 +256,12 @@ window.padamRekod = async function(id) {
         await updateDoc(doc(db, "kandungan", id), { status: "dipadam" });
     }
 }
-panggilDataJadual();
+
+// Panggil jadual kali pertama dengan penapis default (jika ada dropdown filter di UI)
+const filterDropdownTahunAwal = document.getElementById('filterTahun');
+const tahunAwal = filterDropdownTahunAwal ? filterDropdownTahunAwal.value : "Semua";
+panggilDataJadual(tahunAwal);
+
 // ==========================================
 // 7. LOGIK MUAT NAIK FAIL (PENGASINGAN FOLDER & KATEGORI)
 // ==========================================
@@ -282,12 +291,12 @@ if (formUpload) {
         e.preventDefault(); 
         const file = document.getElementById('inputFail').files[0];
         const tajuk = document.getElementById('inputTajuk').value;
-        const kategori = document.getElementById('inputKategori').value; // <-- TAMBAHAN: Tangkap nilai kategori
+        const kategori = document.getElementById('inputKategori').value; 
         const tahunDipilih = document.getElementById('inputTahun').value;
         const user = auth.currentUser;
 
         if (!file || !user) return;
-        if (!kategori) return alert("Sila pilih Kategori Dokumen!"); // <-- TAMBAHAN: Semakan jika kategori kosong
+        if (!kategori) return alert("Sila pilih Kategori Dokumen!"); 
         if (file.size > (15 * 1024 * 1024)) return alert("Saiz fail melebihi 15MB.");
 
         try {
@@ -308,10 +317,9 @@ if (formUpload) {
                 const hasilGAS = await responsGAS.json();
 
                 if (hasilGAS.status === 'success') {
-                    // Tambah rekod ke Firebase berserta medan 'kategori'
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
-                        kategori: kategori, // <-- TAMBAHAN: Simpan medan kategori ke pangkalan data
+                        kategori: kategori, 
                         subjek: subjekSemasa, 
                         folder_destinasi: folderSasaranSemasa, 
                         url_fail: hasilGAS.url,
@@ -334,6 +342,7 @@ if (formUpload) {
         }
     });
 }
+
 // ==========================================
 // 8. LOGIK CARIAN GLOBAL
 // ==========================================
@@ -487,45 +496,33 @@ window.padamKekalFail = async function(id) {
 // ==========================================
 // 10. FUNGSI ADMIN - JANA JADUAL TRACKER (FAIL 1 - FAIL 4)
 // ==========================================
-
-// Cari kod yang memanggil onSnapshot untuk jadualTrackerBody (di admin.html)
 const tbodyAdmin = document.getElementById("jadualTrackerBody");
 
 if (tbodyAdmin) {
     onSnapshot(collection(db, "kandungan"), (querySnapshot) => {
         let trackerData = {};
 
-        // 1. Kumpul data berdasarkan Subjek dan Folder Destinasi (Fail 1-4)
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            
-            // Abaikan fail di tong sampah
             if (data.status === "dipadam") return; 
 
             const subjek = data.subjek;
-            
-            // Wujudkan subjek dalam senarai jika belum ada
             if (!trackerData[subjek]) {
                 trackerData[subjek] = { fail1: false, fail2: false, fail3: false, fail4: false };
             }
 
             const folder = data.folder_destinasi; 
-            
-            // Tanda true jika fail wujud dalam folder tersebut
             if (folder === "fail_1") trackerData[subjek].fail1 = true;
             if (folder === "fail_2") trackerData[subjek].fail2 = true;
             if (folder === "fail_3") trackerData[subjek].fail3 = true;
             if (folder === "fail_4") trackerData[subjek].fail4 = true;
         });
 
-        // 2. Kosongkan jadual lama dan masukkan data baharu
         tbodyAdmin.innerHTML = "";
         
         for (const [subjek, status] of Object.entries(trackerData)) {
-            // Abaikan menu yang bukan panitia (contoh: takwim, spi, kokurikulum)
             if (subjek === "takwim" || subjek === "spi" || subjek === "pbd") continue; 
 
-            // Hasilkan baris (row) untuk jadual
             let row = `
                 <tr class="border-b hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3 font-bold text-gray-800 capitalize">${subjek.replace('_', ' ')}</td>
@@ -539,12 +536,10 @@ if (tbodyAdmin) {
         }
     });
 }
+
 // ==========================================
 // 11. LOGIK AUTOMATIK TRACKER PANITIA (BERDASARKAN KIRAAN 4 FAIL)
 // ==========================================
-const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBody');
-const labelTahunTracker = document.getElementById('labelTahunTracker');
-
 async function janaTrackerPanitia(tahun) {
     const kotakTracker = document.getElementById('kotakTrackerPanitia');
     const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBody');
@@ -552,7 +547,6 @@ async function janaTrackerPanitia(tahun) {
 
     if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
 
-    // 1. SEMAKAN URL 
     const urlParams = new URLSearchParams(window.location.search);
     const subjekSemasaSistem = urlParams.get('subjek');
     
@@ -580,34 +574,35 @@ async function janaTrackerPanitia(tahun) {
         kotakTracker.style.display = 'block'; 
     }
 
-    // 2. KIRAAN DATA DARI FIREBASE
     jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Mengira jumlah fail...</td></tr>';
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
 
     try {
-        const qTracker = query(
-            collection(db, "kandungan"), 
-            where("status", "==", "aktif"), 
-            where("tahun", "==", tahun),
+        // Query untuk Tracker (mesti ikut pilihan Tahun)
+        let queryTracker = [
+            where("status", "==", "aktif"),
             where("subjek", "==", subjekSemasaSistem)
-        );
+        ];
+        
+        if (tahun !== "Semua") {
+            queryTracker.push(where("tahun", "==", tahun));
+        }
+
+        const qTracker = query(collection(db, "kandungan"), ...queryTracker);
         const querySnapshot = await getDocs(qTracker);
 
-        // Sediakan kotak pengiraan kosong untuk 4 folder
         let kiraan = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            const folder = data.folder_destinasi; // Ambil tag folder semasa dimuat naik
+            const folder = data.folder_destinasi; 
 
-            // Tambah +1 pada folder yang berkaitan
             if (folder === "fail_1") kiraan.fail_1++;
             if (folder === "fail_2") kiraan.fail_2++;
             if (folder === "fail_3") kiraan.fail_3++;
             if (folder === "fail_4") kiraan.fail_4++;
         });
 
-        // 3. FUNGSI HIASAN (UI) UNTUK PAPARAN BILANGAN
         const formatBadge = (jumlah) => {
             if (jumlah > 0) {
                 return `<span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-bold border border-blue-200 shadow-sm">${jumlah} Fail</span>`;
@@ -616,13 +611,11 @@ async function janaTrackerPanitia(tahun) {
             }
         };
 
-        // Syarat Lengkap: Keempat-empat folder mesti ada sekurang-kurangnya 1 dokumen
         const lengkap = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
         const badgeStatus = lengkap 
             ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Lengkap</span>' 
             : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Belum Lengkap</span>';
 
-        // LUKIS HTML KE JADUAL
         const htmlTracker = `
             <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
                 <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${infoPanitiaSistem.nama}</td>
@@ -641,11 +634,10 @@ async function janaTrackerPanitia(tahun) {
         jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
     }
 }
-// ==========================================
-// 12. PENGGERAK AUTOMATIK JADUAL TRACKER
-// ==========================================
 
-// A. Panggil jadual sebaik sahaja sistem disahkan log masuk
+// ==========================================
+// 12. PENGGERAK AUTOMATIK TRACKER & JADUAL
+// ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user && document.getElementById('jadualTrackerPanitiaBody')) {
         const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
@@ -653,40 +645,13 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// B. Ubah jadual secara automatik bila cikgu tukar tahun pada dropdown
 const filterTahunSistem = document.getElementById('filterTahun');
 if (filterTahunSistem) {
     filterTahunSistem.addEventListener('change', (e) => {
+        // Apabila cikgu tukar tahun, 2 benda akan berubah: 
+        // 1. Tracker akan diKira Semula
         janaTrackerPanitia(e.target.value);
+        // 2. (BAHAGIAN B) Jadual di bawah juga akan menapis ikut tahun tersebut!
+        panggilDataJadual(e.target.value);
     });
-}
-// ==========================================
-// FUNGSI KHAS: TRACKER PANITIA SEMASA (FAIL 1-4)
-// ==========================================
-function kemaskiniTrackerPanitiaSemasa(querySnapshot) {
-    const tbody = document.getElementById("jadualTrackerPanitiaBody");
-    if (!tbody) return;
-
-    let statusSemasa = { fail1: false, fail2: false, fail3: false, fail4: false };
-
-    querySnapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.status === "dipadam") return;
-        
-        // Semak folder_destinasi
-        if (data.folder_destinasi === "fail_1") statusSemasa.fail1 = true;
-        if (data.folder_destinasi === "fail_2") statusSemasa.fail2 = true;
-        if (data.folder_destinasi === "fail_3") statusSemasa.fail3 = true;
-        if (data.folder_destinasi === "fail_4") statusSemasa.fail4 = true;
-    });
-
-    // Paparkan keputusan dalam 1 baris
-    tbody.innerHTML = `
-        <tr class="bg-white border-b">
-            <td class="px-4 py-3 text-center">${statusSemasa.fail1 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
-            <td class="px-4 py-3 text-center">${statusSemasa.fail2 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
-            <td class="px-4 py-3 text-center">${statusSemasa.fail3 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
-            <td class="px-4 py-3 text-center">${statusSemasa.fail4 ? '<span class="text-green-600 font-bold">✅ Lengkap</span>' : '<span class="text-red-500 font-bold">❌ Belum</span>'}</td>
-        </tr>
-    `;
 }
