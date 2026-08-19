@@ -242,7 +242,7 @@ if (formUpload) {
             reader.readAsDataURL(file);
             reader.onload = async function() {
                 const base64Data = reader.result.split(',')[1]; 
-                const gasUrl = "https://script.google.com/macros/s/AKfycbxJgaxqjiSwkBcr-v9ICWtYOwc8zbtLO3qHE4ptVPPNPUkGVg86PlKcjD9K1thpz6XX5g/exec";
+                const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
                 
                 const responsGAS = await fetch(gasUrl, {
                     method: "POST",
