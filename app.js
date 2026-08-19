@@ -574,6 +574,7 @@ async function panggilDataTracker() {
     }
 }
 // ==========================================
+// ==========================================
 // 11. LOGIK AUTOMATIK TRACKER PANITIA (BERDASARKAN TAGGING)
 // ==========================================
 const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBody');
@@ -586,25 +587,11 @@ async function janaTrackerPanitia(tahun) {
 
     if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
 
-    // 1. SEMAKAN URL (Sorok jika bukan Panitia)
+    // 1. SEMAKAN URL 
     const urlParams = new URLSearchParams(window.location.search);
     const subjekSemasaSistem = urlParams.get('subjek');
     
-    // Senarai ID khusus untuk Panitia sahaja
-    const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
-
-    // Jika yang dibuka BUKAN panitia (contoh: visi_misi, pss, plan), sorok jadual & hentikan fungsi
-    if (!senaraiIDPanitia.includes(subjekSemasaSistem)) {
-        kotakTracker.style.display = 'none'; // Sorok kotak tracker
-        return; 
-    } else {
-        kotakTracker.style.display = 'block'; // Papar kotak tracker jika ia adalah Panitia
-    }
-
-    // 2. LOGIK PENGIRAAN FIREBASE KEKAL SAMA
-    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menganalisis pangkalan data panitia...</td></tr>';
-    if (labelTahunTracker) labelTahunTracker.innerText = tahun;
-
+    // Senarai ID khusus untuk rujukan nama Panitia
     const senaraiPanitia = [
         { id: "bm", nama: "Panitia Bahasa Melayu" },
         { id: "bi", nama: "Panitia Bahasa Inggeris" },
@@ -620,63 +607,83 @@ async function janaTrackerPanitia(tahun) {
         { id: "ba", nama: "Panitia Bahasa Arab" }
     ];
 
+    // Cari adakah URL subjek ini tersenarai dalam senaraiPanitia
+    const infoPanitiaSistem = senaraiPanitia.find(p => p.id === subjekSemasaSistem);
+
+    // Jika BUKAN panitia, sorok jadual & hentikan fungsi
+    if (!infoPanitiaSistem) {
+        kotakTracker.style.display = 'none'; 
+        return; 
+    } else {
+        kotakTracker.style.display = 'block'; // Papar jika ia Panitia
+    }
+
+    // 2. LOGIK PENGIRAAN FIREBASE (HANYA UNTUK PANITIA SEMASA)
+    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menganalisis pangkalan data panitia...</td></tr>';
+    if (labelTahunTracker) labelTahunTracker.innerText = tahun;
+
     try {
-        const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"), where("tahun", "==", tahun));
+        // Kita tambah tapisan (where) supaya Firebase hanya cari dokumen untuk Subjek ini sahaja!
+        const qTracker = query(
+            collection(db, "kandungan"), 
+            where("status", "==", "aktif"), 
+            where("tahun", "==", tahun),
+            where("subjek", "==", subjekSemasaSistem) // <--- PENAMBAHBAIKAN DI SINI
+        );
         const querySnapshot = await getDocs(qTracker);
 
-        let dataSemakan = {};
-        senaraiPanitia.forEach(sub => {
-            dataSemakan[sub.id] = { dskp: false, rpt: false, minit: 0, kertas_kerja: false };
-        });
+        // Sediakan kotak kosong untuk disemak
+        let status = { dskp: false, rpt: false, minit: 0, kertas_kerja: false };
 
+        // Tanda 'true' jika dokumen wujud
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            const subjekFail = data.subjek;
             const kategoriFail = data.kategori;
 
-            if (dataSemakan[subjekFail]) {
-                if (kategoriFail === "dskp") dataSemakan[subjekFail].dskp = true;
-                if (kategoriFail === "rpt") dataSemakan[subjekFail].rpt = true;
-                if (kategoriFail === "minit") dataSemakan[subjekFail].minit += 1;
-                if (kategoriFail === "kertas_kerja") dataSemakan[subjekFail].kertas_kerja = true;
-            }
+            if (kategoriFail === "dskp") status.dskp = true;
+            if (kategoriFail === "rpt") status.rpt = true;
+            if (kategoriFail === "minit") status.minit += 1;
+            if (kategoriFail === "kertas_kerja") status.kertas_kerja = true;
         });
 
-        let htmlTracker = "";
+        // 3. LUKIS HTML UNTUK SATU BARIS SAHAJA
         const iconHijau = '<i class="fas fa-check-circle text-emerald-500 text-lg shadow-sm rounded-full bg-white"></i>';
         const iconMerah = '<i class="fas fa-times-circle text-red-200 text-lg"></i>';
 
-        senaraiPanitia.forEach(sub => {
-            const status = dataSemakan[sub.id];
-            
-            const dskpIcon = status.dskp ? iconHijau : iconMerah;
-            const rptIcon = status.rpt ? iconHijau : iconMerah;
-            const kertasIcon = status.kertas_kerja ? iconHijau : iconMerah;
-            
-            let kelasMinit = status.minit >= 4 ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-50';
-            let minitTeks = `<span class="font-bold px-2 py-1 rounded-md ${kelasMinit}">${status.minit} / 4</span>`;
-            
-            const lengkap = status.dskp && status.rpt && (status.minit >= 4) && status.kertas_kerja;
-            const badgeStatus = lengkap 
-                ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-star mr-1 text-amber-400"></i>Lengkap</span>' 
-                : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Sedang Berjalan</span>';
+        const dskpIcon = status.dskp ? iconHijau : iconMerah;
+        const rptIcon = status.rpt ? iconHijau : iconMerah;
+        const kertasIcon = status.kertas_kerja ? iconHijau : iconMerah;
+        
+        let kelasMinit = status.minit >= 4 ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-50';
+        let minitTeks = `<span class="font-bold px-2 py-1 rounded-md ${kelasMinit}">${status.minit} / 4</span>`;
+        
+        const lengkap = status.dskp && status.rpt && (status.minit >= 4) && status.kertas_kerja;
+        const badgeStatus = lengkap 
+            ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-star mr-1 text-amber-400"></i>Lengkap</span>' 
+            : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Sedang Berjalan</span>';
 
-            htmlTracker += `
-                <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
-                    <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${sub.nama}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${dskpIcon}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${rptIcon}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${minitTeks}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${kertasIcon}</td>
-                    <td class="p-3 text-center">${badgeStatus}</td>
-                </tr>
-            `;
-        });
+        const htmlTracker = `
+            <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
+                <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${infoPanitiaSistem.nama}</td>
+                <td class="p-3 text-center border-r border-slate-50">${dskpIcon}</td>
+                <td class="p-3 text-center border-r border-slate-50">${rptIcon}</td>
+                <td class="p-3 text-center border-r border-slate-50">${minitTeks}</td>
+                <td class="p-3 text-center border-r border-slate-50">${kertasIcon}</td>
+                <td class="p-3 text-center">${badgeStatus}</td>
+            </tr>
+        `;
 
         jadualTrackerPanitiaBody.innerHTML = htmlTracker;
 
     } catch (error) {
         console.error("Ralat Tracker Panitia:", error);
+        
+        // Membantu admin jika Firebase minta Index baharu
+        if(error.message.includes("index") || error.message.includes("Index")) {
+            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-amber-600 font-medium text-sm">Sistem sedang memproses Index Firebase baharu. Ralat: ${error.message} (Lihat Console F12 untuk link index)</td></tr>`;
+        } else {
+            jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
+        }
     }
 }
 // ==========================================
