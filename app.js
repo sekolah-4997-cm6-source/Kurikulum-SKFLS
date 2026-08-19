@@ -3,7 +3,9 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";// ==========================================
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// ==========================================
 // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
 // ==========================================
 const firebaseConfig = {
@@ -25,104 +27,65 @@ window.isAdmin = false;
 // ==========================================
 // 3. LOGIK LOG MASUK (GOOGLE AUTH) & PANGKAT ADMIN
 // ==========================================
-// Pastikan baris import auth ada di bahagian paling atas fail app.js anda (Bahagian 1)
-// import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-
-// Senarai emel admin (Tukar kepada emel DELIMa sebenar Cikgu / Admin)
 const senaraiAdmin = [
     "sekolah-4997-cm6@moe-dl.edu.my", 
     "g-12345678@moe-dl.edu.my" 
 ];
 
-window.isAdmin = false;
 window.userSemasa = null;
 
 const btnLogin = document.getElementById('btnLogin');
 const txtLogin = document.getElementById('txtLogin');
 const iconLogin = document.getElementById('iconLogin');
 
-// Fungsi Semak Admin (Dikemaskini untuk menyokong admin.html)
 function semakStatusAdmin(email) {
     if (senaraiAdmin.includes(email)) {
         window.isAdmin = true;
-        
-        // Panggil fungsi sahkan halaman jika berada di page admin.html
-        if (typeof sahkanHalamanAdmin === "function") {
-            sahkanHalamanAdmin();
-        }
-        
-        // Tunjuk semua butang admin di paparan awam
-        document.querySelectorAll('.hanya-admin').forEach(el => {
-            el.classList.remove('hidden');
-        });
+        if (typeof sahkanHalamanAdmin === "function") sahkanHalamanAdmin();
+        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
     } else {
         window.isAdmin = false;
-        
-        // Halang bukan admin masuk ke admin.html dan tendang ke index.html
         if (window.location.pathname.includes('admin.html')) {
             alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir sistem.");
             window.location.href = "index.html";
         }
-        
-        // Sembunyikan butang admin untuk user biasa
-        document.querySelectorAll('.hanya-admin').forEach(el => {
-            el.classList.add('hidden');
-        });
+        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
     }
 }
 
-// Pantau status log masuk pengguna (Live)
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Jika User sudah log masuk
         window.userSemasa = user;
         if (txtLogin) txtLogin.innerText = "Log Keluar";
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
-        
-        // Semak adakah user ini admin
         semakStatusAdmin(user.email);
-        
     } else {
-        // Jika User belum log masuk
         window.userSemasa = null;
         window.isAdmin = false;
         if (txtLogin) txtLogin.innerText = "Log Masuk (DELIMa)";
         if (iconLogin) iconLogin.className = "fas fa-sign-in-alt mr-2 text-slate-600";
         
-        // Halang sesiapa yang tak login dari akses admin.html
         if (window.location.pathname.includes('admin.html')) {
             alert("Sila log masuk menggunakan e-mel DELIMa terlebih dahulu.");
             window.location.href = "index.html";
         }
-        
-        // Sembunyikan butang admin
-        document.querySelectorAll('.hanya-admin').forEach(el => {
-            el.classList.add('hidden');
-        });
+        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
     }
 });
 
-// Fungsi klik butang Log Masuk / Log Keluar
 if (btnLogin) {
     btnLogin.addEventListener('click', () => {
         if (window.userSemasa) {
-            // Proses log keluar
-            signOut(auth).then(() => {
-                alert("Anda telah log keluar dengan berjaya.");
-            }).catch((error) => {
-                console.error("Ralat log keluar:", error);
-            });
+            signOut(auth).then(() => alert("Anda telah log keluar dengan berjaya.")).catch((error) => console.error("Ralat log keluar:", error));
         } else {
-            // Proses log masuk
-            signInWithPopup(auth, provider).then((result) => {
-                // Log masuk berjaya, onAuthStateChanged akan uruskan UI
-            }).catch((error) => {
+            signInWithPopup(auth, provider).catch((error) => {
                 console.error("Ralat log masuk:", error);
                 alert("Gagal log masuk: " + error.message);
             });
         }
     });
 }
+
 // ==========================================
 // 4. KAWALAN TAJUK MUKA SURAT BESAR
 // ==========================================
@@ -163,7 +126,7 @@ if (btnMenu && sidebar && overlay) {
 }
 
 // ==========================================
-// 6. BACA & PAPARKAN JADUAL SECARA LIVE (DENGAN FILTER & PAGINATION)
+// 6. BACA & PAPARKAN JADUAL SECARA LIVE
 // ==========================================
 const ruangJadual = document.getElementById('ruangJadual');
 const filterTahun = document.getElementById('filterTahun');
@@ -190,7 +153,7 @@ function panggilDataJadual() {
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         if (snapshot.empty) {
-            ruangJadual.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik (atau tiada fail untuk tahun ini).</p>';
+            ruangJadual.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
             return;
         }
 
@@ -217,9 +180,7 @@ function panggilDataJadual() {
 
             htmlJadual += `
                 <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                    <td class="p-4 font-medium text-slate-800">
-                        <i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}
-                    </td>
+                    <td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td>
                     <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada Tag'}</span></td>
                     <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
                     <td class="p-4 text-slate-500">${tarikhMasa}</td>
@@ -232,45 +193,22 @@ function panggilDataJadual() {
         });
 
         htmlJadual += `</tbody></table></div>`;
-        
-        htmlJadual += `
-            <div class="p-4 text-center border-t border-slate-100 bg-slate-50">
-                <button onclick="tambahLimit()" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition">
-                    <i class="fas fa-chevron-down mr-1"></i> Papar Fail Lebih Lama (Maks: ${limitFail})
-                </button>
-            </div>
-        `;
+        htmlJadual += `<div class="p-4 text-center border-t border-slate-100 bg-slate-50"><button onclick="tambahLimit()" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition"><i class="fas fa-chevron-down mr-1"></i> Papar Lebih Banyak</button></div>`;
         
         ruangJadual.innerHTML = htmlJadual;
-
-        if (window.isAdmin) {
-            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
-        }
+        if (window.isAdmin) document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
     });
 }
 
-if(filterTahun) {
-    filterTahun.addEventListener('change', () => {
-        limitFail = 20; 
-        panggilDataJadual();
-    });
-}
-
-window.tambahLimit = function() {
-    limitFail += 20; 
-    panggilDataJadual();
-}
-
+if(filterTahun) { filterTahun.addEventListener('change', () => { limitFail = 20; panggilDataJadual(); }); }
+window.tambahLimit = function() { limitFail += 20; panggilDataJadual(); }
 window.padamRekod = async function(id) {
     if (confirm("Adakah anda pasti mahu memadam fail ini? (Fail akan disimpan dalam arkib admin)")) {
-        const docRef = doc(db, "kandungan", id);
-        await updateDoc(docRef, {
-            status: "dipadam"
-        });
+        await updateDoc(doc(db, "kandungan", id), { status: "dipadam" });
     }
 }
-
 panggilDataJadual();
+
 // ==========================================
 // 7. LOGIK MUAT NAIK FAIL (UPLOAD)
 // ==========================================
@@ -315,19 +253,17 @@ if (formUpload) {
                 const hasilGAS = await responsGAS.json();
 
                 if (hasilGAS.status === 'success') {
-                  // Gantikan blok addDoc sedia ada dengan ini:
-const tahunDipilih = document.getElementById('inputTahun').value;
-
-await addDoc(collection(db, "kandungan"), {
-    tajuk: tajuk, 
-    subjek: subjekSemasa, 
-    url_fail: hasilGAS.url,
-    dimuat_naik_oleh: user.displayName, 
-    uid_pemuat_naik: user.uid, 
-    tarikh: serverTimestamp(),
-    tahun: tahunDipilih, // Tagging Tahun
-    status: "aktif"      // Status untuk Soft Delete
-});
+                    const tahunDipilih = document.getElementById('inputTahun').value;
+                    await addDoc(collection(db, "kandungan"), {
+                        tajuk: tajuk, 
+                        subjek: subjekSemasa, 
+                        url_fail: hasilGAS.url,
+                        dimuat_naik_oleh: user.displayName, 
+                        uid_pemuat_naik: user.uid, 
+                        tarikh: serverTimestamp(),
+                        tahun: tahunDipilih,
+                        status: "aktif"
+                    });
                     modalUpload.classList.add('hidden');
                     formUpload.reset();
                 } else {
@@ -343,7 +279,10 @@ await addDoc(collection(db, "kandungan"), {
             btnSubmitUpload.classList.replace('bg-slate-400', 'bg-blue-600');
             txtSubmit.innerHTML = 'Cuba Lagi';
         }
-      // ==========================================
+    });
+}
+
+// ==========================================
 // 8. LOGIK CARIAN GLOBAL
 // ==========================================
 const inputCarian = document.getElementById('inputCarian');
@@ -364,7 +303,6 @@ if (inputCarian && modalCarian) {
             ruangHasilCarian.innerHTML = '<p class="text-center text-slate-500 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3 block"></i>Sedang menapis dokumen...</p>';
             
             try {
-                // Tarik fail aktif dan tapis
                 const qSearch = query(collection(db, "kandungan"), where("status", "==", "aktif"));
                 const querySnapshot = await getDocs(qSearch);
                 
@@ -382,12 +320,12 @@ if (inputCarian && modalCarian) {
                                 <td class="p-3">
                                     <p class="font-bold text-slate-800 text-base">${data.tajuk}</p>
                                     <p class="text-xs text-slate-500 mt-1">
-                                        <span class="bg-slate-200 px-2 py-0.5 rounded mr-2">Folder: ${data.subjek}</span> 
+                                        <span class="bg-slate-200 px-2 py-0.5 rounded mr-2">Folder: ${senaraiNamaPanitia[data.subjek] || data.subjek}</span> 
                                         Tahun: ${data.tahun || 'Tiada'}
                                     </p>
                                 </td>
                                 <td class="p-3 text-right">
-                                    <a href="${data.url_fail}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Buka Dokumen</a>
+                                    <a href="${data.url_fail}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">Buka</a>
                                 </td>
                             </tr>
                         `;
@@ -395,7 +333,7 @@ if (inputCarian && modalCarian) {
                 });
 
                 if(jumlahJumpa === 0) {
-                    ruangHasilCarian.innerHTML = '<div class="text-center py-10"><i class="fas fa-search-minus text-4xl text-slate-300 mb-3 block"></i><p class="text-slate-500">Tiada fail dijumpai dengan kata kunci tersebut.</p></div>';
+                    ruangHasilCarian.innerHTML = '<div class="text-center py-10"><i class="fas fa-search-minus text-4xl text-slate-300 mb-3 block"></i><p class="text-slate-500">Tiada fail dijumpai.</p></div>';
                 } else {
                     hasilHTML += `</tbody></table>`;
                     ruangHasilCarian.innerHTML = `<div class="bg-emerald-50 text-emerald-700 p-3 rounded-lg mb-4 text-sm font-bold border border-emerald-200"><i class="fas fa-check-circle mr-2"></i> ${jumlahJumpa} dokumen dijumpai.</div>` + hasilHTML;
@@ -406,34 +344,32 @@ if (inputCarian && modalCarian) {
         }
     });
 
-    btnTutupCarian.addEventListener('click', () => {
-        modalCarian.classList.add('hidden');
-    });
+    if (btnTutupCarian) {
+        btnTutupCarian.addEventListener('click', () => {
+            modalCarian.classList.add('hidden');
+        });
+    }
 }
-    });
+
 // ==========================================
 // 9. LOGIK ADMIN CONSOLE (ARKIB & TRACKER)
 // ==========================================
 const adminContent = document.getElementById('adminContent');
 const ruangArkib = document.getElementById('ruangArkib');
 
-// Fungsi untuk cek adakah user berada di page admin dan adakah dia benar-benar admin
 function sahkanHalamanAdmin() {
     if (window.location.pathname.includes('admin.html')) {
         if (window.isAdmin) {
-            // Jika dia admin, tunjukkan kandungan
             if(adminContent) adminContent.style.display = 'block';
             panggilDataArkib();
             panggilDataTracker();
         } else {
-            // Jika bukan admin, beri amaran dan halau balik ke index
             alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir (Admin) sistem.");
             window.location.href = "index.html";
         }
     }
 }
 
-// Fungsi panggil fail yang berstatus "dipadam"
 function panggilDataArkib() {
     if (!ruangArkib) return;
     
@@ -466,7 +402,7 @@ function panggilDataArkib() {
                 <tr class="border-b border-slate-100 hover:bg-slate-50">
                     <td class="p-4">
                         <p class="font-bold text-slate-800">${data.tajuk}</p>
-                        <p class="text-xs text-slate-500">Folder Asal: ${data.subjek} | Tahun: ${data.tahun}</p>
+                        <p class="text-xs text-slate-500">Folder Asal: ${senaraiNamaPanitia[data.subjek] || data.subjek} | Tahun: ${data.tahun}</p>
                     </td>
                     <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
                     <td class="p-4 text-right whitespace-nowrap">
@@ -482,20 +418,16 @@ function panggilDataArkib() {
     });
 }
 
-// Fungsi Pulihkan Fail (Tukar status kembali kepada 'aktif')
 window.kembalikanFail = async function(id) {
     if (confirm("Adakah anda pasti mahu memulihkan fail ini? Ia akan dikembalikan ke folder asalnya.")) {
-        const docRef = doc(db, "kandungan", id);
-        await updateDoc(docRef, { status: "aktif" });
+        await updateDoc(doc(db, "kandungan", id), { status: "aktif" });
         alert("Berjaya dipulihkan.");
     }
 }
 
-// Fungsi Padam Kekal dari Database
 window.padamKekalFail = async function(id) {
     if (confirm("AMARAN: Fail akan dipadam sepenuhnya dari pangkalan data dan tidak boleh dikembalikan. Teruskan?")) {
-        const docRef = doc(db, "kandungan", id);
-        await deleteDoc(docRef);
+        await deleteDoc(doc(db, "kandungan", id));
         alert("Fail telah dipadam kekal.");
     }
 }
@@ -508,12 +440,10 @@ const jadualTracker = document.getElementById('jadualTracker');
 async function panggilDataTracker() {
     if (!jadualTracker) return;
 
-    // Tunjuk animasi loading sementara menyemak fail
     jadualTracker.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Sedang menyemak fail panitia...</td></tr>';
 
     const sesiSemasa = "2026/2027"; 
 
-    // Senarai ID folder subjek yang sistem perlu pantau
     const senaraiSubjek = [
         { id: "bm", nama: "Bahasa Melayu" },
         { id: "bi", nama: "Bahasa Inggeris" },
@@ -522,17 +452,14 @@ async function panggilDataTracker() {
     ];
 
     try {
-        // Minta pangkalan data keluarkan fail untuk sesi 2026/2027 yang 'aktif'
         const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"), where("tahun", "==", sesiSemasa));
         const querySnapshot = await getDocs(qTracker);
 
-        // Sediakan rekod pemantauan
         let statusPanitia = {};
         senaraiSubjek.forEach(sub => {
             statusPanitia[sub.id] = { rpt: false, minit: false, kertasKerja: false };
         });
 
-        // Semak tajuk fail
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const subjekFail = data.subjek;
@@ -551,12 +478,10 @@ async function panggilDataTracker() {
             }
         });
 
-        // Bina baris jadual (HTML)
         let htmlTracker = "";
         
         senaraiSubjek.forEach(sub => {
             const status = statusPanitia[sub.id];
-            
             const iconHijau = '<i class="fas fa-check-circle text-lg text-emerald-600"></i>';
             const iconMerah = '<i class="fas fa-times-circle text-lg text-red-300"></i>';
 
@@ -584,8 +509,6 @@ async function panggilDataTracker() {
 
     } catch (error) {
         console.error("Ralat Tracker:", error);
-        
-        // Mesej mesra pengguna jika isu Index masih berlaku
         if(error.message.includes("index")) {
             jadualTracker.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-amber-600">Sistem perlukan Index Firebase. Sila klik pautan biru di Console (F12) untuk bina index.</td></tr>`;
         } else {
