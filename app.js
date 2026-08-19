@@ -411,7 +411,7 @@ if (inputCarian && modalCarian) {
     });
 }
     });
-  // ==========================================
+// ==========================================
 // 9. LOGIK ADMIN CONSOLE (ARKIB & TRACKER)
 // ==========================================
 const adminContent = document.getElementById('adminContent');
@@ -499,7 +499,8 @@ window.padamKekalFail = async function(id) {
         alert("Fail telah dipadam kekal.");
     }
 }
- // ==========================================
+
+// ==========================================
 // 10. LOGIK AUTOMATIK CHECKLIST TRACKER
 // ==========================================
 const jadualTracker = document.getElementById('jadualTracker');
@@ -510,7 +511,6 @@ async function panggilDataTracker() {
     // Tunjuk animasi loading sementara menyemak fail
     jadualTracker.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Sedang menyemak fail panitia...</td></tr>';
 
-    // 👇👇👇 UBAH DI SINI: Pastikan ia sama dengan ejaan di dropdown borang anda
     const sesiSemasa = "2026/2027"; 
 
     // Senarai ID folder subjek yang sistem perlu pantau
@@ -593,4 +593,3 @@ async function panggilDataTracker() {
         }
     }
 }
-  
