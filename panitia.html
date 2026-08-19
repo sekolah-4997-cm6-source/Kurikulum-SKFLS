@@ -144,24 +144,40 @@
             <button id="btnTutupModal" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition"><i class="fas fa-times text-xl"></i></button>
             <h2 class="text-xl font-bold text-slate-800 mb-4 border-b pb-2"><i class="fas fa-cloud-upload-alt text-blue-500 mr-2"></i>Muat Naik Bahan</h2>
             
-            <form id="formUpload" class="space-y-4">
+          <form id="formUpload" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Tajuk Dokumen / Fail</label>
                     <input type="text" id="inputTajuk" required class="w-full border border-slate-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Cth: Minit Mesyuarat Bil 1 2024">
                 </div>
+
+                <!-- KOD KATEGORI DOKUMEN YANG BARU DITAMBAH DI SINI -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fas fa-tags mr-1 text-slate-500"></i> Kategori Dokumen</label>
+                    <select id="inputKategori" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition bg-white">
+                        <option value="" disabled selected>-- Sila Pilih Kategori --</option>
+                        <option value="dskp">DSKP</option>
+                        <option value="rpt">RPT / Perancangan Akademik</option>
+                        <option value="minit">Minit Mesyuarat</option>
+                        <option value="kertas_kerja">Kertas Kerja / Laporan Program</option>
+                        <option value="lain">Lain-lain / Dokumen Sokongan</option>
+                    </select>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Pilih Fail (PDF/Word/Excel)</label>
-                    <input type="file" id="inputFail" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <!-- Saya dah tambahkan attribute 'accept' pada input fail ini supaya ia hadkan jenis fail -->
+                    <input type="file" id="inputFail" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
+                
                 <!-- Letak kod ini di dalam formUpload, di bawah inputFail -->
-<div>
-    <label class="block text-sm font-medium text-slate-700 mb-1">Tahun Akademik</label>
-    <select id="inputTahun" required class="w-full border border-slate-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-        <option value="2026">2026/2027</option>
-        <option value="2025">2025/2026</option>
-        <option value="2024">2024/2025</option>
-    </select>
-</div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tahun Akademik</label>
+                    <select id="inputTahun" required class="w-full border border-slate-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <option value="2026">2026/2027</option>
+                        <option value="2025">2025/2026</option>
+                        <option value="2024">2024/2025</option>
+                    </select>
+                </div>
                 <button type="submit" id="btnSubmitUpload" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition mt-4">
                     <span id="txtSubmit">Muat Naik Sekarang</span>
                 </button>
