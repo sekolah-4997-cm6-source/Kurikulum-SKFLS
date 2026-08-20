@@ -61,7 +61,7 @@ onAuthStateChanged(auth, (user) => {
         semakStatusAdmin(user.email);
         
         // Load Tracker jika ada di halaman tersebut
-        if (document.getElementById('jadualTrackerPanitiaBody')) {
+        if (document.getElementById('jadualTrackerBody')) {
             const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
             janaTrackerPanitia(tahunSemasa);
         }
@@ -516,7 +516,7 @@ window.padamKekalFail = async function(id) {
 // 10. JADUAL TRACKER PANITIA 
 // ==========================================
 async function janaTrackerPanitia(tahun) {
-    const trackerTableBody = document.getElementById('jadualTrackerPanitiaBody');
+    const trackerTableBody = document.getElementById('jadualTrackerBody');
     if (!trackerTableBody) return; 
 
     // Sasaran agresif: Kita cari jadual itu sendiri dan semua pembalutnya
@@ -618,7 +618,7 @@ async function janaTrackerPanitia(tahun) {
 const filterTahunSistem = document.getElementById('filterTahun');
 if (filterTahunSistem) {
     filterTahunSistem.addEventListener('change', (e) => {
-        if(document.getElementById('jadualTrackerPanitiaBody')) janaTrackerPanitia(e.target.value);
+        if(document.getElementById('jadualTrackerBody')) janaTrackerPanitia(e.target.value);
         panggilDataJadual(e.target.value);
     });
 }
