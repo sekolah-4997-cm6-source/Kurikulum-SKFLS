@@ -105,7 +105,6 @@ const senaraiNamaPanitia = {
 
 const tajukPanitia = document.getElementById('tajukPanitia');
 if (tajukPanitia) {
-    // Memastikan ia menggunakan One-Stop Centre jika tiada padanan
     tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'One-Stop Centre';
 }
 
@@ -128,7 +127,7 @@ if (btnMenu && sidebar && overlay) {
 }
 
 // ==========================================
-// 6. BACA & PAPARKAN JADUAL BERSERTA PENAPISAN TAHUN (BEBAS COMPOSITE INDEX)
+// 6. BACA & PAPARKAN JADUAL BERSERTA PENAPISAN TAHUN
 // ==========================================
 let unsubscribeJadual = null;
 
@@ -138,6 +137,18 @@ function panggilDataJadual(tahunFilter = "Semua") {
 
     const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
     const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
+
+    // KEMASKINI UI: Pastikan Jadual Tracker HILANG di paparan Panitia
+    const trackerTableBody = document.getElementById('jadualTrackerPanitiaBody');
+    if (trackerTableBody) {
+        // Cari container utama jadual tracker (sama ada ada ID atau menggunakan class .bg-white)
+        const trackerContainer = document.getElementById('kotakTrackerPanitia') || trackerTableBody.closest('.bg-white') || trackerTableBody.closest('table');
+        if (adakahPanitia || (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html'))) {
+            if (trackerContainer) trackerContainer.style.display = 'none';
+        } else {
+            if (trackerContainer) trackerContainer.style.display = 'block';
+        }
+    }
 
     // Sembunyikan/Paparkan struktur HTML mengikut jenis paparan
     ['ruangFail1', 'ruangFail2', 'ruangFail3', 'ruangFail4'].forEach(id => {
@@ -154,7 +165,6 @@ function panggilDataJadual(tahunFilter = "Semua") {
             kadJadualUtama.style.display = adakahPanitia ? 'none' : 'block';
         }
         
-        // INJECT BUTANG MUAT NAIK UTAMA UNTUK HALAMAN BUKAN PANITIA JIKA IA TIADA
         if (!adakahPanitia) {
             let injectedBtn = document.getElementById('btnInjectUploadUtama');
             if (!injectedBtn) {
@@ -165,26 +175,22 @@ function panggilDataJadual(tahunFilter = "Semua") {
                         <i class="fas fa-cloud-upload-alt mr-2"></i> Muat Naik Bahan
                     </button>
                 `;
-                // Masukkan tepat di atas jadual lama
                 kadJadualUtama.parentNode.insertBefore(btnContainer, kadJadualUtama);
             } else {
                 injectedBtn.parentElement.style.display = 'flex';
             }
         } else {
-            // Sembunyikan butang yang di-inject jika kita bertukar ke halaman Panitia
             let injectedBtn = document.getElementById('btnInjectUploadUtama');
             if(injectedBtn) injectedBtn.parentElement.style.display = 'none';
         }
     }
 
-    // Guna query ringkas untuk elak error "Missing Index" dari Firestore
     const q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
     
     if (unsubscribeJadual) unsubscribeJadual();
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         
-        // Tapis data menggunakan Javascript untuk elak isu index
         let senaraiData = [];
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
@@ -193,14 +199,12 @@ function panggilDataJadual(tahunFilter = "Semua") {
             senaraiData.push({ id: docSnap.id, ...data });
         });
 
-        // Susun dari yang terbaharu
         senaraiData.sort((a, b) => {
             let tA = a.tarikh ? a.tarikh.toMillis() : 0;
             let tB = b.tarikh ? b.tarikh.toMillis() : 0;
             return tB - tA;
         });
 
-        // --- KES 1: HALAMAN PANITIA SUBJEK (4 FAIL) ---
         if (adakahPanitia && ruangFail1) {
             let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
@@ -232,8 +236,6 @@ function panggilDataJadual(tahunFilter = "Semua") {
                 }
             });
         } 
-        
-        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL) ---
         else if (ruangJadualLama) {
             if (senaraiData.length === 0) {
                 ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
@@ -301,7 +303,6 @@ const btnSubmitUpload = document.getElementById('btnSubmitUpload');
 const txtSubmit = document.getElementById('txtSubmit');
 let folderSasaranSemasa = "fail_1"; 
 
-// Pantau klik butang "Muat Naik" secara global
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik') || btn.id === 'btnInjectUploadUtama')) {
@@ -511,24 +512,22 @@ window.padamKekalFail = async function(id) {
 // 10. JADUAL TRACKER PANITIA (TIDAK PERLUKAN INDEX FIRESTORE)
 // ==========================================
 async function janaTrackerPanitia(tahun) {
-    const kotakTracker = document.getElementById('kotakTrackerPanitia');
-    const jadualTrackerPanitiaBody = document.getElementById('jadualTrackerPanitiaBody');
+    const trackerTableBody = document.getElementById('jadualTrackerPanitiaBody');
+    if (!trackerTableBody) return; 
+
+    const trackerContainer = document.getElementById('kotakTrackerPanitia') || trackerTableBody.closest('.bg-white') || trackerTableBody.closest('table');
     const labelTahunTracker = document.getElementById('labelTahunTracker');
 
-    if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
-
-    const pathName = window.location.pathname.toLowerCase();
-    const isDashboardOrAdmin = pathName.endsWith('/') || pathName.endsWith('index.html') || pathName.includes('admin.html');
-    
-    if (!isDashboardOrAdmin || (subjekSemasa !== 'umum' && !pathName.includes('admin.html'))) {
-        kotakTracker.style.display = 'none';
-        return;
+    // Hentikan proses & sembunyikan tracker jika kita BUKAN di paparan 'umum' (One-Stop Centre) ATAU BUKAN di 'admin.html'
+    if (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html')) {
+        if (trackerContainer) trackerContainer.style.display = 'none';
+        return; 
     } else {
-        kotakTracker.style.display = 'block';
+        if (trackerContainer) trackerContainer.style.display = 'block';
     }
 
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
-    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menyemak Pangkalan Data...</td></tr>';
+    trackerTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menyemak Pangkalan Data...</td></tr>';
 
     const senaraiSemuaPanitia = [
         { id: "bm", nama: "B. Melayu" },
@@ -546,7 +545,6 @@ async function janaTrackerPanitia(tahun) {
     ];
 
     try {
-        // Ambil SEMUA rekod aktif dari Firestore. Kita tapis menggunakan kod Javascript (elak ralat missing composite index)
         const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"));
         const querySnapshot = await getDocs(qTracker);
 
@@ -557,7 +555,6 @@ async function janaTrackerPanitia(tahun) {
 
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            // Tapis tahun di peringkat perisian (javascript)
             if (tahun !== "Semua" && data.tahun !== tahun) return; 
             
             const subjek = data.subjek;
@@ -594,11 +591,11 @@ async function janaTrackerPanitia(tahun) {
             `;
         });
 
-        jadualTrackerPanitiaBody.innerHTML = htmlTracker;
+        trackerTableBody.innerHTML = htmlTracker;
 
     } catch (error) {
         console.error("Ralat Tracker Panitia:", error);
-        jadualTrackerPanitiaBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
+        trackerTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
     }
 }
 
