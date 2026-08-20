@@ -350,12 +350,10 @@ if (formUpload) {
         e.preventDefault(); 
         const file = document.getElementById('inputFail').files[0];
         const tajuk = document.getElementById('inputTajuk').value;
-        const kategori = document.getElementById('inputKategori').value; 
         const tahunDipilih = document.getElementById('inputTahun').value;
         const user = auth.currentUser;
 
         if (!file || !user) return;
-        if (!kategori) return alert("Sila pilih Kategori Dokumen!"); 
         if (file.size > (15 * 1024 * 1024)) return alert("Saiz fail melebihi 15MB.");
 
         try {
@@ -378,7 +376,7 @@ if (formUpload) {
                 if (hasilGAS.status === 'success' || hasilGAS.url) {
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
-                        kategori: kategori, 
+                        kategori: folderSasaranSemasa,
                         subjek: subjekSemasa, 
                         folder_destinasi: folderSasaranSemasa, 
                         url_fail: hasilGAS.url,
