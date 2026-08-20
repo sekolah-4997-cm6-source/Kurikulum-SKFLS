@@ -151,14 +151,12 @@ function panggilDataJadual(tahunFilter = "Semua") {
         }
     }
 
-    // KEMASKINI UI 3: Sembunyikan Butang Muat Naik Besar di atas jika di halaman Panitia
-    if (adakahPanitia) {
-        document.querySelectorAll('button').forEach(btn => {
-            if (btn.textContent.includes('Muat Naik Bahan')) {
-                btn.style.display = 'none';
-            }
-        });
-    }
+    // KEMASKINI UI 3: Sembunyikan Butang Muat Naik Besar di atas jika di halaman Panitia, PAPARKAN jika Bukan Panitia
+    document.querySelectorAll('button').forEach(btn => {
+        if (btn.textContent.includes('Muat Naik Bahan')) {
+            btn.style.display = adakahPanitia ? 'none' : ''; 
+        }
+    });
 
     let syarat = [
         where("subjek", "==", subjekSemasa),
@@ -209,7 +207,7 @@ function panggilDataJadual(tahunFilter = "Semua") {
             ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
                 const ruang = document.getElementById(`ruangFail${index + 1}`);
                 if (ruang) {
-                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : ''; // Tiada tulisan jika kosong
+                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : '';
                 }
             });
         } 
@@ -285,11 +283,15 @@ const btnSubmitUpload = document.getElementById('btnSubmitUpload');
 const txtSubmit = document.getElementById('txtSubmit');
 let folderSasaranSemasa = "fail_1"; 
 
-document.querySelectorAll('.btn-muat-naik').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        folderSasaranSemasa = e.target.getAttribute('data-folder'); 
-        modalUpload.classList.remove('hidden');
-    });
+// Pastikan butang utama juga berkesan walau takde 'data-folder'
+document.querySelectorAll('.btn-muat-naik, button').forEach(btn => {
+    if (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik')) {
+        btn.addEventListener('click', (e) => {
+            // Ambil data-folder jika ada, jika tiada (contohnya butang di Visi Misi), set kepada umum
+            folderSasaranSemasa = btn.getAttribute('data-folder') || "umum"; 
+            if (modalUpload) modalUpload.classList.remove('hidden');
+        });
+    }
 });
 
 if (btnTutupModal) {
@@ -512,7 +514,6 @@ window.padamKekalFail = async function(id) {
 const tbodyAdmin = document.getElementById("jadualTrackerBody");
 
 if (tbodyAdmin) {
-    // KEMASKINI UI: Sembunyikan jadual Tracker Admin jika ia berada di halaman Panitia
     const isDashboardOrAdmin = window.location.pathname.endsWith('/') || window.location.pathname.endsWith('index.html') || window.location.pathname.includes('admin.html');
     const kadTrackerAdmin = tbodyAdmin.closest('.bg-white') || tbodyAdmin.parentElement.parentElement;
     
