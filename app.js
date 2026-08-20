@@ -192,12 +192,18 @@ function panggilDataJadual(tahunFilter = "Semua") {
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         
-        // Tapis secara JS untuk elak error Firestore
+     // Tapis secara JS untuk elak error Firestore
         let senaraiData = [];
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             if (data.status !== "aktif") return;
-            if (tahunFilter !== "Semua" && data.tahun !== tahunFilter) return;
+            
+            // PENYELESAIAN: Saringan tahun yang lebih fleksibel dan tepat
+            if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
+                const docTahun = data.tahun || "";
+                if (docTahun !== tahunFilter && !docTahun.includes(tahunFilter)) return;
+            }
+
             senaraiData.push({ id: docSnap.id, ...data });
         });
 
@@ -575,15 +581,17 @@ function janaTrackerPanitia(tahun) {
                 dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
             });
 
-            snapshot.forEach((docSnap) => {
+          snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                const docTahun = data.tahun || "";
                 
-                // Semak tahun (Termasuk jika ejaan tahun jenis '2026/2027')
-                if (tahun !== "Semua" && docTahun !== tahun && !docTahun.includes(tahun)) return; 
+                // PENYELESAIAN: Saringan tracker yang sepadan dengan paparan
+                if (tahun && tahun.toLowerCase() !== "semua") {
+                    const docTahun = data.tahun || "";
+                    if (docTahun !== tahun && !docTahun.includes(tahun)) return;
+                }
                 
                 const subjek = data.subjek;
-                const folder = data.folder_destinasi || 'fail_1'; // Fallback selamat
+                const folder = data.folder_destinasi || 'fail_1'; 
 
                 if (dataSubjek[subjek] && dataSubjek[subjek][folder] !== undefined) {
                     dataSubjek[subjek][folder]++;
