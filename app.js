@@ -622,11 +622,3 @@ if (filterTahunSistem) {
         panggilDataJadual(e.target.value);
     });
 }
-// PENGGERAK JADUAL & PENAPIS (FILTER)
-const filterTahunSistem = document.getElementById('filterTahun');
-if (filterTahunSistem) {
-    filterTahunSistem.addEventListener('change', (e) => {
-        if(document.getElementById('jadualTrackerPanitiaBody')) janaTrackerPanitia(e.target.value);
-        panggilDataJadual(e.target.value);
-    });
-}
