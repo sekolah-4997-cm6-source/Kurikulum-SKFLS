@@ -369,7 +369,7 @@ if (formUpload) {
                 });
                 const hasilGAS = await responsGAS.json();
 
-                if (hasilGAS.status === 'success') {
+                if (hasilGAS.status === 'success' || hasilGAS.url) {
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
                         kategori: kategori, 
