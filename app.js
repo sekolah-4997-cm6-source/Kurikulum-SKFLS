@@ -59,6 +59,12 @@ onAuthStateChanged(auth, (user) => {
         if (txtLogin) txtLogin.innerText = "Log Keluar";
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
         semakStatusAdmin(user.email);
+        
+        // Panggil tracker panitia apabila user berjaya login (untuk dashboard/admin)
+        if (document.getElementById('jadualTrackerPanitiaBody')) {
+            const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
+            janaTrackerPanitia(tahunSemasa);
+        }
     } else {
         window.userSemasa = null;
         window.isAdmin = false;
@@ -151,10 +157,17 @@ function panggilDataJadual(tahunFilter = "Semua") {
         }
     }
 
-    // KEMASKINI UI 3: Sembunyikan Butang Muat Naik Besar di atas jika di halaman Panitia, PAPARKAN jika Bukan Panitia
+    // KEMASKINI UI 3: KAWALAN BUTANG MUAT NAIK YANG LEBIH KUKUH
     document.querySelectorAll('button').forEach(btn => {
-        if (btn.textContent.includes('Muat Naik Bahan')) {
-            btn.style.display = adakahPanitia ? 'none' : ''; 
+        if (btn.textContent.includes('Muat Naik Bahan') || btn.classList.contains('btn-muat-naik')) {
+            if (adakahPanitia) {
+                btn.style.display = 'none'; 
+                btn.classList.add('hidden');
+            } else {
+                // Gunakan inline-flex supaya bentuk asal butang (ikon + teks) tidak hancur
+                btn.style.display = 'inline-flex'; 
+                btn.classList.remove('hidden');
+            }
         }
     });
 
@@ -182,7 +195,6 @@ function panggilDataJadual(tahunFilter = "Semua") {
             snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 const id = docSnap.id;
-                let tarikhMasa = data.tarikh ? data.tarikh.toDate().toLocaleDateString('ms-MY') : "Baru sahaja";
                 const folderDocs = data.folder_destinasi || 'fail_1';
 
                 let rowHTML = `
@@ -207,7 +219,7 @@ function panggilDataJadual(tahunFilter = "Semua") {
             ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
                 const ruang = document.getElementById(`ruangFail${index + 1}`);
                 if (ruang) {
-                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : '';
+                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : '<p class="text-slate-400 text-sm py-2 italic">Belum ada bahan.</p>';
                 }
             });
         } 
@@ -283,14 +295,14 @@ const btnSubmitUpload = document.getElementById('btnSubmitUpload');
 const txtSubmit = document.getElementById('txtSubmit');
 let folderSasaranSemasa = "fail_1"; 
 
-// Pastikan butang utama juga berkesan walau takde 'data-folder'
-document.querySelectorAll('.btn-muat-naik, button').forEach(btn => {
-    if (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik')) {
-        btn.addEventListener('click', (e) => {
-            // Ambil data-folder jika ada, jika tiada (contohnya butang di Visi Misi), set kepada umum
-            folderSasaranSemasa = btn.getAttribute('data-folder') || "umum"; 
-            if (modalUpload) modalUpload.classList.remove('hidden');
-        });
+// Buka modal dari mana-mana butang muat naik
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik'))) {
+        if (!window.userSemasa) return alert("Sila Log Masuk (DELIMa) terlebih dahulu.");
+        
+        folderSasaranSemasa = btn.getAttribute('data-folder') || "umum"; 
+        if (modalUpload) modalUpload.classList.remove('hidden');
     }
 });
 
@@ -344,7 +356,7 @@ if (formUpload) {
                         status: "aktif"
                     });
                     
-                    alert("Berjaya dimuat naik ke " + folderSasaranSemasa.replace('_', ' ').toUpperCase());
+                    alert("Berjaya dimuat naik!");
                     modalUpload.classList.add('hidden');
                     formUpload.reset();
                 }
@@ -428,7 +440,7 @@ if (inputCarian && modalCarian) {
 }
 
 // ==========================================
-// 9. LOGIK ADMIN CONSOLE (ARKIB & TRACKER)
+// 9. LOGIK ADMIN CONSOLE (ARKIB)
 // ==========================================
 const adminContent = document.getElementById('adminContent');
 const ruangArkib = document.getElementById('ruangArkib');
@@ -438,7 +450,6 @@ function sahkanHalamanAdmin() {
         if (window.isAdmin) {
             if(adminContent) adminContent.style.display = 'block';
             panggilDataArkib();
-            panggilDataTracker();
         } else {
             alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir (Admin) sistem.");
             window.location.href = "index.html";
@@ -509,62 +520,7 @@ window.padamKekalFail = async function(id) {
 }
 
 // ==========================================
-// 10. FUNGSI ADMIN - JANA JADUAL TRACKER (FAIL 1 - FAIL 4)
-// ==========================================
-const tbodyAdmin = document.getElementById("jadualTrackerBody");
-
-if (tbodyAdmin) {
-    const isDashboardOrAdmin = window.location.pathname.endsWith('/') || window.location.pathname.endsWith('index.html') || window.location.pathname.includes('admin.html');
-    const kadTrackerAdmin = tbodyAdmin.closest('.bg-white') || tbodyAdmin.parentElement.parentElement;
-    
-    if (kadTrackerAdmin) {
-        if (!isDashboardOrAdmin || (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html'))) {
-            kadTrackerAdmin.style.display = 'none';
-        } else {
-            kadTrackerAdmin.style.display = 'block';
-        }
-    }
-
-    onSnapshot(collection(db, "kandungan"), (querySnapshot) => {
-        let trackerData = {};
-
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.status === "dipadam") return; 
-
-            const subjek = data.subjek;
-            if (!trackerData[subjek]) {
-                trackerData[subjek] = { fail1: false, fail2: false, fail3: false, fail4: false };
-            }
-
-            const folder = data.folder_destinasi; 
-            if (folder === "fail_1") trackerData[subjek].fail1 = true;
-            if (folder === "fail_2") trackerData[subjek].fail2 = true;
-            if (folder === "fail_3") trackerData[subjek].fail3 = true;
-            if (folder === "fail_4") trackerData[subjek].fail4 = true;
-        });
-
-        tbodyAdmin.innerHTML = "";
-        
-        for (const [subjek, status] of Object.entries(trackerData)) {
-            if (subjek === "takwim" || subjek === "spi" || subjek === "pbd") continue; 
-
-            let row = `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 font-bold text-gray-800 capitalize">${subjek.replace('_', ' ')}</td>
-                    <td class="px-4 py-3 text-center">${status.fail1 ? '✅' : '❌'}</td>
-                    <td class="px-4 py-3 text-center">${status.fail2 ? '✅' : '❌'}</td>
-                    <td class="px-4 py-3 text-center">${status.fail3 ? '✅' : '❌'}</td>
-                    <td class="px-4 py-3 text-center">${status.fail4 ? '✅' : '❌'}</td>
-                </tr>
-            `;
-            tbodyAdmin.innerHTML += row;
-        }
-    });
-}
-
-// ==========================================
-// 11. LOGIK AUTOMATIK TRACKER PANITIA (BERDASARKAN KIRAAN 4 FAIL)
+// 10. JADUAL TRACKER PANITIA (KESELURUHAN SUBJEK & KIRAAN FAIL)
 // ==========================================
 async function janaTrackerPanitia(tahun) {
     const kotakTracker = document.getElementById('kotakTrackerPanitia');
@@ -573,49 +529,38 @@ async function janaTrackerPanitia(tahun) {
 
     if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
 
+    // Tentukan adakah tracker ini patut dipaparkan
     const pathName = window.location.pathname.toLowerCase();
     const isDashboardOrAdmin = pathName.endsWith('/') || pathName.endsWith('index.html') || pathName.includes('admin.html');
-    if (!isDashboardOrAdmin || subjekSemasa !== 'umum') {
+    
+    // Hanya tunjukkan di Dashboard Utama ('umum') atau muka surat admin
+    if (!isDashboardOrAdmin || (subjekSemasa !== 'umum' && !pathName.includes('admin.html'))) {
         kotakTracker.style.display = 'none';
         return;
+    } else {
+        kotakTracker.style.display = 'block';
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const subjekSemasaSistem = urlParams.get('subjek');
-    
-    const senaraiPanitia = [
-        { id: "bm", nama: "Panitia Bahasa Melayu" },
-        { id: "bi", nama: "Panitia Bahasa Inggeris" },
-        { id: "mt", nama: "Panitia Matematik" },
-        { id: "sn", nama: "Panitia Sains" },
-        { id: "pi", nama: "Panitia Pendidikan Islam" },
-        { id: "pm", nama: "Panitia Pendidikan Moral" },
-        { id: "sej", nama: "Panitia Sejarah" },
-        { id: "rbt", nama: "Panitia Reka Bentuk & Teknologi" },
-        { id: "psv", nama: "Panitia Pendidikan Seni Visual" },
-        { id: "mz", nama: "Panitia Pendidikan Muzik" },
-        { id: "pjpk", nama: "Panitia PJPK" },
-        { id: "ba", nama: "Panitia Bahasa Arab" }
+    if (labelTahunTracker) labelTahunTracker.innerText = tahun;
+    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Mengira jumlah fail...</td></tr>';
+
+    const senaraiSemuaPanitia = [
+        { id: "bm", nama: "B. Melayu" },
+        { id: "bi", nama: "B. Inggeris" },
+        { id: "mt", nama: "Matematik" },
+        { id: "sn", nama: "Sains" },
+        { id: "pi", nama: "Pendidikan Islam" },
+        { id: "pm", nama: "Pendidikan Moral" },
+        { id: "sej", nama: "Sejarah" },
+        { id: "rbt", nama: "RBT" },
+        { id: "psv", nama: "Pend. Seni Visual" },
+        { id: "mz", nama: "Pend. Muzik" },
+        { id: "pjpk", nama: "PJPK" },
+        { id: "ba", nama: "B. Arab" }
     ];
 
-    const infoPanitiaSistem = senaraiPanitia.find(p => p.id === subjekSemasaSistem);
-
-    if (!infoPanitiaSistem) {
-        kotakTracker.style.display = 'none'; 
-        return; 
-    } else {
-        kotakTracker.style.display = 'block'; 
-    }
-
-    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Mengira jumlah fail...</td></tr>';
-    if (labelTahunTracker) labelTahunTracker.innerText = tahun;
-
     try {
-        let queryTracker = [
-            where("status", "==", "aktif"),
-            where("subjek", "==", subjekSemasaSistem)
-        ];
-        
+        let queryTracker = [where("status", "==", "aktif")];
         if (tahun !== "Semua") {
             queryTracker.push(where("tahun", "==", tahun));
         }
@@ -623,41 +568,54 @@ async function janaTrackerPanitia(tahun) {
         const qTracker = query(collection(db, "kandungan"), ...queryTracker);
         const querySnapshot = await getDocs(qTracker);
 
-        let kiraan = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
-
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const folder = data.folder_destinasi; 
-
-            if (folder === "fail_1") kiraan.fail_1++;
-            if (folder === "fail_2") kiraan.fail_2++;
-            if (folder === "fail_3") kiraan.fail_3++;
-            if (folder === "fail_4") kiraan.fail_4++;
+        // Sediakan objek kosong untuk mengira setiap subjek
+        let dataSubjek = {};
+        senaraiSemuaPanitia.forEach(p => {
+            dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
         });
 
-        const formatBadge = (jumlah) => {
-            if (jumlah > 0) {
-                return `<span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-bold border border-blue-200 shadow-sm">${jumlah} Fail</span>`;
-            } else {
-                return `<span class="bg-slate-50 text-slate-400 px-3 py-1 rounded-md text-sm">0</span>`;
+        // Masukkan data ke dalam objek mengikut subjek dan folder
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const subjek = data.subjek;
+            const folder = data.folder_destinasi; 
+
+            if (dataSubjek[subjek] && dataSubjek[subjek][folder] !== undefined) {
+                dataSubjek[subjek][folder]++;
             }
-        };
+        });
 
-        const lengkap = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
-        const badgeStatus = lengkap 
-            ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Lengkap</span>' 
-            : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Belum Lengkap</span>';
+        // Hasilkan HTML (Tanda Tick beserta bilangan fail)
+        let htmlTracker = "";
+        
+        senaraiSemuaPanitia.forEach(p => {
+            const kiraan = dataSubjek[p.id];
+            
+            // Fungsi kecil untuk format kotak: "✅ (2)" atau "❌ (0)"
+            const formatKotak = (jumlah) => {
+                if (jumlah > 0) {
+                    return `<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200"><i class="fas fa-check"></i> (${jumlah})</span>`;
+                } else {
+                    return `<span class="text-slate-400 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-times"></i> (0)</span>`;
+                }
+            };
 
-        const htmlTracker = `
-            <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
-                <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${infoPanitiaSistem.nama}</td>
-                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_1)}</td>
-                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_2)}</td>
-                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_3)}</td>
-                <td class="p-3 text-center border-r border-slate-50">${formatBadge(kiraan.fail_4)}</td>
-                <td class="p-3 text-center">${badgeStatus}</td>
-            </tr>
-        `;
+            const lengkapSemua = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
+            const statusLengkap = lengkapSemua 
+                ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Lengkap</span>' 
+                : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Belum Lengkap</span>';
+
+            htmlTracker += `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
+                    <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${p.nama}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_1)}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_2)}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_3)}</td>
+                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_4)}</td>
+                    <td class="p-3 text-center">${statusLengkap}</td>
+                </tr>
+            `;
+        });
 
         jadualTrackerPanitiaBody.innerHTML = htmlTracker;
 
@@ -667,20 +625,11 @@ async function janaTrackerPanitia(tahun) {
     }
 }
 
-// ==========================================
-// 12. PENGGERAK AUTOMATIK TRACKER & JADUAL
-// ==========================================
-onAuthStateChanged(auth, (user) => {
-    if (user && document.getElementById('jadualTrackerPanitiaBody')) {
-        const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
-        janaTrackerPanitia(tahunSemasa);
-    }
-});
-
+// PENGGERAK JADUAL & PENAPIS (FILTER)
 const filterTahunSistem = document.getElementById('filterTahun');
 if (filterTahunSistem) {
     filterTahunSistem.addEventListener('change', (e) => {
-        janaTrackerPanitia(e.target.value);
+        if(document.getElementById('jadualTrackerPanitiaBody')) janaTrackerPanitia(e.target.value);
         panggilDataJadual(e.target.value);
     });
 }
