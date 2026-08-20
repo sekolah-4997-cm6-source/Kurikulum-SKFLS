@@ -519,18 +519,28 @@ async function janaTrackerPanitia(tahun) {
     const trackerTableBody = document.getElementById('jadualTrackerPanitiaBody');
     if (!trackerTableBody) return; 
 
-    // Betulkan Isu 5: Pastikan kad putih tracker disorok di halaman Panitia
-    const kadTracker = trackerTableBody.closest('.bg-white') || trackerTableBody.closest('table').parentElement;
-    const labelTahunTracker = document.getElementById('labelTahunTracker');
+    // Sasaran agresif: Kita cari jadual itu sendiri dan semua pembalutnya
+    const jadualTracker = trackerTableBody.closest('table');
+    const pembalutJadual = jadualTracker ? jadualTracker.parentElement : null;
+    const kadPutih = trackerTableBody.closest('.bg-white');
+    const kotakUtama = document.getElementById('kotakTrackerPanitia');
 
-    // Hanya papar jika URL adalah 'umum' (One-Stop Centre) atau di admin.html
+    // LOGIK SEMBUNYI: Jika di paparan Panitia, sorokkan KESEMUANYA
     if (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html')) {
-        if (kadTracker) kadTracker.style.display = 'none';
-        return; 
+        if (kotakUtama) kotakUtama.style.display = 'none';
+        if (kadPutih) kadPutih.style.display = 'none';
+        if (pembalutJadual) pembalutJadual.style.display = 'none';
+        if (jadualTracker) jadualTracker.style.display = 'none';
+        return; // Hentikan fungsi supaya ia tak panggil data
     } else {
-        if (kadTracker) kadTracker.style.display = 'block';
+        // LOGIK PAPAR: Jika di One-Stop Centre atau Admin
+        if (kotakUtama) kotakUtama.style.display = 'block';
+        if (kadPutih) kadPutih.style.display = 'block';
+        if (pembalutJadual) pembalutJadual.style.display = 'block';
+        if (jadualTracker) jadualTracker.style.display = 'table';
     }
 
+    const labelTahunTracker = document.getElementById('labelTahunTracker');
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
     trackerTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menyemak Pangkalan Data...</td></tr>';
 
@@ -550,7 +560,6 @@ async function janaTrackerPanitia(tahun) {
     ];
 
     try {
-        // Betulkan Isu 4: Ambil semua fail tanpa penapis tahun dari DB, kemudian filter pakai JS
         const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"));
         const querySnapshot = await getDocs(qTracker);
 
@@ -561,7 +570,7 @@ async function janaTrackerPanitia(tahun) {
 
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            if (tahun !== "Semua" && data.tahun !== tahun) return; // Tapis tahun di sini
+            if (tahun !== "Semua" && data.tahun !== tahun) return; 
             
             const subjek = data.subjek;
             const folder = data.folder_destinasi; 
@@ -605,6 +614,14 @@ async function janaTrackerPanitia(tahun) {
     }
 }
 
+// PENGGERAK JADUAL & PENAPIS (FILTER)
+const filterTahunSistem = document.getElementById('filterTahun');
+if (filterTahunSistem) {
+    filterTahunSistem.addEventListener('change', (e) => {
+        if(document.getElementById('jadualTrackerPanitiaBody')) janaTrackerPanitia(e.target.value);
+        panggilDataJadual(e.target.value);
+    });
+}
 // PENGGERAK JADUAL & PENAPIS (FILTER)
 const filterTahunSistem = document.getElementById('filterTahun');
 if (filterTahunSistem) {
