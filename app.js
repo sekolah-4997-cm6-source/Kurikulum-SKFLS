@@ -134,17 +134,31 @@ function panggilDataJadual(tahunFilter = "Semua") {
     const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
     const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
 
-    // KEMASKINI UI: Sembunyikan 4 fail untuk bukan Panitia, dan sebaliknya
+    // KEMASKINI UI 1: Sembunyikan 4 fail untuk bukan Panitia, dan sebaliknya
     ['ruangFail1', 'ruangFail2', 'ruangFail3', 'ruangFail4'].forEach(id => {
         const ruang = document.getElementById(id);
         if (ruang) {
-            // Mencari div kad utama (parent) yang membalut ruang fail ini
             const kadUtama = ruang.closest('.bg-white') || ruang.parentElement.parentElement;
-            if (kadUtama) {
-                kadUtama.style.display = adakahPanitia ? 'block' : 'none';
-            }
+            if (kadUtama) kadUtama.style.display = adakahPanitia ? 'block' : 'none';
         }
     });
+
+    // KEMASKINI UI 2: Sembunyikan kotak putih bawah (Jadual Lama) jika di halaman Panitia
+    if (ruangJadualLama) {
+        const kadJadualUtama = ruangJadualLama.closest('.bg-white') || ruangJadualLama.parentElement;
+        if (kadJadualUtama) {
+            kadJadualUtama.style.display = adakahPanitia ? 'none' : 'block';
+        }
+    }
+
+    // KEMASKINI UI 3: Sembunyikan Butang Muat Naik Besar di atas jika di halaman Panitia
+    if (adakahPanitia) {
+        document.querySelectorAll('button').forEach(btn => {
+            if (btn.textContent.includes('Muat Naik Bahan')) {
+                btn.style.display = 'none';
+            }
+        });
+    }
 
     let syarat = [
         where("subjek", "==", subjekSemasa),
@@ -195,8 +209,7 @@ function panggilDataJadual(tahunFilter = "Semua") {
             ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
                 const ruang = document.getElementById(`ruangFail${index + 1}`);
                 if (ruang) {
-                    // KEMASKINI: Dikosongkan jika tiada fail (tiada mesej "Belum ada bahan")
-                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : '';
+                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : ''; // Tiada tulisan jika kosong
                 }
             });
         } 
@@ -499,6 +512,18 @@ window.padamKekalFail = async function(id) {
 const tbodyAdmin = document.getElementById("jadualTrackerBody");
 
 if (tbodyAdmin) {
+    // KEMASKINI UI: Sembunyikan jadual Tracker Admin jika ia berada di halaman Panitia
+    const isDashboardOrAdmin = window.location.pathname.endsWith('/') || window.location.pathname.endsWith('index.html') || window.location.pathname.includes('admin.html');
+    const kadTrackerAdmin = tbodyAdmin.closest('.bg-white') || tbodyAdmin.parentElement.parentElement;
+    
+    if (kadTrackerAdmin) {
+        if (!isDashboardOrAdmin || (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html'))) {
+            kadTrackerAdmin.style.display = 'none';
+        } else {
+            kadTrackerAdmin.style.display = 'block';
+        }
+    }
+
     onSnapshot(collection(db, "kandungan"), (querySnapshot) => {
         let trackerData = {};
 
@@ -547,10 +572,9 @@ async function janaTrackerPanitia(tahun) {
 
     if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
 
-    // KEMASKINI: Sembunyikan Tracker Jika Bukan di Dashboard/Admin
     const pathName = window.location.pathname.toLowerCase();
     const isDashboardOrAdmin = pathName.endsWith('/') || pathName.endsWith('index.html') || pathName.includes('admin.html');
-    if (!isDashboardOrAdmin) {
+    if (!isDashboardOrAdmin || subjekSemasa !== 'umum') {
         kotakTracker.style.display = 'none';
         return;
     }
