@@ -3,7 +3,7 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
 // 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
@@ -60,7 +60,6 @@ onAuthStateChanged(auth, (user) => {
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
         semakStatusAdmin(user.email);
         
-        // Panggil tracker panitia apabila user berjaya login (untuk dashboard/admin)
         if (document.getElementById('jadualTrackerPanitiaBody')) {
             const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
             janaTrackerPanitia(tahunSemasa);
@@ -82,7 +81,7 @@ onAuthStateChanged(auth, (user) => {
 if (btnLogin) {
     btnLogin.addEventListener('click', () => {
         if (window.userSemasa) {
-            signOut(auth).then(() => alert("Anda telah log keluar dengan berjaya.")).catch((error) => console.error("Ralat log keluar:", error));
+            signOut(auth).then(() => alert("Anda telah log keluar.")).catch((error) => console.error("Ralat log keluar:", error));
         } else {
             signInWithPopup(auth, provider).catch((error) => alert("Gagal log masuk: " + error.message));
         }
@@ -101,12 +100,13 @@ const senaraiNamaPanitia = {
     'bm': 'Panitia Bahasa Melayu', 'bi': 'Panitia Bahasa Inggeris', 'mt': 'Panitia Matematik', 'sn': 'Panitia Sains', 'pi': 'Panitia Pendidikan Islam', 'pm': 'Panitia Pendidikan Moral',
     'sej': 'Panitia Sejarah', 'rbt': 'Panitia Reka Bentuk & Teknologi', 'psv': 'Panitia Pendidikan Seni Visual', 'mz': 'Panitia Pendidikan Muzik', 'pjpk': 'Panitia PJPK', 'ba': 'Panitia Bahasa Arab',
     'plan': 'Program PLaN', 'pemulihan': 'Pemulihan Khas', 'transisi': 'Program Transisi Tahun 1', 'intervensi_t1': 'Intervensi Tahun 1 (3M)',
-    'pss': 'Pusat Sumber Sekolah (PSS)', 'pra': 'Prasekolah'
+    'pss': 'Pusat Sumber Sekolah (PSS)', 'pra': 'Prasekolah', 'umum': 'One-Stop Centre'
 };
 
 const tajukPanitia = document.getElementById('tajukPanitia');
 if (tajukPanitia) {
-    tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'Senarai Dokumen';
+    // Memastikan ia menggunakan One-Stop Centre jika tiada padanan
+    tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'One-Stop Centre';
 }
 
 // ==========================================
@@ -121,7 +121,6 @@ if (btnMenu && sidebar && overlay) {
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden');
     });
-    
     overlay.addEventListener('click', () => {
         sidebar.classList.add('-translate-x-full');
         overlay.classList.add('hidden');
@@ -129,7 +128,7 @@ if (btnMenu && sidebar && overlay) {
 }
 
 // ==========================================
-// 6. BACA & PAPARKAN JADUAL BERSERTA PENAPISAN (FILTER) TAHUN
+// 6. BACA & PAPARKAN JADUAL BERSERTA PENAPISAN TAHUN (BEBAS COMPOSITE INDEX)
 // ==========================================
 let unsubscribeJadual = null;
 
@@ -140,7 +139,7 @@ function panggilDataJadual(tahunFilter = "Semua") {
     const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
     const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
 
-    // KEMASKINI UI 1: Sembunyikan 4 fail untuk bukan Panitia, dan sebaliknya
+    // Sembunyikan/Paparkan struktur HTML mengikut jenis paparan
     ['ruangFail1', 'ruangFail2', 'ruangFail3', 'ruangFail4'].forEach(id => {
         const ruang = document.getElementById(id);
         if (ruang) {
@@ -149,54 +148,65 @@ function panggilDataJadual(tahunFilter = "Semua") {
         }
     });
 
-    // KEMASKINI UI 2: Sembunyikan kotak putih bawah (Jadual Lama) jika di halaman Panitia
     if (ruangJadualLama) {
         const kadJadualUtama = ruangJadualLama.closest('.bg-white') || ruangJadualLama.parentElement;
         if (kadJadualUtama) {
             kadJadualUtama.style.display = adakahPanitia ? 'none' : 'block';
         }
-    }
-
-    // KEMASKINI UI 3: KAWALAN BUTANG MUAT NAIK YANG LEBIH KUKUH
-    document.querySelectorAll('button').forEach(btn => {
-        if (btn.textContent.includes('Muat Naik Bahan') || btn.classList.contains('btn-muat-naik')) {
-            if (adakahPanitia) {
-                btn.style.display = 'none'; 
-                btn.classList.add('hidden');
+        
+        // INJECT BUTANG MUAT NAIK UTAMA UNTUK HALAMAN BUKAN PANITIA JIKA IA TIADA
+        if (!adakahPanitia) {
+            let injectedBtn = document.getElementById('btnInjectUploadUtama');
+            if (!injectedBtn) {
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'flex justify-end mb-4';
+                btnContainer.innerHTML = `
+                    <button id="btnInjectUploadUtama" data-folder="umum" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md font-bold flex items-center transition">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i> Muat Naik Bahan
+                    </button>
+                `;
+                // Masukkan tepat di atas jadual lama
+                kadJadualUtama.parentNode.insertBefore(btnContainer, kadJadualUtama);
             } else {
-                // Gunakan inline-flex supaya bentuk asal butang (ikon + teks) tidak hancur
-                btn.style.display = 'inline-flex'; 
-                btn.classList.remove('hidden');
+                injectedBtn.parentElement.style.display = 'flex';
             }
+        } else {
+            // Sembunyikan butang yang di-inject jika kita bertukar ke halaman Panitia
+            let injectedBtn = document.getElementById('btnInjectUploadUtama');
+            if(injectedBtn) injectedBtn.parentElement.style.display = 'none';
         }
-    });
-
-    let syarat = [
-        where("subjek", "==", subjekSemasa),
-        where("status", "==", "aktif")
-    ];
-
-    if (tahunFilter !== "Semua") {
-        syarat.push(where("tahun", "==", tahunFilter));
     }
-    
-    syarat.push(orderBy("tarikh", "desc"));
-    const q = query(collection(db, "kandungan"), ...syarat);
+
+    // Guna query ringkas untuk elak error "Missing Index" dari Firestore
+    const q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
     
     if (unsubscribeJadual) unsubscribeJadual();
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
+        
+        // Tapis data menggunakan Javascript untuk elak isu index
+        let senaraiData = [];
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.status !== "aktif") return;
+            if (tahunFilter !== "Semua" && data.tahun !== tahunFilter) return;
+            senaraiData.push({ id: docSnap.id, ...data });
+        });
+
+        // Susun dari yang terbaharu
+        senaraiData.sort((a, b) => {
+            let tA = a.tarikh ? a.tarikh.toMillis() : 0;
+            let tB = b.tarikh ? b.tarikh.toMillis() : 0;
+            return tB - tA;
+        });
 
         // --- KES 1: HALAMAN PANITIA SUBJEK (4 FAIL) ---
         if (adakahPanitia && ruangFail1) {
             let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const id = docSnap.id;
+            senaraiData.forEach((data) => {
                 const folderDocs = data.folder_destinasi || 'fail_1';
-
                 let rowHTML = `
                     <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50">
                         <div>
@@ -205,11 +215,10 @@ function panggilDataJadual(tahunFilter = "Semua") {
                         </div>
                         <div class="whitespace-nowrap ml-4">
                             <a href="${data.url_fail}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-bold mr-3">Buka</a>
-                            <button onclick="padamRekod('${id}')" class="hanya-admin hidden text-red-600 hover:text-red-800 text-sm font-bold" title="Padam">Padam</button>
+                            <button onclick="padamRekod('${data.id}')" class="hanya-admin hidden text-red-600 hover:text-red-800 text-sm font-bold" title="Padam">Padam</button>
                         </div>
                     </div>
                 `;
-                
                 if (htmlFail[folderDocs] !== undefined) {
                     htmlFail[folderDocs] += rowHTML;
                     jumlahFail[folderDocs]++;
@@ -226,7 +235,7 @@ function panggilDataJadual(tahunFilter = "Semua") {
         
         // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL) ---
         else if (ruangJadualLama) {
-            if (snapshot.empty) {
+            if (senaraiData.length === 0) {
                 ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
                 return;
             }
@@ -247,11 +256,8 @@ function panggilDataJadual(tahunFilter = "Semua") {
                     <tbody class="text-sm">
             `;
 
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const id = docSnap.id;
+            senaraiData.forEach((data) => {
                 let tarikhMasa = data.tarikh ? data.tarikh.toDate().toLocaleDateString('ms-MY') : "Baru sahaja";
-
                 htmlJadual += `
                     <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
                         <td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td>
@@ -261,7 +267,7 @@ function panggilDataJadual(tahunFilter = "Semua") {
                         <td class="p-4 text-slate-500">${tarikhMasa}</td>
                         <td class="p-4 text-right whitespace-nowrap">
                             <a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">Buka</a>
-                            <button onclick="padamRekod('${id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button>
+                            <button onclick="padamRekod('${data.id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -286,7 +292,7 @@ const tahunAwal = filterDropdownTahunAwal ? filterDropdownTahunAwal.value : "Sem
 panggilDataJadual(tahunAwal);
 
 // ==========================================
-// 7. LOGIK MUAT NAIK FAIL (PENGASINGAN FOLDER & KATEGORI)
+// 7. LOGIK MUAT NAIK FAIL
 // ==========================================
 const modalUpload = document.getElementById('modalUpload');
 const btnTutupModal = document.getElementById('btnTutupModal');
@@ -295,12 +301,11 @@ const btnSubmitUpload = document.getElementById('btnSubmitUpload');
 const txtSubmit = document.getElementById('txtSubmit');
 let folderSasaranSemasa = "fail_1"; 
 
-// Buka modal dari mana-mana butang muat naik
+// Pantau klik butang "Muat Naik" secara global
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
-    if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik'))) {
+    if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik') || btn.id === 'btnInjectUploadUtama')) {
         if (!window.userSemasa) return alert("Sila Log Masuk (DELIMa) terlebih dahulu.");
-        
         folderSasaranSemasa = btn.getAttribute('data-folder') || "umum"; 
         if (modalUpload) modalUpload.classList.remove('hidden');
     }
@@ -382,10 +387,7 @@ if (inputCarian && modalCarian) {
     inputCarian.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
             const keyword = inputCarian.value.toLowerCase();
-            if(keyword.length < 3) {
-                alert("Sila taip sekurang-kurangnya 3 huruf untuk mencari.");
-                return;
-            }
+            if(keyword.length < 3) return alert("Sila taip minimum 3 huruf.");
             
             modalCarian.classList.remove('hidden');
             ruangHasilCarian.innerHTML = '<p class="text-center text-slate-500 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3 block"></i>Sedang menapis dokumen...</p>';
@@ -399,17 +401,14 @@ if (inputCarian && modalCarian) {
 
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const tajukKecil = data.tajuk.toLowerCase();
-                    
-                    if(tajukKecil.includes(keyword)) {
+                    if(data.tajuk.toLowerCase().includes(keyword)) {
                         jumlahJumpa++;
                         hasilHTML += `
                             <tr class="border-b hover:bg-slate-50">
                                 <td class="p-3">
                                     <p class="font-bold text-slate-800 text-base">${data.tajuk}</p>
                                     <p class="text-xs text-slate-500 mt-1">
-                                        <span class="bg-slate-200 px-2 py-0.5 rounded mr-2">Folder: ${senaraiNamaPanitia[data.subjek] || data.subjek}</span> 
-                                        Tahun: ${data.tahun || 'Tiada'}
+                                        <span class="bg-slate-200 px-2 py-0.5 rounded mr-2">Folder: ${senaraiNamaPanitia[data.subjek] || data.subjek}</span> Tahun: ${data.tahun || 'Tiada'}
                                     </p>
                                 </td>
                                 <td class="p-3 text-right">
@@ -432,11 +431,7 @@ if (inputCarian && modalCarian) {
         }
     });
 
-    if (btnTutupCarian) {
-        btnTutupCarian.addEventListener('click', () => {
-            modalCarian.classList.add('hidden');
-        });
-    }
+    if (btnTutupCarian) btnTutupCarian.addEventListener('click', () => modalCarian.classList.add('hidden'));
 }
 
 // ==========================================
@@ -459,8 +454,7 @@ function sahkanHalamanAdmin() {
 
 function panggilDataArkib() {
     if (!ruangArkib) return;
-    
-    const qArkib = query(collection(db, "kandungan"), where("status", "==", "dipadam"), orderBy("tarikh", "desc"));
+    const qArkib = query(collection(db, "kandungan"), where("status", "==", "dipadam"));
     
     onSnapshot(qArkib, (snapshot) => {
         if (snapshot.empty) {
@@ -481,10 +475,11 @@ function panggilDataArkib() {
                 <tbody class="text-sm">
         `;
 
-        snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const id = docSnap.id;
+        let arkibData = [];
+        snapshot.forEach(docSnap => arkibData.push({id: docSnap.id, ...docSnap.data()}));
+        arkibData.sort((a,b) => (b.tarikh?.toMillis()||0) - (a.tarikh?.toMillis()||0));
 
+        arkibData.forEach((data) => {
             htmlArkib += `
                 <tr class="border-b border-slate-100 hover:bg-slate-50">
                     <td class="p-4">
@@ -493,34 +488,27 @@ function panggilDataArkib() {
                     </td>
                     <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
                     <td class="p-4 text-right whitespace-nowrap">
-                        <button onclick="kembalikanFail('${id}')" class="bg-emerald-100 text-emerald-700 px-3 py-2 rounded-md hover:bg-emerald-200 transition text-xs font-bold mr-2"><i class="fas fa-undo mr-1"></i>Pulihkan</button>
-                        <button onclick="padamKekalFail('${id}')" class="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition text-xs font-bold"><i class="fas fa-trash mr-1"></i>Padam Kekal</button>
+                        <button onclick="kembalikanFail('${data.id}')" class="bg-emerald-100 text-emerald-700 px-3 py-2 rounded-md hover:bg-emerald-200 transition text-xs font-bold mr-2"><i class="fas fa-undo mr-1"></i>Pulihkan</button>
+                        <button onclick="padamKekalFail('${data.id}')" class="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition text-xs font-bold"><i class="fas fa-trash mr-1"></i>Padam Kekal</button>
                     </td>
                 </tr>
             `;
         });
-
         htmlArkib += `</tbody></table></div>`;
         ruangArkib.innerHTML = htmlArkib;
     });
 }
 
 window.kembalikanFail = async function(id) {
-    if (confirm("Adakah anda pasti mahu memulihkan fail ini? Ia akan dikembalikan ke folder asalnya.")) {
-        await updateDoc(doc(db, "kandungan", id), { status: "aktif" });
-        alert("Berjaya dipulihkan.");
-    }
+    if (confirm("Adakah anda pasti mahu memulihkan fail ini?")) await updateDoc(doc(db, "kandungan", id), { status: "aktif" });
 }
 
 window.padamKekalFail = async function(id) {
-    if (confirm("AMARAN: Fail akan dipadam sepenuhnya dari pangkalan data dan tidak boleh dikembalikan. Teruskan?")) {
-        await deleteDoc(doc(db, "kandungan", id));
-        alert("Fail telah dipadam kekal.");
-    }
+    if (confirm("AMARAN: Fail akan dipadam sepenuhnya. Teruskan?")) await deleteDoc(doc(db, "kandungan", id));
 }
 
 // ==========================================
-// 10. JADUAL TRACKER PANITIA (KESELURUHAN SUBJEK & KIRAAN FAIL)
+// 10. JADUAL TRACKER PANITIA (TIDAK PERLUKAN INDEX FIRESTORE)
 // ==========================================
 async function janaTrackerPanitia(tahun) {
     const kotakTracker = document.getElementById('kotakTrackerPanitia');
@@ -529,11 +517,9 @@ async function janaTrackerPanitia(tahun) {
 
     if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
 
-    // Tentukan adakah tracker ini patut dipaparkan
     const pathName = window.location.pathname.toLowerCase();
     const isDashboardOrAdmin = pathName.endsWith('/') || pathName.endsWith('index.html') || pathName.includes('admin.html');
     
-    // Hanya tunjukkan di Dashboard Utama ('umum') atau muka surat admin
     if (!isDashboardOrAdmin || (subjekSemasa !== 'umum' && !pathName.includes('admin.html'))) {
         kotakTracker.style.display = 'none';
         return;
@@ -542,7 +528,7 @@ async function janaTrackerPanitia(tahun) {
     }
 
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
-    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Mengira jumlah fail...</td></tr>';
+    jadualTrackerPanitiaBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menyemak Pangkalan Data...</td></tr>';
 
     const senaraiSemuaPanitia = [
         { id: "bm", nama: "B. Melayu" },
@@ -560,23 +546,20 @@ async function janaTrackerPanitia(tahun) {
     ];
 
     try {
-        let queryTracker = [where("status", "==", "aktif")];
-        if (tahun !== "Semua") {
-            queryTracker.push(where("tahun", "==", tahun));
-        }
-
-        const qTracker = query(collection(db, "kandungan"), ...queryTracker);
+        // Ambil SEMUA rekod aktif dari Firestore. Kita tapis menggunakan kod Javascript (elak ralat missing composite index)
+        const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"));
         const querySnapshot = await getDocs(qTracker);
 
-        // Sediakan objek kosong untuk mengira setiap subjek
         let dataSubjek = {};
         senaraiSemuaPanitia.forEach(p => {
             dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
         });
 
-        // Masukkan data ke dalam objek mengikut subjek dan folder
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
+            // Tapis tahun di peringkat perisian (javascript)
+            if (tahun !== "Semua" && data.tahun !== tahun) return; 
+            
             const subjek = data.subjek;
             const folder = data.folder_destinasi; 
 
@@ -585,19 +568,13 @@ async function janaTrackerPanitia(tahun) {
             }
         });
 
-        // Hasilkan HTML (Tanda Tick beserta bilangan fail)
         let htmlTracker = "";
-        
         senaraiSemuaPanitia.forEach(p => {
             const kiraan = dataSubjek[p.id];
             
-            // Fungsi kecil untuk format kotak: "✅ (2)" atau "❌ (0)"
             const formatKotak = (jumlah) => {
-                if (jumlah > 0) {
-                    return `<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200"><i class="fas fa-check"></i> (${jumlah})</span>`;
-                } else {
-                    return `<span class="text-slate-400 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-times"></i> (0)</span>`;
-                }
+                if (jumlah > 0) return `<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200"><i class="fas fa-check"></i> (${jumlah})</span>`;
+                return `<span class="text-slate-400 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-times"></i> (0)</span>`;
             };
 
             const lengkapSemua = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
