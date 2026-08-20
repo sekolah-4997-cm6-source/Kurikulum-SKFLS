@@ -192,19 +192,25 @@ function panggilDataJadual(tahunFilter = "Semua") {
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         
-     // Tapis secara JS untuk elak error Firestore
+// Tapis secara JS untuk elak error Firestore
         let senaraiData = [];
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            if (data.status !== "aktif") return;
             
-            // PENYELESAIAN: Saringan tahun yang lebih fleksibel dan tepat
-           // Gantikan blok saringan tahun dengan ini:
-if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
-    const docTahun = data.tahun || "";
-    // Jika docTahun kosong (undefined), kita paparkan juga supaya fail tidak 'ghaib' tanpa dikesan
-    if (docTahun !== "" && docTahun !== tahunFilter && !docTahun.includes(tahunFilter)) return;
-}
+            // 1. Mesti status aktif
+            if (data.status !== "aktif") return;
+
+            // 2. Saringan Tahun Kebal
+            if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
+                const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
+                const filterKecil = String(tahunFilter).toLowerCase();
+                
+                // Jika fail ADA tahun, tapi langsung tak sama dengan filter, baru kita sorok.
+                // Jika fail TIADA TAHUN (kosong), kita lepaskan supaya ia tak ghaib!
+                if (docTahun !== "" && !docTahun.includes(filterKecil)) {
+                    return; 
+                }
+            }
 
             senaraiData.push({ id: docSnap.id, ...data });
         });
@@ -583,15 +589,18 @@ function janaTrackerPanitia(tahun) {
                 dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
             });
 
-          snapshot.forEach((docSnap) => {
+        snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 
-              // Gantikan blok saringan tahun dengan ini:
-if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
-    const docTahun = data.tahun || "";
-    // Jika docTahun kosong (undefined), kita paparkan juga supaya fail tidak 'ghaib' tanpa dikesan
-    if (docTahun !== "" && docTahun !== tahunFilter && !docTahun.includes(tahunFilter)) return;
-}
+                // 1. Saringan Tahun Kebal untuk Tracker
+                if (tahun && tahun.toLowerCase() !== "semua") {
+                    const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
+                    const filterKecil = String(tahun).toLowerCase();
+                    
+                    if (docTahun !== "" && !docTahun.includes(filterKecil)) {
+                        return; 
+                    }
+                }
                 
                 const subjek = data.subjek;
                 const folder = data.folder_destinasi || 'fail_1'; 
