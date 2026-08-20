@@ -60,6 +60,7 @@ onAuthStateChanged(auth, (user) => {
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
         semakStatusAdmin(user.email);
         
+        // Load Tracker jika ada di halaman tersebut
         if (document.getElementById('jadualTrackerPanitiaBody')) {
             const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
             janaTrackerPanitia(tahunSemasa);
@@ -105,6 +106,7 @@ const senaraiNamaPanitia = {
 
 const tajukPanitia = document.getElementById('tajukPanitia');
 if (tajukPanitia) {
+    // Betulkan Isu 3: Memastikan tajuk One-Stop Centre keluar jika di kawasan bukan panitia
     tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'One-Stop Centre';
 }
 
@@ -138,19 +140,7 @@ function panggilDataJadual(tahunFilter = "Semua") {
     const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
     const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
 
-    // KEMASKINI UI: Pastikan Jadual Tracker HILANG di paparan Panitia
-    const trackerTableBody = document.getElementById('jadualTrackerPanitiaBody');
-    if (trackerTableBody) {
-        // Cari container utama jadual tracker (sama ada ada ID atau menggunakan class .bg-white)
-        const trackerContainer = document.getElementById('kotakTrackerPanitia') || trackerTableBody.closest('.bg-white') || trackerTableBody.closest('table');
-        if (adakahPanitia || (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html'))) {
-            if (trackerContainer) trackerContainer.style.display = 'none';
-        } else {
-            if (trackerContainer) trackerContainer.style.display = 'block';
-        }
-    }
-
-    // Sembunyikan/Paparkan struktur HTML mengikut jenis paparan
+    // KAWALAN UI: 4 Kotak Fail vs 1 Jadual Besar
     ['ruangFail1', 'ruangFail2', 'ruangFail3', 'ruangFail4'].forEach(id => {
         const ruang = document.getElementById(id);
         if (ruang) {
@@ -165,32 +155,36 @@ function panggilDataJadual(tahunFilter = "Semua") {
             kadJadualUtama.style.display = adakahPanitia ? 'none' : 'block';
         }
         
-        if (!adakahPanitia) {
-            let injectedBtn = document.getElementById('btnInjectUploadUtama');
-            if (!injectedBtn) {
-                const btnContainer = document.createElement('div');
-                btnContainer.className = 'flex justify-end mb-4';
-                btnContainer.innerHTML = `
-                    <button id="btnInjectUploadUtama" data-folder="umum" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md font-bold flex items-center transition">
-                        <i class="fas fa-cloud-upload-alt mr-2"></i> Muat Naik Bahan
-                    </button>
-                `;
-                kadJadualUtama.parentNode.insertBefore(btnContainer, kadJadualUtama);
-            } else {
-                injectedBtn.parentElement.style.display = 'flex';
-            }
+        // KAWALAN UI: Butang Muat Naik Utama (Bukan Panitia)
+        let containerButangUtama = document.getElementById('containerUploadUtama');
+        if (!containerButangUtama) {
+            containerButangUtama = document.createElement('div');
+            containerButangUtama.id = 'containerUploadUtama';
+            containerButangUtama.className = 'flex justify-end mb-4';
+            containerButangUtama.innerHTML = `
+                <button id="btnInjectUploadUtama" data-folder="umum" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md font-bold flex items-center transition">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i> Muat Naik Bahan
+                </button>
+            `;
+            kadJadualUtama.parentNode.insertBefore(containerButangUtama, kadJadualUtama);
+        }
+
+        // Betulkan Isu 2 & 6: Papar/Sembunyi Butang Besar
+        if (adakahPanitia) {
+            containerButangUtama.style.display = 'none';
         } else {
-            let injectedBtn = document.getElementById('btnInjectUploadUtama');
-            if(injectedBtn) injectedBtn.parentElement.style.display = 'none';
+            containerButangUtama.style.display = 'flex';
         }
     }
 
+    // Ambil data subjek (Tanpa composite index)
     const q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
     
     if (unsubscribeJadual) unsubscribeJadual();
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         
+        // Tapis secara JS untuk elak error Firestore
         let senaraiData = [];
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
@@ -199,12 +193,14 @@ function panggilDataJadual(tahunFilter = "Semua") {
             senaraiData.push({ id: docSnap.id, ...data });
         });
 
+        // Susun tarikh terkini di atas
         senaraiData.sort((a, b) => {
             let tA = a.tarikh ? a.tarikh.toMillis() : 0;
             let tB = b.tarikh ? b.tarikh.toMillis() : 0;
             return tB - tA;
         });
 
+        // --- KES 1: HALAMAN PANITIA SUBJEK (4 FAIL) ---
         if (adakahPanitia && ruangFail1) {
             let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
@@ -236,6 +232,8 @@ function panggilDataJadual(tahunFilter = "Semua") {
                 }
             });
         } 
+        
+        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL) ---
         else if (ruangJadualLama) {
             if (senaraiData.length === 0) {
                 ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
@@ -279,22 +277,25 @@ function panggilDataJadual(tahunFilter = "Semua") {
             ruangJadualLama.innerHTML = htmlJadual;
         }
 
+        // Tunjuk balik butang padam kalau user tu admin
         if (window.isAdmin) document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
     });
 }
 
+// Fungsi Padam Rekod
 window.padamRekod = async function(id) {
     if (confirm("Adakah anda pasti mahu memadam fail ini?")) {
         await updateDoc(doc(db, "kandungan", id), { status: "dipadam" });
     }
 }
 
+// Trigger awal
 const filterDropdownTahunAwal = document.getElementById('filterTahun');
 const tahunAwal = filterDropdownTahunAwal ? filterDropdownTahunAwal.value : "Semua";
 panggilDataJadual(tahunAwal);
 
 // ==========================================
-// 7. LOGIK MUAT NAIK FAIL
+// 7. LOGIK MUAT NAIK FAIL (MODAL & GAS)
 // ==========================================
 const modalUpload = document.getElementById('modalUpload');
 const btnTutupModal = document.getElementById('btnTutupModal');
@@ -303,6 +304,7 @@ const btnSubmitUpload = document.getElementById('btnSubmitUpload');
 const txtSubmit = document.getElementById('txtSubmit');
 let folderSasaranSemasa = "fail_1"; 
 
+// Buka Modal
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik') || btn.id === 'btnInjectUploadUtama')) {
@@ -312,6 +314,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Tutup Modal
 if (btnTutupModal) {
     btnTutupModal.addEventListener('click', () => { 
         modalUpload.classList.add('hidden'); 
@@ -319,6 +322,7 @@ if (btnTutupModal) {
     });
 }
 
+// Submit Modal
 if (formUpload) {
     formUpload.addEventListener('submit', async (e) => {
         e.preventDefault(); 
@@ -509,21 +513,22 @@ window.padamKekalFail = async function(id) {
 }
 
 // ==========================================
-// 10. JADUAL TRACKER PANITIA (TIDAK PERLUKAN INDEX FIRESTORE)
+// 10. JADUAL TRACKER PANITIA 
 // ==========================================
 async function janaTrackerPanitia(tahun) {
     const trackerTableBody = document.getElementById('jadualTrackerPanitiaBody');
     if (!trackerTableBody) return; 
 
-    const trackerContainer = document.getElementById('kotakTrackerPanitia') || trackerTableBody.closest('.bg-white') || trackerTableBody.closest('table');
+    // Betulkan Isu 5: Pastikan kad putih tracker disorok di halaman Panitia
+    const kadTracker = trackerTableBody.closest('.bg-white') || trackerTableBody.closest('table').parentElement;
     const labelTahunTracker = document.getElementById('labelTahunTracker');
 
-    // Hentikan proses & sembunyikan tracker jika kita BUKAN di paparan 'umum' (One-Stop Centre) ATAU BUKAN di 'admin.html'
+    // Hanya papar jika URL adalah 'umum' (One-Stop Centre) atau di admin.html
     if (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html')) {
-        if (trackerContainer) trackerContainer.style.display = 'none';
+        if (kadTracker) kadTracker.style.display = 'none';
         return; 
     } else {
-        if (trackerContainer) trackerContainer.style.display = 'block';
+        if (kadTracker) kadTracker.style.display = 'block';
     }
 
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
@@ -545,6 +550,7 @@ async function janaTrackerPanitia(tahun) {
     ];
 
     try {
+        // Betulkan Isu 4: Ambil semua fail tanpa penapis tahun dari DB, kemudian filter pakai JS
         const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"));
         const querySnapshot = await getDocs(qTracker);
 
@@ -555,7 +561,7 @@ async function janaTrackerPanitia(tahun) {
 
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            if (tahun !== "Semua" && data.tahun !== tahun) return; 
+            if (tahun !== "Semua" && data.tahun !== tahun) return; // Tapis tahun di sini
             
             const subjek = data.subjek;
             const folder = data.folder_destinasi; 
