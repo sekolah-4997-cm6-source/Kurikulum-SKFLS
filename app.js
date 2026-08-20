@@ -523,11 +523,12 @@ window.padamKekalFail = async function(id) {
 // ==========================================
 // 10. JADUAL TRACKER PANITIA 
 // ==========================================
-async function janaTrackerPanitia(tahun) {
+let unsubscribeTracker = null; // Tambahan untuk live-update!
+
+function janaTrackerPanitia(tahun) {
     const trackerTableBody = document.getElementById('jadualTrackerBody');
     if (!trackerTableBody) return; 
 
-    // Sasaran agresif: Kita cari jadual itu sendiri dan semua pembalutnya
     const jadualTracker = trackerTableBody.closest('table');
     const pembalutJadual = jadualTracker ? jadualTracker.parentElement : null;
     const kadPutih = trackerTableBody.closest('.bg-white');
@@ -539,7 +540,7 @@ async function janaTrackerPanitia(tahun) {
         if (kadPutih) kadPutih.style.display = 'none';
         if (pembalutJadual) pembalutJadual.style.display = 'none';
         if (jadualTracker) jadualTracker.style.display = 'none';
-        return; // Hentikan fungsi supaya ia tak panggil data
+        return; 
     } else {
         // LOGIK PAPAR: Jika di One-Stop Centre atau Admin
         if (kotakUtama) kotakUtama.style.display = 'block';
@@ -553,68 +554,70 @@ async function janaTrackerPanitia(tahun) {
     trackerTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menyemak Pangkalan Data...</td></tr>';
 
     const senaraiSemuaPanitia = [
-        { id: "bm", nama: "B. Melayu" },
-        { id: "bi", nama: "B. Inggeris" },
-        { id: "mt", nama: "Matematik" },
-        { id: "sn", nama: "Sains" },
-        { id: "pi", nama: "Pendidikan Islam" },
-        { id: "pm", nama: "Pendidikan Moral" },
-        { id: "sej", nama: "Sejarah" },
-        { id: "rbt", nama: "RBT" },
-        { id: "psv", nama: "Pend. Seni Visual" },
-        { id: "mz", nama: "Pend. Muzik" },
-        { id: "pjpk", nama: "PJPK" },
-        { id: "ba", nama: "B. Arab" }
+        { id: "bm", nama: "B. Melayu" }, { id: "bi", nama: "B. Inggeris" },
+        { id: "mt", nama: "Matematik" }, { id: "sn", nama: "Sains" },
+        { id: "pi", nama: "Pendidikan Islam" }, { id: "pm", nama: "Pendidikan Moral" },
+        { id: "sej", nama: "Sejarah" }, { id: "rbt", nama: "RBT" },
+        { id: "psv", nama: "Pend. Seni Visual" }, { id: "mz", nama: "Pend. Muzik" },
+        { id: "pjpk", nama: "PJPK" }, { id: "ba", nama: "B. Arab" }
     ];
 
     try {
         const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"));
-        const querySnapshot = await getDocs(qTracker);
+        
+        // Hentikan carian lama jika pengguna tukar-tukar filter tahun
+        if (unsubscribeTracker) unsubscribeTracker();
 
-        let dataSubjek = {};
-        senaraiSemuaPanitia.forEach(p => {
-            dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
+        // Guna onSnapshot supaya jadual ini bertukar live secara automatik
+        unsubscribeTracker = onSnapshot(qTracker, (snapshot) => {
+            let dataSubjek = {};
+            senaraiSemuaPanitia.forEach(p => {
+                dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
+            });
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const docTahun = data.tahun || "";
+                
+                // Semak tahun (Termasuk jika ejaan tahun jenis '2026/2027')
+                if (tahun !== "Semua" && docTahun !== tahun && !docTahun.includes(tahun)) return; 
+                
+                const subjek = data.subjek;
+                const folder = data.folder_destinasi || 'fail_1'; // Fallback selamat
+
+                if (dataSubjek[subjek] && dataSubjek[subjek][folder] !== undefined) {
+                    dataSubjek[subjek][folder]++;
+                }
+            });
+
+            let htmlTracker = "";
+            senaraiSemuaPanitia.forEach(p => {
+                const kiraan = dataSubjek[p.id];
+                
+                const formatKotak = (jumlah) => {
+                    if (jumlah > 0) return `<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200"><i class="fas fa-check"></i> (${jumlah})</span>`;
+                    return `<span class="text-slate-400 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-times"></i> (0)</span>`;
+                };
+
+                const lengkapSemua = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
+                const statusLengkap = lengkapSemua 
+                    ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Lengkap</span>' 
+                    : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Belum Lengkap</span>';
+
+                htmlTracker += `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
+                        <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${p.nama}</td>
+                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_1)}</td>
+                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_2)}</td>
+                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_3)}</td>
+                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_4)}</td>
+                        <td class="p-3 text-center">${statusLengkap}</td>
+                    </tr>
+                `;
+            });
+
+            trackerTableBody.innerHTML = htmlTracker;
         });
-
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if (tahun !== "Semua" && data.tahun !== tahun) return; 
-            
-            const subjek = data.subjek;
-            const folder = data.folder_destinasi; 
-
-            if (dataSubjek[subjek] && dataSubjek[subjek][folder] !== undefined) {
-                dataSubjek[subjek][folder]++;
-            }
-        });
-
-        let htmlTracker = "";
-        senaraiSemuaPanitia.forEach(p => {
-            const kiraan = dataSubjek[p.id];
-            
-            const formatKotak = (jumlah) => {
-                if (jumlah > 0) return `<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200"><i class="fas fa-check"></i> (${jumlah})</span>`;
-                return `<span class="text-slate-400 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-times"></i> (0)</span>`;
-            };
-
-            const lengkapSemua = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
-            const statusLengkap = lengkapSemua 
-                ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Lengkap</span>' 
-                : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Belum Lengkap</span>';
-
-            htmlTracker += `
-                <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
-                    <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${p.nama}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_1)}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_2)}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_3)}</td>
-                    <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_4)}</td>
-                    <td class="p-3 text-center">${statusLengkap}</td>
-                </tr>
-            `;
-        });
-
-        trackerTableBody.innerHTML = htmlTracker;
 
     } catch (error) {
         console.error("Ralat Tracker Panitia:", error);
