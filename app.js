@@ -106,8 +106,16 @@ const senaraiNamaPanitia = {
 
 const tajukPanitia = document.getElementById('tajukPanitia');
 if (tajukPanitia) {
-    // Betulkan Isu 3: Memastikan tajuk One-Stop Centre keluar jika di kawasan bukan panitia
-    tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'One-Stop Centre';
+    // Tukar teks tajuk mengikut URL
+    tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'Senarai Dokumen';
+    
+    // TAMBAHAN: Paksa tajuk dan kotak di sekelilingnya dipaparkan (buang fungsi hide jika ada)
+    tajukPanitia.style.display = 'block';
+    
+    // Jika tajuk ini berada dalam satu <div> besar (container), paksa div itu keluar juga
+    if(tajukPanitia.parentElement) {
+        tajukPanitia.parentElement.style.display = 'block';
+    }
 }
 
 // ==========================================
