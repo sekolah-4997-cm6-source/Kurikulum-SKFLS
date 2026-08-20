@@ -348,12 +348,17 @@ if (btnTutupModal) {
 if (formUpload) {
     formUpload.addEventListener('submit', async (e) => {
         e.preventDefault(); 
+        
         const file = document.getElementById('inputFail').files[0];
         const tajuk = document.getElementById('inputTajuk').value;
         const tahunDipilih = document.getElementById('inputTahun').value;
         const user = auth.currentUser;
 
+        // KITA DAH BUANG BARIS 'inputKategori' DI SINI
+
         if (!file || !user) return;
+        // KITA DAH BUANG SEMAKAN '!kategori' DI SINI
+        
         if (file.size > (15 * 1024 * 1024)) return alert("Saiz fail melebihi 15MB.");
 
         try {
@@ -373,10 +378,11 @@ if (formUpload) {
                 });
                 const hasilGAS = await responsGAS.json();
 
+                // Kita guna perlindungan "URL" seperti yang dibincangkan sebelum ini
                 if (hasilGAS.status === 'success' || hasilGAS.url) {
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
-                        kategori: folderSasaranSemasa,
+                        kategori: folderSasaranSemasa, // Automatik set ikut butang yang ditekan
                         subjek: subjekSemasa, 
                         folder_destinasi: folderSasaranSemasa, 
                         url_fail: hasilGAS.url,
@@ -389,7 +395,10 @@ if (formUpload) {
                     alert("Berjaya dimuat naik!");
                     modalUpload.classList.add('hidden');
                     formUpload.reset();
+                } else {
+                    alert("Gagal memuat naik fail ke Google Drive.");
                 }
+                
                 btnSubmitUpload.disabled = false;
                 txtSubmit.innerHTML = 'Muat Naik Sekarang';
             };
@@ -399,7 +408,6 @@ if (formUpload) {
         }
     });
 }
-
 // ==========================================
 // 8. LOGIK CARIAN GLOBAL
 // ==========================================
