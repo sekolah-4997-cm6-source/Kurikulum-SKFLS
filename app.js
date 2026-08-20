@@ -199,10 +199,12 @@ function panggilDataJadual(tahunFilter = "Semua") {
             if (data.status !== "aktif") return;
             
             // PENYELESAIAN: Saringan tahun yang lebih fleksibel dan tepat
-            if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
-                const docTahun = data.tahun || "";
-                if (docTahun !== tahunFilter && !docTahun.includes(tahunFilter)) return;
-            }
+           // Gantikan blok saringan tahun dengan ini:
+if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
+    const docTahun = data.tahun || "";
+    // Jika docTahun kosong (undefined), kita paparkan juga supaya fail tidak 'ghaib' tanpa dikesan
+    if (docTahun !== "" && docTahun !== tahunFilter && !docTahun.includes(tahunFilter)) return;
+}
 
             senaraiData.push({ id: docSnap.id, ...data });
         });
@@ -584,11 +586,12 @@ function janaTrackerPanitia(tahun) {
           snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 
-                // PENYELESAIAN: Saringan tracker yang sepadan dengan paparan
-                if (tahun && tahun.toLowerCase() !== "semua") {
-                    const docTahun = data.tahun || "";
-                    if (docTahun !== tahun && !docTahun.includes(tahun)) return;
-                }
+              // Gantikan blok saringan tahun dengan ini:
+if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
+    const docTahun = data.tahun || "";
+    // Jika docTahun kosong (undefined), kita paparkan juga supaya fail tidak 'ghaib' tanpa dikesan
+    if (docTahun !== "" && docTahun !== tahunFilter && !docTahun.includes(tahunFilter)) return;
+}
                 
                 const subjek = data.subjek;
                 const folder = data.folder_destinasi || 'fail_1'; 
