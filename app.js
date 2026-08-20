@@ -148,22 +148,12 @@ function panggilDataJadual(tahunFilter = "Semua") {
     const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
     const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
 
-  // KAWALAN UI: 4 Kotak Fail vs 1 Jadual Besar
+// KAWALAN UI: 4 Kotak Fail vs 1 Jadual Besar
     ['ruangFail1', 'ruangFail2', 'ruangFail3', 'ruangFail4'].forEach(id => {
         const ruang = document.getElementById(id);
-        if (ruang) {
-            const kadUtama = ruang.closest('.bg-white');
-            
-            // PENYELESAIAN: Semak jika kad putih ini memegang tajuk besar.
-            // Jika ada tajuk, JANGAN sembunyikan kad utama. Sembunyikan pembalut kotak fail sahaja.
-            if (kadUtama && kadUtama.querySelector('#tajukPanitia')) {
-                const kotakFail = ruang.parentElement.parentElement;
-                if (kotakFail) kotakFail.style.display = adakahPanitia ? 'block' : 'none';
-            } else {
-                // Jika kad ini tiada tajuk (kad berasingan), boleh sembunyikan seperti biasa
-                if (kadUtama) kadUtama.style.display = adakahPanitia ? 'block' : 'none';
-                else if (ruang.parentElement.parentElement) ruang.parentElement.parentElement.style.display = adakahPanitia ? 'block' : 'none';
-            }
+        if (ruang && ruang.parentElement) {
+            // Hanya sembunyikan kotak 'mb-8' yang membalut Fail ini sahaja, jangan usik tajuk!
+            ruang.parentElement.style.display = adakahPanitia ? 'block' : 'none';
         }
     });
 
