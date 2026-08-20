@@ -20,9 +20,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({
-    hd: "moe-dl.edu.my"
-});
+provider.setCustomParameters({ hd: "moe-dl.edu.my" });
 const db = getFirestore(app);
 
 window.isAdmin = false;
@@ -80,10 +78,7 @@ if (btnLogin) {
         if (window.userSemasa) {
             signOut(auth).then(() => alert("Anda telah log keluar dengan berjaya.")).catch((error) => console.error("Ralat log keluar:", error));
         } else {
-            signInWithPopup(auth, provider).catch((error) => {
-                console.error("Ralat log masuk:", error);
-                alert("Gagal log masuk: " + error.message);
-            });
+            signInWithPopup(auth, provider).catch((error) => alert("Gagal log masuk: " + error.message));
         }
     });
 }
@@ -128,11 +123,10 @@ if (btnMenu && sidebar && overlay) {
 }
 
 // ==========================================
-// 6 & BAHAGIAN B: BACA & PAPARKAN JADUAL BERSERTA PENAPISAN (FILTER) TAHUN
+// 6. BACA & PAPARKAN JADUAL BERSERTA PENAPISAN (FILTER) TAHUN
 // ==========================================
 let unsubscribeJadual = null;
 
-// Kita tambah parameter "tahunFilter" supaya jadual boleh ditapis
 function panggilDataJadual(tahunFilter = "Semua") {
     const ruangJadualLama = document.getElementById('ruangJadual'); 
     const ruangFail1 = document.getElementById('ruangFail1');       
@@ -140,20 +134,28 @@ function panggilDataJadual(tahunFilter = "Semua") {
     const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
     const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
 
-    // Asas query
+    // KEMASKINI UI: Sembunyikan 4 fail untuk bukan Panitia, dan sebaliknya
+    ['ruangFail1', 'ruangFail2', 'ruangFail3', 'ruangFail4'].forEach(id => {
+        const ruang = document.getElementById(id);
+        if (ruang) {
+            // Mencari div kad utama (parent) yang membalut ruang fail ini
+            const kadUtama = ruang.closest('.bg-white') || ruang.parentElement.parentElement;
+            if (kadUtama) {
+                kadUtama.style.display = adakahPanitia ? 'block' : 'none';
+            }
+        }
+    });
+
     let syarat = [
         where("subjek", "==", subjekSemasa),
         where("status", "==", "aktif")
     ];
 
-    // BAHAGIAN B: Jika Tahun dipilih bukan "Semua", kita tapis ikut Tahun
     if (tahunFilter !== "Semua") {
         syarat.push(where("tahun", "==", tahunFilter));
     }
     
-    // Susun jadual mengikut tarikh terkini
     syarat.push(orderBy("tarikh", "desc"));
-
     const q = query(collection(db, "kandungan"), ...syarat);
     
     if (unsubscribeJadual) unsubscribeJadual();
@@ -193,9 +195,8 @@ function panggilDataJadual(tahunFilter = "Semua") {
             ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
                 const ruang = document.getElementById(`ruangFail${index + 1}`);
                 if (ruang) {
-                    ruang.innerHTML = jumlahFail[f] > 0 
-                        ? htmlFail[f] 
-                        : `<p class="text-center text-slate-400 py-4 text-xs">Tiada dokumen untuk tahun ${tahunFilter !== 'Semua' ? tahunFilter : 'ini'}.</p>`;
+                    // KEMASKINI: Dikosongkan jika tiada fail (tiada mesej "Belum ada bahan")
+                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : '';
                 }
             });
         } 
@@ -257,7 +258,6 @@ window.padamRekod = async function(id) {
     }
 }
 
-// Panggil jadual kali pertama dengan penapis default (jika ada dropdown filter di UI)
 const filterDropdownTahunAwal = document.getElementById('filterTahun');
 const tahunAwal = filterDropdownTahunAwal ? filterDropdownTahunAwal.value : "Semua";
 panggilDataJadual(tahunAwal);
@@ -547,6 +547,14 @@ async function janaTrackerPanitia(tahun) {
 
     if (!jadualTrackerPanitiaBody || !kotakTracker) return; 
 
+    // KEMASKINI: Sembunyikan Tracker Jika Bukan di Dashboard/Admin
+    const pathName = window.location.pathname.toLowerCase();
+    const isDashboardOrAdmin = pathName.endsWith('/') || pathName.endsWith('index.html') || pathName.includes('admin.html');
+    if (!isDashboardOrAdmin) {
+        kotakTracker.style.display = 'none';
+        return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const subjekSemasaSistem = urlParams.get('subjek');
     
@@ -578,7 +586,6 @@ async function janaTrackerPanitia(tahun) {
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
 
     try {
-        // Query untuk Tracker (mesti ikut pilihan Tahun)
         let queryTracker = [
             where("status", "==", "aktif"),
             where("subjek", "==", subjekSemasaSistem)
@@ -648,10 +655,7 @@ onAuthStateChanged(auth, (user) => {
 const filterTahunSistem = document.getElementById('filterTahun');
 if (filterTahunSistem) {
     filterTahunSistem.addEventListener('change', (e) => {
-        // Apabila cikgu tukar tahun, 2 benda akan berubah: 
-        // 1. Tracker akan diKira Semula
         janaTrackerPanitia(e.target.value);
-        // 2. (BAHAGIAN B) Jadual di bawah juga akan menapis ikut tahun tersebut!
         panggilDataJadual(e.target.value);
     });
 }
