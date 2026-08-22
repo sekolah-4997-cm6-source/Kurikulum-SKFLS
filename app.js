@@ -138,12 +138,11 @@ if (btnMenu && sidebar && overlay) {
 // BAHAGIAN 6: PAPARAN JADUAL & FAIL (REAL-TIME LISTENER)
 // =========================================================================
 function muatJadual() {
-    // 1. Kenal pasti jika subjek semasa adalah Panitia atau Bukan Panitia
     const adakahPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'].includes(subjekSemasa);
     
-    // 2. KAWALAN PAPARAN HTML (Sembunyi/Tunjuk kotak yang betul)
     const ruangKhasPanitia = document.getElementById('ruangKhasPanitia');
     const ruangKhasBukanPanitia = document.getElementById('ruangKhasBukanPanitia');
+    const ruangStatusMini = document.getElementById('ruangStatusMini'); // <-- ID BARU KITA
 
     if (ruangKhasPanitia && ruangKhasBukanPanitia) {
         if (adakahPanitia) {
@@ -155,11 +154,9 @@ function muatJadual() {
         }
     }
 
-    // 3. Persediaan ambil ID tempat letak fail
     const ruangFail1 = document.getElementById('ruangFail1');
     const ruangJadual = document.getElementById('ruangJadual'); 
 
-    // 4. Mula panggil data dari Firebase
     let q;
     if (subjekSemasa && subjekSemasa !== "umum") {
         q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
@@ -167,49 +164,38 @@ function muatJadual() {
         q = query(collection(db, "kandungan"));
     }
 
-    if (unsubscribeJadual) {
-        unsubscribeJadual();
-    }
+    if (unsubscribeJadual) unsubscribeJadual();
 
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         let senaraiData = [];
         
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            
             if (data.status !== "aktif") return;
 
-            // Logik Penapis Tahun
             if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
                 const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
                 const filterKecil = String(tahunFilter).toLowerCase();
-                
-                if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) {
-                    return; 
-                }
+                if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) return; 
             }
-
             senaraiData.push({ id: docSnap.id, ...data });
         });
 
-        // Susun dari terkini ke paling lama
         senaraiData.sort((a, b) => {
             let tA = (a.tarikh && typeof a.tarikh.toMillis === 'function') ? a.tarikh.toMillis() : 0;
             let tB = (b.tarikh && typeof b.tarikh.toMillis === 'function') ? b.tarikh.toMillis() : 0;
             return tB - tA;
         });
 
-        // --- KES 1: HALAMAN PANITIA SUBJEK (PAPARAN 4 FAIL) ---
+        // --- KES 1: HALAMAN PANITIA SUBJEK ---
         if (adakahPanitia && ruangFail1) {
             let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
             senaraiData.forEach((data) => {
                 let folderDocs = data.folder_destinasi;
-                if (!['fail_1', 'fail_2', 'fail_3', 'fail_4'].includes(folderDocs)) {
-                    folderDocs = 'fail_1'; 
-                }
-
+                if (!['fail_1', 'fail_2', 'fail_3', 'fail_4'].includes(folderDocs)) folderDocs = 'fail_1'; 
+                
                 let rowHTML = `
                     <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50 transition-colors">
                         <div>
@@ -234,55 +220,79 @@ function muatJadual() {
                         : '<p class="text-slate-400 text-sm py-2 italic">Belum ada bahan.</p>';
                 }
             });
+
+            // KEMAS KINI STATUS MINI PANITIA
+            if (ruangStatusMini) {
+                const formatBadge = (nama, jumlah) => jumlah > 0 
+                    ? `<span class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 text-sm font-bold shadow-sm"><i class="fas fa-check mr-1"></i>${nama}: ${jumlah}</span>`
+                    : `<span class="bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200 text-sm"><i class="fas fa-times mr-1"></i>${nama}: 0</span>`;
+                
+                ruangStatusMini.innerHTML = `
+                    ${formatBadge('Fail 1', jumlahFail.fail_1)}
+                    ${formatBadge('Fail 2', jumlahFail.fail_2)}
+                    ${formatBadge('Fail 3', jumlahFail.fail_3)}
+                    ${formatBadge('Fail 4', jumlahFail.fail_4)}
+                `;
+            }
         } 
-        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL SAHAJA) ---
+        // --- KES 2: BUKAN PANITIA ---
         else if (!adakahPanitia && ruangJadual) {
             if (senaraiData.length === 0) {
                 ruangJadual.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
-                return;
+                
+                // KEMAS KINI STATUS MINI (KOSONG)
+                if (ruangStatusMini) {
+                    ruangStatusMini.innerHTML = `<span class="bg-slate-50 text-slate-500 px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium"><i class="fas fa-times-circle mr-2"></i>Belum Ada Fail</span>`;
+                }
+            } else {
+                let htmlJadual = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                                <th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th>
+                                <th class="p-4 font-medium hidden md:table-cell">Tahun</th>
+                                <th class="p-4 font-medium hidden md:table-cell">Oleh</th>
+                                <th class="p-4 font-medium">Tarikh</th>
+                                <th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">`;
+
+                senaraiData.forEach((data) => {
+                    let tarikhMasa = (data.tarikh && typeof data.tarikh.toDate === 'function') 
+                        ? data.tarikh.toDate().toLocaleDateString('ms-MY') 
+                        : "Baru sahaja";
+                        
+                    htmlJadual += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                            <td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td>
+                            <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada'}</span></td>
+                            <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
+                            <td class="p-4 text-slate-500">${tarikhMasa}</td>
+                            <td class="p-4 text-right whitespace-nowrap">
+                                <a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">Buka</a>
+                                <button onclick="padamRekod('${data.id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                });
+                htmlJadual += `</tbody></table></div>`;
+                ruangJadual.innerHTML = htmlJadual;
+
+                // KEMAS KINI STATUS MINI BUKAN PANITIA
+                if (ruangStatusMini) {
+                    ruangStatusMini.innerHTML = `<span class="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-200 text-sm font-bold shadow-sm"><i class="fas fa-check-circle mr-2"></i>Telah Dimuat Naik: ${senaraiData.length} Fail</span>`;
+                }
             }
-
-            let htmlJadual = `
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                            <th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th>
-                            <th class="p-4 font-medium hidden md:table-cell">Tahun</th>
-                            <th class="p-4 font-medium hidden md:table-cell">Oleh</th>
-                            <th class="p-4 font-medium">Tarikh</th>
-                            <th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm">`;
-
-            senaraiData.forEach((data) => {
-                let tarikhMasa = (data.tarikh && typeof data.tarikh.toDate === 'function') 
-                    ? data.tarikh.toDate().toLocaleDateString('ms-MY') 
-                    : "Baru sahaja";
-                    
-                htmlJadual += `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                        <td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td>
-                        <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada'}</span></td>
-                        <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
-                        <td class="p-4 text-slate-500">${tarikhMasa}</td>
-                        <td class="p-4 text-right whitespace-nowrap">
-                            <a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">Buka</a>
-                            <button onclick="padamRekod('${data.id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>`;
-            });
-            htmlJadual += `</tbody></table></div>`;
-            ruangJadual.innerHTML = htmlJadual;
         }
 
-        // Tunjukkan semula butang 'Padam' untuk Admin jika perlu
         if (window.isAdmin) {
             document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
         }
     });
 }
+
+
 // ==========================================
 // 7. LOGIK MUAT NAIK FAIL (MODAL & GAS)
 // ==========================================
