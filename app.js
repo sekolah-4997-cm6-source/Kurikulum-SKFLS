@@ -138,10 +138,28 @@ if (btnMenu && sidebar && overlay) {
 // BAHAGIAN 6: PAPARAN JADUAL & FAIL (REAL-TIME LISTENER)
 // =========================================================================
 function muatJadual() {
+    // 1. Kenal pasti jika subjek semasa adalah Panitia atau Bukan Panitia
     const adakahPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'].includes(subjekSemasa);
-    const ruangFail1 = document.getElementById('ruangFail1');
-    const ruangJadualLama = document.getElementById('ruangJadualLama') || document.getElementById('ruangJadualUtama');
+    
+    // 2. KAWALAN PAPARAN HTML (Sembunyi/Tunjuk kotak yang betul)
+    const ruangKhasPanitia = document.getElementById('ruangKhasPanitia');
+    const ruangKhasBukanPanitia = document.getElementById('ruangKhasBukanPanitia');
 
+    if (ruangKhasPanitia && ruangKhasBukanPanitia) {
+        if (adakahPanitia) {
+            ruangKhasPanitia.classList.remove('hidden');
+            ruangKhasBukanPanitia.classList.add('hidden');
+        } else {
+            ruangKhasPanitia.classList.add('hidden');
+            ruangKhasBukanPanitia.classList.remove('hidden');
+        }
+    }
+
+    // 3. Persediaan ambil ID tempat letak fail
+    const ruangFail1 = document.getElementById('ruangFail1');
+    const ruangJadual = document.getElementById('ruangJadual'); 
+
+    // 4. Mula panggil data dari Firebase
     let q;
     if (subjekSemasa && subjekSemasa !== "umum") {
         q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
@@ -161,6 +179,7 @@ function muatJadual() {
             
             if (data.status !== "aktif") return;
 
+            // Logik Penapis Tahun
             if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
                 const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
                 const filterKecil = String(tahunFilter).toLowerCase();
@@ -173,6 +192,7 @@ function muatJadual() {
             senaraiData.push({ id: docSnap.id, ...data });
         });
 
+        // Susun dari terkini ke paling lama
         senaraiData.sort((a, b) => {
             let tA = (a.tarikh && typeof a.tarikh.toMillis === 'function') ? a.tarikh.toMillis() : 0;
             let tB = (b.tarikh && typeof b.tarikh.toMillis === 'function') ? b.tarikh.toMillis() : 0;
@@ -185,7 +205,6 @@ function muatJadual() {
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
             senaraiData.forEach((data) => {
-                // PAKSA Folder menjadi selamat
                 let folderDocs = data.folder_destinasi;
                 if (!['fail_1', 'fail_2', 'fail_3', 'fail_4'].includes(folderDocs)) {
                     folderDocs = 'fail_1'; 
@@ -216,10 +235,10 @@ function muatJadual() {
                 }
             });
         } 
-        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL / HALAMAN UTAMA) ---
-        else if (ruangJadualLama) {
+        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL SAHAJA) ---
+        else if (!adakahPanitia && ruangJadual) {
             if (senaraiData.length === 0) {
-                ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
+                ruangJadual.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
                 return;
             }
 
@@ -255,15 +274,15 @@ function muatJadual() {
                     </tr>`;
             });
             htmlJadual += `</tbody></table></div>`;
-            ruangJadualLama.innerHTML = htmlJadual;
+            ruangJadual.innerHTML = htmlJadual;
         }
 
+        // Tunjukkan semula butang 'Padam' untuk Admin jika perlu
         if (window.isAdmin) {
             document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
         }
     });
 }
-
 // ==========================================
 // 7. LOGIK MUAT NAIK FAIL (MODAL & GAS)
 // ==========================================
