@@ -32,10 +32,11 @@
             <a href="index.html" class="flex items-center space-x-3 p-2 bg-blue-600 rounded-lg text-white transition mb-4">
                 <i class="fas fa-home w-5 text-center"></i> <span class="text-sm font-medium">Dashboard Utama</span>
             </a>
-<p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-2 hanya-admin hidden">Pengurusan Sistem</p>
-<a href="admin.html" class="hanya-admin hidden flex items-center space-x-3 p-2 text-amber-300 hover:bg-slate-800 rounded-lg transition mb-4">
-    <i class="fas fa-cogs w-5 text-center"></i> <span class="text-sm font-medium">Admin Console</span>
-</a>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-2 hanya-admin hidden">Pengurusan Sistem</p>
+            <a href="admin.html" class="hanya-admin hidden flex items-center space-x-3 p-2 text-amber-300 hover:bg-slate-800 rounded-lg transition mb-4">
+                <i class="fas fa-cogs w-5 text-center"></i> <span class="text-sm font-medium">Admin Console</span>
+            </a>
+
             <!-- 1. Maklumat Induk Kurikulum -->
             <div class="pt-2 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">1. Maklumat Induk</p></div>
             <a href="panitia.html?subjek=visi_misi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-bullseye w-5 text-center"></i> <span>Visi & Misi</span></a>
@@ -126,86 +127,86 @@
                     </div>
                 </div>
 
-                <!-- SEKSYEN 2: CHECKLIST TRACKER UI -->
+                <!-- SEKSYEN 2: CHECKLIST TRACKER UI PANITIA -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-indigo-50 border-b border-indigo-100 p-5">
-                        <h2 class="text-lg font-bold text-indigo-800"><i class="fas fa-tasks mr-2"></i>Checklist Tracker Fail Panitia (2026)</h2>
+                        <h2 class="text-lg font-bold text-indigo-800"><i class="fas fa-tasks mr-2"></i>Checklist Tracker Fail Panitia (<span id="labelTahunTracker">2026</span>)</h2>
                         <p class="text-sm text-indigo-600 mt-1">Pemantauan fail-fail yang diwajibkan ada bagi setiap Panitia mengikut tahun semasa.</p>
                     </div>
                     
                     <div class="p-6 overflow-x-auto">
-                       <!-- Dalam fail admin.html -->
-<table class="min-w-full bg-white text-sm">
-    <thead class="bg-gray-100 border-b">
-        <tr>
-            <th class="px-4 py-3 text-left font-semibold text-gray-700">Subjek Panitia</th>
-            <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 1</th>
-            <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 2</th>
-            <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 3</th>
-            <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 4</th>
-        </tr>
-    </thead>
-    <tbody id="jadualTrackerBody">
-        <!-- Akan diisi oleh JS -->
-    </tbody>
-</table>
+                        <table class="min-w-full bg-white text-sm">
+                            <thead class="bg-gray-100 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold text-gray-700">Subjek Panitia</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 1</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 2</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 3</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 4</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jadualTrackerBody">
+                                <!-- Akan diisi oleh JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-            </div>
+                <!-- SEKSYEN 3: KAWASAN TRACKER BUKAN PANITIA -->
+                <div class="mt-10 mb-4">
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 border-b pb-2"><i class="fas fa-clipboard-check text-blue-500 mr-2"></i>Tracker Pengurusan (Bukan Panitia)</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    
+                    <!-- Table Maklumat Induk -->
+                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 flex justify-between items-center">
+                            <h4 class="font-bold text-blue-800"><i class="fas fa-sitemap mr-2"></i>1. Maklumat Induk</h4>
+                        </div>
+                        <table class="w-full text-sm">
+                            <tbody id="trackerMaklumatInduk" class="divide-y divide-slate-100">
+                                <!-- Data akan dimasukkan oleh app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Table Mesyuarat & Masa -->
+                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-amber-50 px-4 py-3 border-b border-amber-100 flex justify-between items-center">
+                            <h4 class="font-bold text-amber-800"><i class="fas fa-users mr-2"></i>2. Mesyuarat & Masa</h4>
+                        </div>
+                        <table class="w-full text-sm">
+                            <tbody id="trackerMesyuarat" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Table Program & Intervensi -->
+                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex justify-between items-center">
+                            <h4 class="font-bold text-emerald-800"><i class="fas fa-chart-line mr-2"></i>4. Program & Intervensi</h4>
+                        </div>
+                        <table class="w-full text-sm">
+                            <tbody id="trackerProgram" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Table Sokongan & Awal -->
+                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                        <div class="bg-purple-50 px-4 py-3 border-b border-purple-100 flex justify-between items-center">
+                            <h4 class="font-bold text-purple-800"><i class="fas fa-hands-helping mr-2"></i>5. Sokongan & Awal</h4>
+                        </div>
+                        <table class="w-full text-sm">
+                            <tbody id="trackerSokongan" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div> <!-- Penutup max-w-6xl -->
         </main>
     </div>
-
-    <!-- KAWASAN TRACKER BUKAN PANITIA -->
-<div class="mt-10 mb-4">
-    <h3 class="text-lg md:text-xl font-bold text-slate-800 border-b pb-2"><i class="fas fa-clipboard-check text-blue-500 mr-2"></i>Tracker Pengurusan (Bukan Panitia)</h3>
-</div>
-
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    
-    <!-- Table Maklumat Induk -->
-    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-        <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 flex justify-between items-center">
-            <h4 class="font-bold text-blue-800"><i class="fas fa-sitemap mr-2"></i>1. Maklumat Induk</h4>
-        </div>
-        <table class="w-full text-sm">
-            <tbody id="trackerMaklumatInduk" class="divide-y divide-slate-100">
-                <!-- Data akan dimasukkan oleh app.js -->
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Table Mesyuarat & Masa -->
-    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-        <div class="bg-amber-50 px-4 py-3 border-b border-amber-100 flex justify-between items-center">
-            <h4 class="font-bold text-amber-800"><i class="fas fa-users mr-2"></i>2. Mesyuarat & Masa</h4>
-        </div>
-        <table class="w-full text-sm">
-            <tbody id="trackerMesyuarat" class="divide-y divide-slate-100"></tbody>
-        </table>
-    </div>
-
-    <!-- Table Program & Intervensi -->
-    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-        <div class="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex justify-between items-center">
-            <h4 class="font-bold text-emerald-800"><i class="fas fa-chart-line mr-2"></i>4. Program & Intervensi</h4>
-        </div>
-        <table class="w-full text-sm">
-            <tbody id="trackerProgram" class="divide-y divide-slate-100"></tbody>
-        </table>
-    </div>
-
-    <!-- Table Sokongan & Awal -->
-    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-        <div class="bg-purple-50 px-4 py-3 border-b border-purple-100 flex justify-between items-center">
-            <h4 class="font-bold text-purple-800"><i class="fas fa-hands-helping mr-2"></i>5. Sokongan & Awal</h4>
-        </div>
-        <table class="w-full text-sm">
-            <tbody id="trackerSokongan" class="divide-y divide-slate-100"></tbody>
-        </table>
-    </div>
-
-</div>
     
     <!-- MODAL CARIAN GLOBAL -->
     <div id="modalCarian" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-start justify-center pt-20">
