@@ -23,8 +23,11 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ hd: "moe-dl.edu.my" });
 const db = getFirestore(app);
 
+// PEMBOLEHUBAH GLOBAL PENTING (DITAMBAH UNTUK ELAK RALAT)
 window.isAdmin = false;
 window.userSemasa = null;
+let tahunFilter = "Semua"; // Nilai lalai filter tahun
+let unsubscribeJadual = null; // Pemegang snapshot jadual utama
 
 // ==========================================
 // 3. LOGIK LOG MASUK (GOOGLE AUTH) & PANGKAT ADMIN
@@ -106,13 +109,9 @@ const senaraiNamaPanitia = {
 
 const tajukPanitia = document.getElementById('tajukPanitia');
 if (tajukPanitia) {
-    // Tukar teks tajuk mengikut URL
     tajukPanitia.textContent = senaraiNamaPanitia[subjekSemasa] || 'Senarai Dokumen';
-    
-    // TAMBAHAN: Paksa tajuk dan kotak di sekelilingnya dipaparkan (buang fungsi hide jika ada)
     tajukPanitia.style.display = 'block';
     
-    // Jika tajuk ini berada dalam satu <div> besar (container), paksa div itu keluar juga
     if(tajukPanitia.parentElement) {
         tajukPanitia.parentElement.style.display = 'block';
     }
@@ -139,9 +138,12 @@ if (btnMenu && sidebar && overlay) {
 // =========================================================================
 // BAHAGIAN 6: PAPARAN JADUAL & FAIL (REAL-TIME LISTENER)
 // =========================================================================
-
 function muatJadual() {
-    // 1. Tentukan query (hanya ambil dokumen mengikut subjek yang sedang dibuka)
+    // Definisi Elemen HTML untuk Jadual
+    const adakahPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'].includes(subjekSemasa);
+    const ruangFail1 = document.getElementById('ruangFail1');
+    const ruangJadualLama = document.getElementById('ruangJadualLama') || document.getElementById('ruangJadualUtama');
+
     let q;
     if (subjekSemasa && subjekSemasa !== "umum") {
         q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
@@ -149,19 +151,16 @@ function muatJadual() {
         q = query(collection(db, "kandungan"));
     }
 
-    // 2. Hentikan snapshot lama (jika ada) untuk elak data bertindih
     if (unsubscribeJadual) {
         unsubscribeJadual();
     }
 
-    // 3. Mula dengar data dari pangkalan data secara "Real-Time"
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         let senaraiData = [];
         
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             
-            // Mesti status aktif
             if (data.status !== "aktif") return;
 
             // SARINGAN TAHUN KEBAL (TIMBAL BALIK)
@@ -169,9 +168,7 @@ function muatJadual() {
                 const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
                 const filterKecil = String(tahunFilter).toLowerCase();
                 
-                // Semak kedua-dua arah: 
-                // 1. Adakah fail "2026/2027" ada unsur filter "2026"?
-                // 2. Adakah filter "2026/2027" ada unsur fail "2026"?
+                // Semak kedua-dua arah (2026 vs 2026/2027)
                 if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) {
                     return; 
                 }
@@ -180,10 +177,8 @@ function muatJadual() {
             senaraiData.push({ id: docSnap.id, ...data });
         });
 
-        // ALAT PENGESAN (Akan keluar di F12 -> Console)
         console.log(`[PANITIA] Sistem jumpa ${senaraiData.length} fail untuk subjek: ${subjekSemasa}`);
 
-        // KAWALAN RALAT TARIKH (Susun dari terbaru ke lama)
         senaraiData.sort((a, b) => {
             let tA = (a.tarikh && typeof a.tarikh.toMillis === 'function') ? a.tarikh.toMillis() : 0;
             let tB = (b.tarikh && typeof b.tarikh.toMillis === 'function') ? b.tarikh.toMillis() : 0;
@@ -196,7 +191,6 @@ function muatJadual() {
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
             senaraiData.forEach((data) => {
-                // PENYELAMAT FAIL SESAT (Paksa masuk Fail 1 jika kategori tak sepadan)
                 let folderDocs = data.folder_destinasi;
                 if (!['fail_1', 'fail_2', 'fail_3', 'fail_4'].includes(folderDocs)) {
                     folderDocs = 'fail_1'; 
@@ -218,7 +212,6 @@ function muatJadual() {
                 jumlahFail[folderDocs]++;
             });
 
-            // Masukkan data ke dalam setiap kotak fail 1-4
             ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
                 const ruang = document.getElementById(`ruangFail${index + 1}`);
                 if (ruang) {
@@ -228,7 +221,6 @@ function muatJadual() {
                 }
             });
         } 
-        
         // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL / HALAMAN UTAMA) ---
         else if (ruangJadualLama) {
             if (senaraiData.length === 0) {
@@ -271,7 +263,6 @@ function muatJadual() {
             ruangJadualLama.innerHTML = htmlJadual;
         }
 
-        // Buka butang Padam untuk Admin
         if (window.isAdmin) {
             document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
         }
@@ -288,7 +279,6 @@ const btnSubmitUpload = document.getElementById('btnSubmitUpload');
 const txtSubmit = document.getElementById('txtSubmit');
 let folderSasaranSemasa = "fail_1"; 
 
-// Buka Modal
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik') || btn.id === 'btnInjectUploadUtama')) {
@@ -298,7 +288,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Tutup Modal
 if (btnTutupModal) {
     btnTutupModal.addEventListener('click', () => { 
         modalUpload.classList.add('hidden'); 
@@ -306,7 +295,6 @@ if (btnTutupModal) {
     });
 }
 
-// Submit Modal
 if (formUpload) {
     formUpload.addEventListener('submit', async (e) => {
         e.preventDefault(); 
@@ -316,11 +304,7 @@ if (formUpload) {
         const tahunDipilih = document.getElementById('inputTahun').value;
         const user = auth.currentUser;
 
-        // KITA DAH BUANG BARIS 'inputKategori' DI SINI
-
         if (!file || !user) return;
-        // KITA DAH BUANG SEMAKAN '!kategori' DI SINI
-        
         if (file.size > (15 * 1024 * 1024)) return alert("Saiz fail melebihi 15MB.");
 
         try {
@@ -340,11 +324,10 @@ if (formUpload) {
                 });
                 const hasilGAS = await responsGAS.json();
 
-                // Kita guna perlindungan "URL" seperti yang dibincangkan sebelum ini
                 if (hasilGAS.status === 'success' || hasilGAS.url) {
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
-                        kategori: folderSasaranSemasa, // Automatik set ikut butang yang ditekan
+                        kategori: folderSasaranSemasa, 
                         subjek: subjekSemasa, 
                         folder_destinasi: folderSasaranSemasa, 
                         url_fail: hasilGAS.url,
@@ -370,6 +353,7 @@ if (formUpload) {
         }
     });
 }
+
 // ==========================================
 // 8. LOGIK CARIAN GLOBAL
 // ==========================================
@@ -430,7 +414,7 @@ if (inputCarian && modalCarian) {
 }
 
 // ==========================================
-// 9. LOGIK ADMIN CONSOLE (ARKIB)
+// 9. LOGIK ADMIN CONSOLE (ARKIB & PADAM)
 // ==========================================
 const adminContent = document.getElementById('adminContent');
 const ruangArkib = document.getElementById('ruangArkib');
@@ -494,6 +478,13 @@ function panggilDataArkib() {
     });
 }
 
+// Fungsi Padam Rekod (Ke Arkib)
+window.padamRekod = async function(id) {
+    if (confirm("Adakah anda pasti mahu memadam fail ini? Ia akan dipindahkan ke Arkib.")) {
+        await updateDoc(doc(db, "kandungan", id), { status: "dipadam" });
+    }
+}
+
 window.kembalikanFail = async function(id) {
     if (confirm("Adakah anda pasti mahu memulihkan fail ini?")) await updateDoc(doc(db, "kandungan", id), { status: "aktif" });
 }
@@ -505,7 +496,7 @@ window.padamKekalFail = async function(id) {
 // ==========================================
 // 10. JADUAL TRACKER PANITIA 
 // ==========================================
-let unsubscribeTracker = null; // Tambahan untuk live-update!
+let unsubscribeTracker = null;
 
 function janaTrackerPanitia(tahun) {
     const trackerTableBody = document.getElementById('jadualTrackerBody');
@@ -516,7 +507,6 @@ function janaTrackerPanitia(tahun) {
     const kadPutih = trackerTableBody.closest('.bg-white');
     const kotakUtama = document.getElementById('kotakTrackerPanitia');
 
-    // LOGIK SEMBUNYI: Jika di paparan Panitia, sorokkan KESEMUANYA
     if (subjekSemasa !== 'umum' && !window.location.pathname.includes('admin.html')) {
         if (kotakUtama) kotakUtama.style.display = 'none';
         if (kadPutih) kadPutih.style.display = 'none';
@@ -524,7 +514,6 @@ function janaTrackerPanitia(tahun) {
         if (jadualTracker) jadualTracker.style.display = 'none';
         return; 
     } else {
-        // LOGIK PAPAR: Jika di One-Stop Centre atau Admin
         if (kotakUtama) kotakUtama.style.display = 'block';
         if (kadPutih) kadPutih.style.display = 'block';
         if (pembalutJadual) pembalutJadual.style.display = 'block';
@@ -547,31 +536,26 @@ function janaTrackerPanitia(tahun) {
     try {
         const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"));
         
-        // Hentikan carian lama jika pengguna tukar-tukar filter tahun
         if (unsubscribeTracker) unsubscribeTracker();
 
-        // Guna onSnapshot supaya jadual ini bertukar live secara automatik
         unsubscribeTracker = onSnapshot(qTracker, (snapshot) => {
             let dataSubjek = {};
             senaraiSemuaPanitia.forEach(p => {
                 dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
             });
 
-        snapshot.forEach((docSnap) => {
+            snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 
-                // SARINGAN TAHUN KEBAL (TIMBAL BALIK)
-            if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
-                const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
-                const filterKecil = String(tahunFilter).toLowerCase();
-                
-                // Semak kedua-dua arah: 
-                // 1. Adakah fail "2026/2027" ada unsur filter "2026"?
-                // 2. Adakah filter "2026/2027" ada unsur fail "2026"?
-                if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) {
-                    return; 
+                // SARINGAN TAHUN KEBAL (TIMBAL BALIK) MENGGUNAKAN 'tahun'
+                if (tahun && tahun.toLowerCase() !== "semua") {
+                    const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
+                    const filterKecil = String(tahun).toLowerCase();
+                    
+                    if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) {
+                        return; 
+                    }
                 }
-            }
                 
                 const subjek = data.subjek;
                 const folder = data.folder_destinasi || 'fail_1'; 
@@ -616,11 +600,25 @@ function janaTrackerPanitia(tahun) {
     }
 }
 
-// PENGGERAK JADUAL & PENAPIS (FILTER)
+// PENGGERAK JADUAL & PENAPIS (FILTER) - DIBETULKAN
 const filterTahunSistem = document.getElementById('filterTahun');
 if (filterTahunSistem) {
+    // Tangkap nilai tahun sebaik sahaja skrin dibuka
+    tahunFilter = filterTahunSistem.value;
+    
+    // Aktifkan jadual utama buat kali pertama
+    muatJadual();
+
     filterTahunSistem.addEventListener('change', (e) => {
-        if(document.getElementById('jadualTrackerBody')) janaTrackerPanitia(e.target.value);
-        muatJadual(e.target.value);
+        // Apabila pengguna menukar tahun, kemas kini pembolehubah global
+        tahunFilter = e.target.value; 
+        
+        if (document.getElementById('jadualTrackerBody')) {
+            janaTrackerPanitia(e.target.value);
+        }
+        muatJadual(); // Panggil jadual dengan nilai tahunFilter yang baharu
     });
+} else {
+    // Jika tiada butang filter, teruskan papar jadual secara normal
+    muatJadual();
 }
