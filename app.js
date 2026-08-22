@@ -276,14 +276,16 @@ let folderSasaranSemasa = "fail_1";
 
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
+    
+    // KOD BARU: Halang butang "Muat Naik Sekarang" dari reset folder
+    if (btn && btn.id === 'btnSubmitUpload') return; 
+
     if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik') || btn.id === 'btnInjectUploadUtama')) {
         if (!window.userSemasa) return alert("Sila Log Masuk (DELIMa) terlebih dahulu.");
         
-        // PEMBETULAN: Cuba tangkap data-folder. Jika tiada, teka dari ID kotak pembalut (parent container).
         let folderBidik = btn.getAttribute('data-folder');
         
         if (!folderBidik) {
-            // Tekaan Pintar: Semak sekiranya butang ini di dalam div ruangFail2, dan sebagainya.
             const kotakInduk = btn.closest('[id*="ail1"], [id*="ail2"], [id*="ail3"], [id*="ail4"]');
             if (kotakInduk) {
                 if (kotakInduk.id.includes('2')) folderBidik = "fail_2";
@@ -291,7 +293,7 @@ document.addEventListener('click', (e) => {
                 else if (kotakInduk.id.includes('4')) folderBidik = "fail_4";
                 else folderBidik = "fail_1";
             } else {
-                folderBidik = "fail_1"; // Lalai terakhir
+                folderBidik = "fail_1"; 
             }
         }
         
