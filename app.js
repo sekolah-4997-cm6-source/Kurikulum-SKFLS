@@ -667,3 +667,40 @@ function janaTrackerPanitia(tahun) {
         trackerTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
     }
 }
+
+// =========================================================================
+// BAHAGIAN 11: INISIALISASI (MENGHIDUPKAN SISTEM)
+// =========================================================================
+
+// 1. Pantau status Log Masuk / Log Keluar
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        window.userSemasa = user;
+        window.isAdmin = true; 
+        
+        // Paparkan butang-butang admin (termasuk butang Muat Naik)
+        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
+    } else {
+        window.userSemasa = null;
+        window.isAdmin = false;
+        
+        // Sembunyikan butang-butang admin
+        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
+    }
+
+    // 2. JALANKAN FUNGSI JADUAL & TRACKER (Ini yang mengembalikan paparan anda!)
+    if (typeof muatJadual === "function") {
+        muatJadual();
+    }
+    
+    if (typeof janaTrackerPanitia === "function") {
+        // Jana tracker untuk tahun semasa
+        const tahunSemasa = new Date().getFullYear().toString();
+        janaTrackerPanitia(tahunSemasa); 
+    }
+});
+
+// 3. Pastikan fungsi padam rekod boleh dibaca oleh HTML
+if (typeof padamRekod !== 'undefined') {
+    window.padamRekod = padamRekod;
+}
