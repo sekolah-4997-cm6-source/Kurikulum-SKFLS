@@ -164,14 +164,15 @@ function muatJadual() {
             // Mesti status aktif
             if (data.status !== "aktif") return;
 
-            // SARINGAN TAHUN KEBAL
+            // SARINGAN TAHUN KEBAL (TIMBAL BALIK)
             if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
                 const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
                 const filterKecil = String(tahunFilter).toLowerCase();
                 
-                // Jika fail ADA tahun, tapi tak sama dengan filter, baru kita sorok.
-                // Jika fail TIADA TAHUN, biarkan ia lepas.
-                if (docTahun !== "" && !docTahun.includes(filterKecil)) {
+                // Semak kedua-dua arah: 
+                // 1. Adakah fail "2026/2027" ada unsur filter "2026"?
+                // 2. Adakah filter "2026/2027" ada unsur fail "2026"?
+                if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) {
                     return; 
                 }
             }
@@ -559,15 +560,18 @@ function janaTrackerPanitia(tahun) {
         snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 
-                // 1. Saringan Tahun Kebal untuk Tracker
-                if (tahun && tahun.toLowerCase() !== "semua") {
-                    const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
-                    const filterKecil = String(tahun).toLowerCase();
-                    
-                    if (docTahun !== "" && !docTahun.includes(filterKecil)) {
-                        return; 
-                    }
+                // SARINGAN TAHUN KEBAL (TIMBAL BALIK)
+            if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
+                const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
+                const filterKecil = String(tahunFilter).toLowerCase();
+                
+                // Semak kedua-dua arah: 
+                // 1. Adakah fail "2026/2027" ada unsur filter "2026"?
+                // 2. Adakah filter "2026/2027" ada unsur fail "2026"?
+                if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) {
+                    return; 
                 }
+            }
                 
                 const subjek = data.subjek;
                 const folder = data.folder_destinasi || 'fail_1'; 
@@ -617,6 +621,6 @@ const filterTahunSistem = document.getElementById('filterTahun');
 if (filterTahunSistem) {
     filterTahunSistem.addEventListener('change', (e) => {
         if(document.getElementById('jadualTrackerBody')) janaTrackerPanitia(e.target.value);
-        panggilDataJadual(e.target.value);
+        muatJadual(e.target.value);
     });
 }
