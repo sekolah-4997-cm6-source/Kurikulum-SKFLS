@@ -136,105 +136,78 @@ if (btnMenu && sidebar && overlay) {
     });
 }
 
-// ==========================================
-// 6. BACA & PAPARKAN JADUAL BERSERTA PENAPISAN TAHUN
-// ==========================================
-let unsubscribeJadual = null;
+// =========================================================================
+// BAHAGIAN 6: PAPARAN JADUAL & FAIL (REAL-TIME LISTENER)
+// =========================================================================
 
-function panggilDataJadual(tahunFilter = "Semua") {
-    const ruangJadualLama = document.getElementById('ruangJadual'); 
-    const ruangFail1 = document.getElementById('ruangFail1');       
-
-    const senaraiIDPanitia = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'mz', 'pjpk', 'ba'];
-    const adakahPanitia = senaraiIDPanitia.includes(subjekSemasa);
-
-// KAWALAN UI: 4 Kotak Fail vs 1 Jadual Besar
-    ['ruangFail1', 'ruangFail2', 'ruangFail3', 'ruangFail4'].forEach(id => {
-        const ruang = document.getElementById(id);
-        if (ruang && ruang.parentElement) {
-            // Hanya sembunyikan kotak 'mb-8' yang membalut Fail ini sahaja, jangan usik tajuk!
-            ruang.parentElement.style.display = adakahPanitia ? 'block' : 'none';
-        }
-    });
-
-    if (ruangJadualLama) {
-        const kadJadualUtama = ruangJadualLama.closest('.bg-white') || ruangJadualLama.parentElement;
-        if (kadJadualUtama) {
-            kadJadualUtama.style.display = adakahPanitia ? 'none' : 'block';
-        }
-        
-        // KAWALAN UI: Butang Muat Naik Utama (Bukan Panitia)
-        let containerButangUtama = document.getElementById('containerUploadUtama');
-        if (!containerButangUtama) {
-            containerButangUtama = document.createElement('div');
-            containerButangUtama.id = 'containerUploadUtama';
-            containerButangUtama.className = 'flex justify-end mb-4';
-            containerButangUtama.innerHTML = `
-                <button id="btnInjectUploadUtama" data-folder="umum" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md font-bold flex items-center transition">
-                    <i class="fas fa-cloud-upload-alt mr-2"></i> Muat Naik Bahan
-                </button>
-            `;
-            kadJadualUtama.parentNode.insertBefore(containerButangUtama, kadJadualUtama);
-        }
-
-        // Betulkan Isu 2 & 6: Papar/Sembunyi Butang Besar
-        if (adakahPanitia) {
-            containerButangUtama.style.display = 'none';
-        } else {
-            containerButangUtama.style.display = 'flex';
-        }
+function muatJadual() {
+    // 1. Tentukan query (hanya ambil dokumen mengikut subjek yang sedang dibuka)
+    let q;
+    if (subjekSemasa && subjekSemasa !== "umum") {
+        q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
+    } else {
+        q = query(collection(db, "kandungan"));
     }
 
-    // Ambil data subjek (Tanpa composite index)
-    const q = query(collection(db, "kandungan"), where("subjek", "==", subjekSemasa));
-    
-    if (unsubscribeJadual) unsubscribeJadual();
+    // 2. Hentikan snapshot lama (jika ada) untuk elak data bertindih
+    if (unsubscribeJadual) {
+        unsubscribeJadual();
+    }
 
+    // 3. Mula dengar data dari pangkalan data secara "Real-Time"
     unsubscribeJadual = onSnapshot(q, (snapshot) => {
         let senaraiData = [];
         
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
+            
+            // Mesti status aktif
             if (data.status !== "aktif") return;
 
-            // Saringan Tahun Kebal
+            // SARINGAN TAHUN KEBAL
             if (tahunFilter && tahunFilter.toLowerCase() !== "semua") {
                 const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
                 const filterKecil = String(tahunFilter).toLowerCase();
-                if (docTahun !== "" && !docTahun.includes(filterKecil)) return; 
+                
+                // Jika fail ADA tahun, tapi tak sama dengan filter, baru kita sorok.
+                // Jika fail TIADA TAHUN, biarkan ia lepas.
+                if (docTahun !== "" && !docTahun.includes(filterKecil)) {
+                    return; 
+                }
             }
 
             senaraiData.push({ id: docSnap.id, ...data });
         });
 
-        // ALAT PENGESAN (Akan keluar di F12)
+        // ALAT PENGESAN (Akan keluar di F12 -> Console)
         console.log(`[PANITIA] Sistem jumpa ${senaraiData.length} fail untuk subjek: ${subjekSemasa}`);
 
-        // KAWALAN RALAT TARIKH (Punca jadual selalu 'crash' senyap)
+        // KAWALAN RALAT TARIKH (Susun dari terbaru ke lama)
         senaraiData.sort((a, b) => {
             let tA = (a.tarikh && typeof a.tarikh.toMillis === 'function') ? a.tarikh.toMillis() : 0;
             let tB = (b.tarikh && typeof b.tarikh.toMillis === 'function') ? b.tarikh.toMillis() : 0;
             return tB - tA;
         });
 
-        // --- KES 1: HALAMAN PANITIA SUBJEK (4 FAIL) ---
+        // --- KES 1: HALAMAN PANITIA SUBJEK (PAPARAN 4 FAIL) ---
         if (adakahPanitia && ruangFail1) {
             let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
 
             senaraiData.forEach((data) => {
+                // PENYELAMAT FAIL SESAT (Paksa masuk Fail 1 jika kategori tak sepadan)
                 let folderDocs = data.folder_destinasi;
                 if (!['fail_1', 'fail_2', 'fail_3', 'fail_4'].includes(folderDocs)) {
-                    folderDocs = 'fail_1'; // Penyelamat fail sesat
+                    folderDocs = 'fail_1'; 
                 }
 
                 let rowHTML = `
-                    <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50">
+                    <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50 transition-colors">
                         <div>
                             <p class="font-medium text-slate-800"><i class="fas fa-file-pdf text-red-500 mr-2"></i> ${data.tajuk}</p>
                             <p class="text-xs text-slate-500">Tahun: ${data.tahun || '-'} | Oleh: ${data.dimuat_naik_oleh}</p>
                         </div>
-                        <div class="whitespace-nowrap ml-4">
+                        <div class="whitespace-nowrap ml-4 flex items-center">
                             <a href="${data.url_fail}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-bold mr-3">Buka</a>
                             <button onclick="padamRekod('${data.id}')" class="hanya-admin hidden text-red-600 hover:text-red-800 text-sm font-bold" title="Padam">Padam</button>
                         </div>
@@ -244,76 +217,18 @@ function panggilDataJadual(tahunFilter = "Semua") {
                 jumlahFail[folderDocs]++;
             });
 
+            // Masukkan data ke dalam setiap kotak fail 1-4
             ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
                 const ruang = document.getElementById(`ruangFail${index + 1}`);
                 if (ruang) {
-                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : '<p class="text-slate-400 text-sm py-2 italic">Belum ada bahan.</p>';
+                    ruang.innerHTML = jumlahFail[f] > 0 
+                        ? htmlFail[f] 
+                        : '<p class="text-slate-400 text-sm py-2 italic">Belum ada bahan.</p>';
                 }
             });
         } 
         
-        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL) ---
-        else if (ruangJadualLama) {
-            // Kod jadual tunggal dibiarkan seperti asal...
-            if (senaraiData.length === 0) {
-                ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
-                return;
-            }
-
-            let htmlJadual = `<div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200"><th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th><th class="p-4 font-medium hidden md:table-cell">Tahun</th><th class="p-4 font-medium hidden md:table-cell">Dimuat Naik Oleh</th><th class="p-4 font-medium">Tarikh</th><th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th></tr></thead><tbody class="text-sm">`;
-
-            senaraiData.forEach((data) => {
-                let tarikhMasa = (data.tarikh && typeof data.tarikh.toDate === 'function') ? data.tarikh.toDate().toLocaleDateString('ms-MY') : "Baru sahaja";
-                htmlJadual += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td><td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada'}</span></td><td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td><td class="p-4 text-slate-500">${tarikhMasa}</td><td class="p-4 text-right whitespace-nowrap"><a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">Buka</a><button onclick="padamRekod('${data.id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button></td></tr>`;
-            });
-            htmlJadual += `</tbody></table></div>`;
-            ruangJadualLama.innerHTML = htmlJadual;
-        }
-
-        if (window.isAdmin) document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
-    });
-
-        // Susun tarikh terkini di atas
-        senaraiData.sort((a, b) => {
-            let tA = a.tarikh ? a.tarikh.toMillis() : 0;
-            let tB = b.tarikh ? b.tarikh.toMillis() : 0;
-            return tB - tA;
-        });
-
-        // --- KES 1: HALAMAN PANITIA SUBJEK (4 FAIL) ---
-        if (adakahPanitia && ruangFail1) {
-            let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
-            let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
-
-            senaraiData.forEach((data) => {
-                const folderDocs = data.folder_destinasi || 'fail_1';
-                let rowHTML = `
-                    <div class="flex justify-between items-center border-b border-slate-100 py-3 hover:bg-slate-50">
-                        <div>
-                            <p class="font-medium text-slate-800"><i class="fas fa-file-pdf text-red-500 mr-2"></i> ${data.tajuk}</p>
-                            <p class="text-xs text-slate-500">Kategori: ${data.kategori || '-'} | Tahun: ${data.tahun || '-'} | Oleh: ${data.dimuat_naik_oleh}</p>
-                        </div>
-                        <div class="whitespace-nowrap ml-4">
-                            <a href="${data.url_fail}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-bold mr-3">Buka</a>
-                            <button onclick="padamRekod('${data.id}')" class="hanya-admin hidden text-red-600 hover:text-red-800 text-sm font-bold" title="Padam">Padam</button>
-                        </div>
-                    </div>
-                `;
-                if (htmlFail[folderDocs] !== undefined) {
-                    htmlFail[folderDocs] += rowHTML;
-                    jumlahFail[folderDocs]++;
-                }
-            });
-
-            ['fail_1', 'fail_2', 'fail_3', 'fail_4'].forEach((f, index) => {
-                const ruang = document.getElementById(`ruangFail${index + 1}`);
-                if (ruang) {
-                    ruang.innerHTML = jumlahFail[f] > 0 ? htmlFail[f] : '<p class="text-slate-400 text-sm py-2 italic">Belum ada bahan.</p>';
-                }
-            });
-        } 
-        
-        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL) ---
+        // --- KES 2: BUKAN PANITIA (JADUAL TUNGGAL / HALAMAN UTAMA) ---
         else if (ruangJadualLama) {
             if (senaraiData.length === 0) {
                 ruangJadualLama.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
@@ -327,52 +242,40 @@ function panggilDataJadual(tahunFilter = "Semua") {
                         <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
                             <th class="p-4 font-medium rounded-tl-lg">Tajuk Dokumen</th>
                             <th class="p-4 font-medium hidden md:table-cell">Tahun</th>
-                            <th class="p-4 font-medium hidden md:table-cell">Kategori</th>
-                            <th class="p-4 font-medium hidden md:table-cell">Dimuat Naik Oleh</th>
+                            <th class="p-4 font-medium hidden md:table-cell">Oleh</th>
                             <th class="p-4 font-medium">Tarikh</th>
                             <th class="p-4 font-medium text-right rounded-tr-lg">Tindakan</th>
                         </tr>
                     </thead>
-                    <tbody class="text-sm">
-            `;
+                    <tbody class="text-sm">`;
 
             senaraiData.forEach((data) => {
-                let tarikhMasa = data.tarikh ? data.tarikh.toDate().toLocaleDateString('ms-MY') : "Baru sahaja";
+                let tarikhMasa = (data.tarikh && typeof data.tarikh.toDate === 'function') 
+                    ? data.tarikh.toDate().toLocaleDateString('ms-MY') 
+                    : "Baru sahaja";
+                    
                 htmlJadual += `
                     <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
                         <td class="p-4 font-medium text-slate-800"><i class="fas fa-file-alt text-blue-500 mr-2 text-lg"></i> ${data.tajuk}</td>
                         <td class="p-4 text-slate-500 hidden md:table-cell"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${data.tahun || 'Tiada'}</span></td>
-                        <td class="p-4 text-slate-500 hidden md:table-cell">${data.kategori || '-'}</td>
                         <td class="p-4 text-slate-500 hidden md:table-cell">${data.dimuat_naik_oleh}</td>
                         <td class="p-4 text-slate-500">${tarikhMasa}</td>
                         <td class="p-4 text-right whitespace-nowrap">
                             <a href="${data.url_fail}" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition text-xs font-bold mr-2">Buka</a>
                             <button onclick="padamRekod('${data.id}')" class="hanya-admin hidden bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition text-xs font-bold" title="Padam"><i class="fas fa-trash"></i></button>
                         </td>
-                    </tr>
-                `;
+                    </tr>`;
             });
-
             htmlJadual += `</tbody></table></div>`;
             ruangJadualLama.innerHTML = htmlJadual;
         }
 
-        // Tunjuk balik butang padam kalau user tu admin
-        if (window.isAdmin) document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
+        // Buka butang Padam untuk Admin
+        if (window.isAdmin) {
+            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
+        }
     });
 }
-
-// Fungsi Padam Rekod
-window.padamRekod = async function(id) {
-    if (confirm("Adakah anda pasti mahu memadam fail ini?")) {
-        await updateDoc(doc(db, "kandungan", id), { status: "dipadam" });
-    }
-}
-
-// Trigger awal
-const filterDropdownTahunAwal = document.getElementById('filterTahun');
-const tahunAwal = filterDropdownTahunAwal ? filterDropdownTahunAwal.value : "Semua";
-panggilDataJadual(tahunAwal);
 
 // ==========================================
 // 7. LOGIK MUAT NAIK FAIL (MODAL & GAS)
