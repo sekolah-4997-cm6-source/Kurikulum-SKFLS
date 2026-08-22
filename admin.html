@@ -149,7 +149,6 @@
         <!-- Akan diisi oleh JS -->
     </tbody>
 </table>
-                        <p class="text-xs text-slate-500 mt-4 italic">* Nota: Ini adalah bentuk paparan (UI) Tracker. Logik pengiraan automatik akan diintegrasi pada fasa seterusnya.</p>
                     </div>
                 </div>
 
@@ -157,6 +156,57 @@
         </main>
     </div>
 
+    <!-- KAWASAN TRACKER BUKAN PANITIA -->
+<div class="mt-10 mb-4">
+    <h3 class="text-lg md:text-xl font-bold text-slate-800 border-b pb-2"><i class="fas fa-clipboard-check text-blue-500 mr-2"></i>Tracker Pengurusan (Bukan Panitia)</h3>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    
+    <!-- Table Maklumat Induk -->
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 flex justify-between items-center">
+            <h4 class="font-bold text-blue-800"><i class="fas fa-sitemap mr-2"></i>1. Maklumat Induk</h4>
+        </div>
+        <table class="w-full text-sm">
+            <tbody id="trackerMaklumatInduk" class="divide-y divide-slate-100">
+                <!-- Data akan dimasukkan oleh app.js -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Table Mesyuarat & Masa -->
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="bg-amber-50 px-4 py-3 border-b border-amber-100 flex justify-between items-center">
+            <h4 class="font-bold text-amber-800"><i class="fas fa-users mr-2"></i>2. Mesyuarat & Masa</h4>
+        </div>
+        <table class="w-full text-sm">
+            <tbody id="trackerMesyuarat" class="divide-y divide-slate-100"></tbody>
+        </table>
+    </div>
+
+    <!-- Table Program & Intervensi -->
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex justify-between items-center">
+            <h4 class="font-bold text-emerald-800"><i class="fas fa-chart-line mr-2"></i>4. Program & Intervensi</h4>
+        </div>
+        <table class="w-full text-sm">
+            <tbody id="trackerProgram" class="divide-y divide-slate-100"></tbody>
+        </table>
+    </div>
+
+    <!-- Table Sokongan & Awal -->
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="bg-purple-50 px-4 py-3 border-b border-purple-100 flex justify-between items-center">
+            <h4 class="font-bold text-purple-800"><i class="fas fa-hands-helping mr-2"></i>5. Sokongan & Awal</h4>
+        </div>
+        <table class="w-full text-sm">
+            <tbody id="trackerSokongan" class="divide-y divide-slate-100"></tbody>
+        </table>
+    </div>
+
+</div>
+    
     <!-- MODAL CARIAN GLOBAL -->
     <div id="modalCarian" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-start justify-center pt-20">
         <div class="bg-white rounded-xl w-full max-w-3xl p-6 m-4 shadow-2xl relative max-h-[80vh] flex flex-col">
