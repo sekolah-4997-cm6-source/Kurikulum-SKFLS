@@ -6,6 +6,16 @@
     <title>Sistem Kurikulum SKFLS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    /* Sembunyikan scrollbar untuk paparan yang lebih bersih */
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+</style>
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden text-sm">
 
@@ -116,6 +126,56 @@
                 <p class="text-blue-600 text-sm">Sila pilih menu di sebelah kiri untuk melihat dokumen, SPI, minit mesyuarat atau fail-fail panitia. Log masuk menggunakan e-mel DELIMa untuk memuat naik bahan.</p>
             </div>
 
+<!-- KAWASAN BARISAN GURU (HORIZONTAL SCROLL) -->
+<div class="mt-8 mb-8">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-slate-800">
+            <i class="fas fa-users text-blue-500 mr-2"></i>Barisan Pendidik SK Felda Laka Selatan
+        </h2>
+    </div>
+    
+    <!-- Container Scroll ke tepi -->
+    <div class="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory hide-scrollbar">
+        
+        <!-- KAD GURU 1 -->
+        <div class="snap-start shrink-0 w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="h-48 bg-slate-200">
+                <!-- Tukar nama fail gambar di bawah (contoh: guru1.jpg) -->
+                <img src="./image/guru1.jpg" alt="Guru 1" class="w-full h-full object-cover">
+            </div>
+            <div class="p-3 text-center">
+                <p class="font-bold text-slate-800 text-sm line-clamp-1" title="Cikgu Ahmad Bin Abu">Cikgu Ahmad</p>
+                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Guru Besar</p>
+            </div>
+        </div>
+
+        <!-- KAD GURU 2 -->
+        <div class="snap-start shrink-0 w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="h-48 bg-slate-200">
+                <img src="./image/guru2.jpg" alt="Guru 2" class="w-full h-full object-cover">
+            </div>
+            <div class="p-3 text-center">
+                <p class="font-bold text-slate-800 text-sm line-clamp-1">Cikgu Siti Aminah</p>
+                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">PK Pentadbiran</p>
+            </div>
+        </div>
+
+        <!-- KAD GURU 3 -->
+        <div class="snap-start shrink-0 w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="h-48 bg-slate-200">
+                <img src="./image/guru3.jpg" alt="Guru 3" class="w-full h-full object-cover">
+            </div>
+            <div class="p-3 text-center">
+                <p class="font-bold text-slate-800 text-sm line-clamp-1">Cikgu Rizal</p>
+                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Guru Akademik</p>
+            </div>
+        </div>
+        
+        <!-- Tambah kad seterusnya di bawah ini dengan format yang sama -->
+
+    </div>
+</div>
+            
         </main>
     </div> 
     
