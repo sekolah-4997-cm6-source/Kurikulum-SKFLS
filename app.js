@@ -773,3 +773,173 @@ document.addEventListener("DOMContentLoaded", () => {
         muatSenaraiPengguna();
     }
 });
+
+// =========================================================================
+// 13. PENGURUSAN BARISAN GURU (ADMIN & DASHBOARD)
+// =========================================================================
+
+// A. Fungsi Paparkan Guru di Muka Depan (index.html)
+function paparkanSenaraiGuru() {
+    const ruang = document.getElementById('ruangSenaraiGuru');
+    if (!ruang) return; // Hanya jalan di index.html
+
+    const qGuru = query(collection(db, "guru_skfls"));
+    
+    onSnapshot(qGuru, (snapshot) => {
+        let senarai = [];
+        snapshot.forEach(docSnap => senarai.push({ id: docSnap.id, ...docSnap.data() }));
+        
+        // Susun ikut yang terawal dimasukkan
+        senarai.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+
+        if (senarai.length === 0) {
+            ruang.innerHTML = '<p class="text-slate-500 text-sm italic py-4">Belum ada maklumat pendidik ditambah.</p>';
+            return;
+        }
+
+        let html = '';
+        senarai.forEach(data => {
+            // Tukar link GDrive kepada link paparan imej terus
+            let imgUrl = data.url_gambar;
+            if (imgUrl && imgUrl.includes("drive.google.com/file/d/")) {
+                const fileId = imgUrl.split("/d/")[1].split("/")[0];
+                imgUrl = `https://drive.google.com/uc?id=${fileId}`;
+            }
+
+            html += `
+                <div class="snap-start shrink-0 w-36 md:w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+                    <div class="h-40 md:h-48 bg-slate-200 w-full relative">
+                        <img src="${imgUrl}" alt="${data.nama}" class="absolute inset-0 w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=Tiada+Gambar'">
+                    </div>
+                    <div class="p-3 text-center bg-white flex-1 flex flex-col justify-center">
+                        <p class="font-bold text-slate-800 text-sm line-clamp-1" title="${data.nama}">${data.nama}</p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-medium">${data.jawatan}</p>
+                    </div>
+                </div>
+            `;
+        });
+        ruang.innerHTML = html;
+    });
+}
+
+// B. Fungsi Borang Tambah Guru & Upload (admin.html)
+const formTambahGuru = document.getElementById('formTambahGuru');
+if (formTambahGuru) {
+    formTambahGuru.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nama = document.getElementById('inputNamaGuru').value;
+        const jawatan = document.getElementById('inputJawatanGuru').value;
+        const fileInput = document.getElementById('inputGambarGuru');
+        const file = fileInput.files[0];
+        const btnSubmit = document.getElementById('btnSubmitGuru');
+        const txtSubmit = document.getElementById('txtSubmitGuru');
+
+        if (!file) return alert("Sila pilih gambar.");
+        if (file.size > (5 * 1024 * 1024)) return alert("Saiz gambar terlalu besar. Maksimum 5MB.");
+        
+        try {
+            btnSubmit.disabled = true;
+            txtSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memuat Naik...';
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async function() {
+                const base64Data = reader.result.split(',')[1];
+                // Kita Guna URL GAS sedia ada Cikgu! (Sama macam dokumen)
+                const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
+                
+                const responsGAS = await fetch(gasUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ filename: "GURU_" + Date.now() + "_" + file.name, mimeType: file.type, base64: base64Data })
+                });
+                const hasilGAS = await responsGAS.json();
+
+                if (hasilGAS.status === 'success' || hasilGAS.url) {
+                    await addDoc(collection(db, "guru_skfls"), {
+                        nama: nama,
+                        jawatan: jawatan,
+                        url_gambar: hasilGAS.url,
+                        timestamp: serverTimestamp()
+                    });
+                    
+                    alert(`Profil ${nama} berjaya ditambah!`);
+                    formTambahGuru.reset();
+                } else {
+                    alert("Gagal memuat naik gambar ke Google Drive.");
+                }
+                
+                btnSubmit.disabled = false;
+                txtSubmit.innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan';
+            };
+        } catch (error) {
+            alert("Ralat muat naik: " + error.message);
+            btnSubmit.disabled = false;
+            txtSubmit.innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan';
+        }
+    });
+}
+
+// C. Fungsi Jadual Admin (Lihat & Padam) (admin.html)
+function urusSenaraiGuru() {
+    const jadual = document.getElementById('jadualPengurusanGuru');
+    if (!jadual) return; // Hanya jalan di admin.html
+
+    const qGuru = query(collection(db, "guru_skfls"));
+    
+    onSnapshot(qGuru, (snapshot) => {
+        let senarai = [];
+        snapshot.forEach(docSnap => senarai.push({ id: docSnap.id, ...docSnap.data() }));
+        senarai.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+
+        if (senarai.length === 0) {
+            jadual.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">Tiada rekod. Sila muat naik guru di atas.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        senarai.forEach(data => {
+            let imgUrl = data.url_gambar;
+            if (imgUrl && imgUrl.includes("drive.google.com/file/d/")) {
+                const fileId = imgUrl.split("/d/")[1].split("/")[0];
+                imgUrl = `https://drive.google.com/uc?id=${fileId}`;
+            }
+
+            html += `
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                    <td class="p-3">
+                        <div class="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden relative border border-slate-200">
+                            <img src="${imgUrl}" alt="Gambar" class="absolute inset-0 w-full h-full object-cover">
+                        </div>
+                    </td>
+                    <td class="p-3 font-bold text-slate-800">${data.nama}</td>
+                    <td class="p-3 text-slate-500 text-xs uppercase tracking-wider">${data.jawatan}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="padamGuru('${data.id}', '${data.nama}')" class="bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded-md text-xs font-bold transition">
+                            <i class="fas fa-trash mr-1"></i> Padam
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        jadual.innerHTML = html;
+    });
+}
+
+// D. Fungsi Padam Rekod
+window.padamGuru = async function(id, nama) {
+    if (confirm(`Pasti mahu memadam profil Cikgu ${nama} dari muka depan?`)) {
+        try {
+            await deleteDoc(doc(db, "guru_skfls", id));
+        } catch (error) {
+            alert("Ralat memadam rekod: " + error.message);
+        }
+    }
+};
+
+// E. Panggil Fungsi secara Automatik
+document.addEventListener("DOMContentLoaded", () => {
+    paparkanSenaraiGuru(); // Laksanakan jika buka index.html
+    urusSenaraiGuru();     // Laksanakan jika buka admin.html
+});
