@@ -800,9 +800,20 @@ function paparkanSenaraiGuru() {
         let html = '';
         senarai.forEach(data => {
             let imgUrl = data.url_gambar;
-            if (imgUrl && imgUrl.includes("drive.google.com/file/d/")) {
-                const fileId = imgUrl.split("/d/")[1].split("/")[0];
-                imgUrl = `https://drive.google.com/uc?id=${fileId}`;
+            let fileId = "";
+
+            // Tangkap ID gambar tidak kira format URL apa yang dihantar oleh Google Drive
+            if (imgUrl) {
+                if (imgUrl.includes("/file/d/")) {
+                    fileId = imgUrl.split("/file/d/")[1].split("/")[0];
+                } else if (imgUrl.includes("id=")) {
+                    fileId = imgUrl.split("id=")[1].split("&")[0];
+                }
+            }
+
+            // Guna pautan khas paparan imej (Thumbnail / LH3) yang tidak disekat Google
+            if (fileId) {
+                imgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`; 
             }
 
             // Fallback image jika ralat
@@ -903,9 +914,20 @@ function urusSenaraiGuru() {
         let html = '';
         senarai.forEach(data => {
             let imgUrl = data.url_gambar;
-            if (imgUrl && imgUrl.includes("drive.google.com/file/d/")) {
-                const fileId = imgUrl.split("/d/")[1].split("/")[0];
-                imgUrl = `https://drive.google.com/uc?id=${fileId}`;
+            let fileId = "";
+
+            // Tangkap ID gambar tidak kira format URL apa yang dihantar oleh Google Drive
+            if (imgUrl) {
+                if (imgUrl.includes("/file/d/")) {
+                    fileId = imgUrl.split("/file/d/")[1].split("/")[0];
+                } else if (imgUrl.includes("id=")) {
+                    fileId = imgUrl.split("id=")[1].split("&")[0];
+                }
+            }
+
+            // Guna pautan khas paparan imej (Thumbnail / LH3) yang tidak disekat Google
+            if (fileId) {
+                imgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`; 
             }
 
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=150`;
