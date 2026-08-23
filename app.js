@@ -781,7 +781,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // A. Fungsi Paparkan Guru di Muka Depan (index.html)
 function paparkanSenaraiGuru() {
     const ruang = document.getElementById('ruangSenaraiGuru');
-    if (!ruang) return; // Hanya jalan di index.html
+    if (!ruang) return; 
 
     const qGuru = query(collection(db, "guru_skfls"));
     
@@ -789,7 +789,6 @@ function paparkanSenaraiGuru() {
         let senarai = [];
         snapshot.forEach(docSnap => senarai.push({ id: docSnap.id, ...docSnap.data() }));
         
-        // Susun ikut yang terawal dimasukkan
         senarai.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
 
         if (senarai.length === 0) {
@@ -799,17 +798,20 @@ function paparkanSenaraiGuru() {
 
         let html = '';
         senarai.forEach(data => {
-            // Tukar link GDrive kepada link paparan imej terus
             let imgUrl = data.url_gambar;
             if (imgUrl && imgUrl.includes("drive.google.com/file/d/")) {
                 const fileId = imgUrl.split("/d/")[1].split("/")[0];
+                // Guna format pautan langsung Google Drive
                 imgUrl = `https://drive.google.com/uc?id=${fileId}`;
             }
+
+            // Guna ui-avatars sebagai gambar sandaran (fallback) jika tiada gambar/ralat
+            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=200`;
 
             html += `
                 <div class="snap-start shrink-0 w-36 md:w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
                     <div class="h-40 md:h-48 bg-slate-200 w-full relative">
-                        <img src="${imgUrl}" alt="${data.nama}" class="absolute inset-0 w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=Tiada+Gambar'">
+                        <img src="${imgUrl}" alt="${data.nama}" class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='${fallbackAvatar}';">
                     </div>
                     <div class="p-3 text-center bg-white flex-1 flex flex-col justify-center">
                         <p class="font-bold text-slate-800 text-sm line-clamp-1" title="${data.nama}">${data.nama}</p>
@@ -822,69 +824,10 @@ function paparkanSenaraiGuru() {
     });
 }
 
-// B. Fungsi Borang Tambah Guru & Upload (admin.html)
-const formTambahGuru = document.getElementById('formTambahGuru');
-if (formTambahGuru) {
-    formTambahGuru.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const nama = document.getElementById('inputNamaGuru').value;
-        const jawatan = document.getElementById('inputJawatanGuru').value;
-        const fileInput = document.getElementById('inputGambarGuru');
-        const file = fileInput.files[0];
-        const btnSubmit = document.getElementById('btnSubmitGuru');
-        const txtSubmit = document.getElementById('txtSubmitGuru');
-
-        if (!file) return alert("Sila pilih gambar.");
-        if (file.size > (5 * 1024 * 1024)) return alert("Saiz gambar terlalu besar. Maksimum 5MB.");
-        
-        try {
-            btnSubmit.disabled = true;
-            txtSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memuat Naik...';
-
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async function() {
-                const base64Data = reader.result.split(',')[1];
-                // Kita Guna URL GAS sedia ada Cikgu! (Sama macam dokumen)
-                const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
-                
-                const responsGAS = await fetch(gasUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ filename: "GURU_" + Date.now() + "_" + file.name, mimeType: file.type, base64: base64Data })
-                });
-                const hasilGAS = await responsGAS.json();
-
-                if (hasilGAS.status === 'success' || hasilGAS.url) {
-                    await addDoc(collection(db, "guru_skfls"), {
-                        nama: nama,
-                        jawatan: jawatan,
-                        url_gambar: hasilGAS.url,
-                        timestamp: serverTimestamp()
-                    });
-                    
-                    alert(`Profil ${nama} berjaya ditambah!`);
-                    formTambahGuru.reset();
-                } else {
-                    alert("Gagal memuat naik gambar ke Google Drive.");
-                }
-                
-                btnSubmit.disabled = false;
-                txtSubmit.innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan';
-            };
-        } catch (error) {
-            alert("Ralat muat naik: " + error.message);
-            btnSubmit.disabled = false;
-            txtSubmit.innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan';
-        }
-    });
-}
-
 // C. Fungsi Jadual Admin (Lihat & Padam) (admin.html)
 function urusSenaraiGuru() {
     const jadual = document.getElementById('jadualPengurusanGuru');
-    if (!jadual) return; // Hanya jalan di admin.html
+    if (!jadual) return;
 
     const qGuru = query(collection(db, "guru_skfls"));
     
@@ -906,11 +849,13 @@ function urusSenaraiGuru() {
                 imgUrl = `https://drive.google.com/uc?id=${fileId}`;
             }
 
+            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=150`;
+
             html += `
                 <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
                     <td class="p-3">
                         <div class="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden relative border border-slate-200">
-                            <img src="${imgUrl}" alt="Gambar" class="absolute inset-0 w-full h-full object-cover">
+                            <img src="${imgUrl}" alt="Gambar" class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='${fallbackAvatar}';">
                         </div>
                     </td>
                     <td class="p-3 font-bold text-slate-800">${data.nama}</td>
@@ -926,20 +871,3 @@ function urusSenaraiGuru() {
         jadual.innerHTML = html;
     });
 }
-
-// D. Fungsi Padam Rekod
-window.padamGuru = async function(id, nama) {
-    if (confirm(`Pasti mahu memadam profil Cikgu ${nama} dari muka depan?`)) {
-        try {
-            await deleteDoc(doc(db, "guru_skfls", id));
-        } catch (error) {
-            alert("Ralat memadam rekod: " + error.message);
-        }
-    }
-};
-
-// E. Panggil Fungsi secara Automatik
-document.addEventListener("DOMContentLoaded", () => {
-    paparkanSenaraiGuru(); // Laksanakan jika buka index.html
-    urusSenaraiGuru();     // Laksanakan jika buka admin.html
-});
