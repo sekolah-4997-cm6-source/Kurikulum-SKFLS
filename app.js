@@ -789,6 +789,7 @@ function paparkanSenaraiGuru() {
         let senarai = [];
         snapshot.forEach(docSnap => senarai.push({ id: docSnap.id, ...docSnap.data() }));
         
+        // Susun ikut yang terawal dimasukkan
         senarai.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
 
         if (senarai.length === 0) {
@@ -801,11 +802,10 @@ function paparkanSenaraiGuru() {
             let imgUrl = data.url_gambar;
             if (imgUrl && imgUrl.includes("drive.google.com/file/d/")) {
                 const fileId = imgUrl.split("/d/")[1].split("/")[0];
-                // Guna format pautan langsung Google Drive
                 imgUrl = `https://drive.google.com/uc?id=${fileId}`;
             }
 
-            // Guna ui-avatars sebagai gambar sandaran (fallback) jika tiada gambar/ralat
+            // Fallback image jika ralat
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=200`;
 
             html += `
@@ -821,6 +821,65 @@ function paparkanSenaraiGuru() {
             `;
         });
         ruang.innerHTML = html;
+    });
+}
+
+// B. Fungsi Borang Tambah Guru & Upload (admin.html)
+const formTambahGuru = document.getElementById('formTambahGuru');
+if (formTambahGuru) {
+    formTambahGuru.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nama = document.getElementById('inputNamaGuru').value;
+        const jawatan = document.getElementById('inputJawatanGuru').value;
+        const fileInput = document.getElementById('inputGambarGuru');
+        const file = fileInput.files[0];
+        const btnSubmit = document.getElementById('btnSubmitGuru');
+        const txtSubmit = document.getElementById('txtSubmitGuru');
+
+        if (!file) return alert("Sila pilih gambar.");
+        if (file.size > (5 * 1024 * 1024)) return alert("Saiz gambar terlalu besar. Maksimum 5MB.");
+        
+        try {
+            btnSubmit.disabled = true;
+            txtSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memuat Naik...';
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async function() {
+                const base64Data = reader.result.split(',')[1];
+                // Link GAS sedia ada cikgu
+                const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
+                
+                const responsGAS = await fetch(gasUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ filename: "GURU_" + Date.now() + "_" + file.name, mimeType: file.type, base64: base64Data })
+                });
+                const hasilGAS = await responsGAS.json();
+
+                if (hasilGAS.status === 'success' || hasilGAS.url) {
+                    await addDoc(collection(db, "guru_skfls"), {
+                        nama: nama,
+                        jawatan: jawatan,
+                        url_gambar: hasilGAS.url,
+                        timestamp: serverTimestamp()
+                    });
+                    
+                    alert(`Profil ${nama} berjaya ditambah!`);
+                    formTambahGuru.reset();
+                } else {
+                    alert("Gagal memuat naik gambar ke Google Drive.");
+                }
+                
+                btnSubmit.disabled = false;
+                txtSubmit.innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan';
+            };
+        } catch (error) {
+            alert("Ralat muat naik: " + error.message);
+            btnSubmit.disabled = false;
+            txtSubmit.innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan';
+        }
     });
 }
 
@@ -871,3 +930,20 @@ function urusSenaraiGuru() {
         jadual.innerHTML = html;
     });
 }
+
+// D. Fungsi Padam Rekod
+window.padamGuru = async function(id, nama) {
+    if (confirm(`Pasti mahu memadam profil Cikgu ${nama} dari muka depan?`)) {
+        try {
+            await deleteDoc(doc(db, "guru_skfls", id));
+        } catch (error) {
+            alert("Ralat memadam rekod: " + error.message);
+        }
+    }
+};
+
+// E. Panggil Fungsi secara Automatik
+document.addEventListener("DOMContentLoaded", () => {
+    paparkanSenaraiGuru(); 
+    urusSenaraiGuru();     
+});
