@@ -6,7 +6,7 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signO
 import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot, deleteDoc, updateDoc, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
-// 2. TAMPAL CONFIG FIREBASE ANDA DI SINI
+// 2. CONFIG FIREBASE
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyDhEer81oa5wGndqr5dKRwFwVeSahwaUjo",
@@ -23,63 +23,110 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ hd: "moe-dl.edu.my" });
 const db = getFirestore(app);
 
+// Pembolehubah Global
 window.isAdmin = false;
 window.userSemasa = null;
 let tahunFilter = "Semua"; 
 let unsubscribeJadual = null; 
+let unsubscribeTracker = null;
 
 // ==========================================
-// 3. LOGIK LOG MASUK (GOOGLE AUTH) & PANGKAT ADMIN
+// 3. LOGIK LOG MASUK & PERANAN PENGGUNA (FIRESTORE)
 // ==========================================
-const senaraiAdmin = [
-    "sekolah-4997-cm6@moe-dl.edu.my", 
-    "g-12345678@moe-dl.edu.my" 
-];
-
 const btnLogin = document.getElementById('btnLogin');
 const txtLogin = document.getElementById('txtLogin');
 const iconLogin = document.getElementById('iconLogin');
 
-function semakStatusAdmin(email) {
-    if (senaraiAdmin.includes(email)) {
-        window.isAdmin = true;
-        if (typeof sahkanHalamanAdmin === "function") sahkanHalamanAdmin();
-        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
-    } else {
-        window.isAdmin = false;
-        if (window.location.pathname.includes('admin.html')) {
-            alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir sistem.");
-            window.location.href = "index.html";
-        }
-        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
-    }
-}
-
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
+        // 1. Semak domain DELIMa
+        if (!user.email.endsWith("@moe-dl.edu.my")) {
+            alert("Sila gunakan e-mel MOE (DELIMa) sahaja.");
+            signOut(auth);
+            return;
+        }
+
         window.userSemasa = user;
         if (txtLogin) txtLogin.innerText = "Log Keluar";
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
-        semakStatusAdmin(user.email);
         
-        if (document.getElementById('jadualTrackerBody')) {
-            const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : "2026";
+        // 2. Semak/Daftar Peranan Pengguna di Firestore
+        const userRef = doc(db, "pengguna", user.email);
+        const userSnap = await getDoc(userRef);
+        
+        let perananPengguna = "guru"; // Peranan lalai
+        
+        if (!userSnap.exists()) {
+            // Jika pengguna log masuk kali pertama, simpan data mereka dalam DB
+            await setDoc(userRef, {
+                nama: user.displayName || "Pengguna DELIMa",
+                email: user.email,
+                peranan: "guru"
+            });
+        } else {
+            // Jika sudah ada, ambil peranan mereka
+            perananPengguna = userSnap.data().peranan;
+        }
+
+        // 3. Tentukan paparan UI berdasarkan peranan
+        if (perananPengguna === "admin") {
+            window.isAdmin = true;
+            if (typeof sahkanHalamanAdmin === "function") sahkanHalamanAdmin(); // Benarkan akses admin.html
+            
+            // Paparkan semua butang khusus admin (Upload, Padam)
+            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
+            
+            // Paparkan butang menu admin khusus (jika ada dalam HTML)
+            const adminMenuBtn = document.getElementById("admin-menu-button");
+            if (adminMenuBtn) adminMenuBtn.classList.remove("hidden");
+        } else {
+            window.isAdmin = false;
+            
+            // Jika cuba akses admin.html tapi bukan admin, tendang keluar
+            if (window.location.pathname.includes('admin.html')) {
+                alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir sistem.");
+                window.location.href = "index.html";
+            }
+            
+            // Sembunyikan semua butang admin
+            document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
+            
+            const adminMenuBtn = document.getElementById("admin-menu-button");
+            if (adminMenuBtn) adminMenuBtn.classList.add("hidden");
+        }
+
+        // 4. Jalankan fungsi jadual & tracker setelah selesai semakan peranan
+        if (typeof muatJadual === "function") muatJadual();
+        
+        if (document.getElementById('jadualTrackerBody') && typeof janaTrackerPanitia === "function") {
+            const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : new Date().getFullYear().toString();
             janaTrackerPanitia(tahunSemasa);
         }
+
     } else {
+        // 5. Logik apabila pengguna log keluar
         window.userSemasa = null;
         window.isAdmin = false;
         if (txtLogin) txtLogin.innerText = "Log Masuk (DELIMa)";
         if (iconLogin) iconLogin.className = "fas fa-sign-in-alt mr-2 text-slate-600";
         
+        // Tendang keluar jika berada di halaman admin
         if (window.location.pathname.includes('admin.html')) {
             alert("Sila log masuk menggunakan e-mel DELIMa terlebih dahulu.");
             window.location.href = "index.html";
         }
+        
+        // Sembunyikan elemen admin
         document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
+        const adminMenuBtn = document.getElementById("admin-menu-button");
+        if (adminMenuBtn) adminMenuBtn.classList.add("hidden");
+        
+        // Tetap jalankan jadual untuk paparan awam (tanpa fungsi admin)
+        if (typeof muatJadual === "function") muatJadual();
     }
 });
 
+// Logik untuk butang klik Log Masuk / Log Keluar
 if (btnLogin) {
     btnLogin.addEventListener('click', () => {
         if (window.userSemasa) {
@@ -89,12 +136,10 @@ if (btnLogin) {
         }
     });
 }
-
 // ==========================================
 // 4. KAWALAN TAJUK MUKA SURAT BESAR
 // ==========================================
 const urlParams = new URLSearchParams(window.location.search);
-// PEMBETULAN: Paksa semua url subjek menjadi huruf kecil untuk elak error Tracker
 const subjekSemasa = (urlParams.get('subjek') || 'umum').toLowerCase();
 
 const senaraiNamaPanitia = {
@@ -142,7 +187,7 @@ function muatJadual() {
     
     const ruangKhasPanitia = document.getElementById('ruangKhasPanitia');
     const ruangKhasBukanPanitia = document.getElementById('ruangKhasBukanPanitia');
-    const ruangStatusMini = document.getElementById('ruangStatusMini'); // <-- ID BARU KITA
+    const ruangStatusMini = document.getElementById('ruangStatusMini');
 
     if (ruangKhasPanitia && ruangKhasBukanPanitia) {
         if (adakahPanitia) {
@@ -187,7 +232,6 @@ function muatJadual() {
             return tB - tA;
         });
 
-        // --- KES 1: HALAMAN PANITIA SUBJEK ---
         if (adakahPanitia && ruangFail1) {
             let htmlFail = { fail_1: "", fail_2: "", fail_3: "", fail_4: "" };
             let jumlahFail = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 };
@@ -221,7 +265,6 @@ function muatJadual() {
                 }
             });
 
-            // KEMAS KINI STATUS MINI PANITIA
             if (ruangStatusMini) {
                 const formatBadge = (nama, jumlah) => jumlah > 0 
                     ? `<span class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 text-sm font-bold shadow-sm"><i class="fas fa-check mr-1"></i>${nama}: ${jumlah}</span>`
@@ -235,12 +278,10 @@ function muatJadual() {
                 `;
             }
         } 
-        // --- KES 2: BUKAN PANITIA ---
         else if (!adakahPanitia && ruangJadual) {
             if (senaraiData.length === 0) {
                 ruangJadual.innerHTML = '<p class="text-center text-slate-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 block"></i> Belum ada bahan dimuat naik.</p>';
                 
-                // KEMAS KINI STATUS MINI (KOSONG)
                 if (ruangStatusMini) {
                     ruangStatusMini.innerHTML = `<span class="bg-slate-50 text-slate-500 px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium"><i class="fas fa-times-circle mr-2"></i>Belum Ada Fail</span>`;
                 }
@@ -279,19 +320,18 @@ function muatJadual() {
                 htmlJadual += `</tbody></table></div>`;
                 ruangJadual.innerHTML = htmlJadual;
 
-                // KEMAS KINI STATUS MINI BUKAN PANITIA
                 if (ruangStatusMini) {
                     ruangStatusMini.innerHTML = `<span class="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-200 text-sm font-bold shadow-sm"><i class="fas fa-check-circle mr-2"></i>Telah Dimuat Naik: ${senaraiData.length} Fail</span>`;
                 }
             }
         }
 
+        // Tunjukkan semula elemen admin jika pengguna semasa ialah admin
         if (window.isAdmin) {
             document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
         }
     });
 }
-
 
 // ==========================================
 // 7. LOGIK MUAT NAIK FAIL (MODAL & GAS)
@@ -305,12 +345,11 @@ let folderSasaranSemasa = "fail_1";
 
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
-    
-    // KOD BARU: Halang butang "Muat Naik Sekarang" dari reset folder
     if (btn && btn.id === 'btnSubmitUpload') return; 
 
     if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik') || btn.id === 'btnInjectUploadUtama')) {
         if (!window.userSemasa) return alert("Sila Log Masuk (DELIMa) terlebih dahulu.");
+        if (!window.isAdmin) return alert("Akses muat naik hanya dibenarkan untuk Admin.");
         
         let folderBidik = btn.getAttribute('data-folder');
         
@@ -371,7 +410,7 @@ if (formUpload) {
                     await addDoc(collection(db, "kandungan"), {
                         tajuk: tajuk, 
                         kategori: folderSasaranSemasa, 
-                        subjek: subjekSemasa, // Sekarang kompom huruf kecil
+                        subjek: subjekSemasa, 
                         folder_destinasi: folderSasaranSemasa, 
                         url_fail: hasilGAS.url,
                         dimuat_naik_oleh: user.displayName, 
@@ -538,13 +577,10 @@ window.padamKekalFail = async function(id) {
 // ==========================================
 // 10. JADUAL TRACKER KESELURUHAN (PANITIA & BUKAN PANITIA)
 // ==========================================
-let unsubscribeTracker = null;
-
 function janaTrackerPanitia(tahun) {
     const trackerTableBody = document.getElementById('jadualTrackerBody');
     if (!trackerTableBody) return; 
 
-    // Label tahun (jika ada di UI admin)
     const labelTahunTracker = document.getElementById('labelTahunTracker');
     if (labelTahunTracker) labelTahunTracker.innerText = tahun;
     
@@ -565,11 +601,9 @@ function janaTrackerPanitia(tahun) {
         if (unsubscribeTracker) unsubscribeTracker();
 
         unsubscribeTracker = onSnapshot(qTracker, (snapshot) => {
-            // 1. Matriks Panitia
             let dataSubjek = {};
             senaraiSemuaPanitia.forEach(p => { dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 }; });
 
-            // 2. Matriks Bukan Panitia
             let dataBukanPanitia = {
                 'visi_misi': 0, 'spi': 0, 'dasar': 0, 'takwim': 0,
                 'mesyuarat_induk': 0, 'mmi': 0,
@@ -580,7 +614,6 @@ function janaTrackerPanitia(tahun) {
             snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 
-                // Penapis Tahun
                 if (tahun && tahun.toLowerCase() !== "semua") {
                     const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
                     const filterKecil = String(tahun).toLowerCase();
@@ -589,22 +622,17 @@ function janaTrackerPanitia(tahun) {
                 
                 const subjek = data.subjek ? String(data.subjek).toLowerCase() : "";
                 
-                // Masukkan data ke Panitia
                 if (dataSubjek[subjek]) {
                     let folder = data.folder_destinasi;
                     if (!['fail_1', 'fail_2', 'fail_3', 'fail_4'].includes(folder)) folder = 'fail_1'; 
                     dataSubjek[subjek][folder]++;
                 }
 
-                // Masukkan data ke Bukan Panitia
                 if (dataBukanPanitia[subjek] !== undefined) {
                     dataBukanPanitia[subjek]++;
                 }
             });
 
-            // ==========================================
-            // RENDER HTML PANITIA
-            // ==========================================
             let htmlTracker = "";
             senaraiSemuaPanitia.forEach(p => {
                 const kiraan = dataSubjek[p.id];
@@ -629,9 +657,6 @@ function janaTrackerPanitia(tahun) {
             });
             trackerTableBody.innerHTML = htmlTracker;
 
-            // ==========================================
-            // RENDER HTML BUKAN PANITIA
-            // ==========================================
             const renderBukanPanitia = (kumpulanData, targetId) => {
                 const targetEl = document.getElementById(targetId);
                 if (!targetEl) return;
@@ -679,38 +704,72 @@ function janaTrackerPanitia(tahun) {
 }
 
 // =========================================================================
-// BAHAGIAN 11: INISIALISASI (MENGHIDUPKAN SISTEM)
+// 11. PENGURUSAN AKSES PENGGUNA (ADMIN PANEL)
 // =========================================================================
 
-// 1. Pantau status Log Masuk / Log Keluar
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        window.userSemasa = user;
-        window.isAdmin = true; 
-        
-        // Paparkan butang-butang admin (termasuk butang Muat Naik)
-        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
-    } else {
-        window.userSemasa = null;
-        window.isAdmin = false;
-        
-        // Sembunyikan butang-butang admin
-        document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
-    }
+async function muatSenaraiPengguna() {
+    const tbody = document.getElementById("senarai-pengguna-body");
+    if (!tbody) return; // Hanya jalankan jika kita berada di halaman yang ada jadual ini (admin.html)
 
-    // 2. JALANKAN FUNGSI JADUAL & TRACKER (Ini yang mengembalikan paparan anda!)
-    if (typeof muatJadual === "function") {
-        muatJadual();
+    try {
+        const querySnapshot = await getDocs(collection(db, "pengguna"));
+        tbody.innerHTML = ""; // Kosongkan mesej "Memuatkan data..."
+
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const email = docSnap.id;
+
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
+            tr.innerHTML = `
+                <td class="p-4">
+                    <div class="font-bold text-slate-800">${data.nama}</div>
+                    <div class="text-sm text-slate-500">${data.email}</div>
+                </td>
+                <td class="p-4">
+                    <select id="role-${email.replace(/[@.]/g, '')}" class="border border-slate-300 rounded-lg p-2 w-full text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <option value="guru" ${data.peranan === 'guru' ? 'selected' : ''}>Guru Biasa</option>
+                        <option value="admin" ${data.peranan === 'admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                </td>
+                <td class="p-4 text-right whitespace-nowrap">
+                    <button onclick="kemaskiniPeranan('${email}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-bold transition shadow-sm">
+                        Simpan
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Ralat memuat senarai pengguna:", error);
+        tbody.innerHTML = `<tr><td colspan="3" class="text-red-500 text-center p-4">Gagal memuatkan data. Pastikan anda mempunyai akses Admin.</td></tr>`;
     }
-    
-    if (typeof janaTrackerPanitia === "function") {
-        // Jana tracker untuk tahun semasa
-        const tahunSemasa = new Date().getFullYear().toString();
-        janaTrackerPanitia(tahunSemasa); 
+}
+
+// Jadikan fungsi global supaya butang HTML 'onclick' boleh memanggilnya
+window.kemaskiniPeranan = async function(email) {
+    // Kita buang simbol khas pada ID select box
+    const selectId = `role-${email.replace(/[@.]/g, '')}`;
+    const roleBaru = document.getElementById(selectId).value;
+
+    const sah = confirm(`Adakah anda pasti mahu menukar akses ${email} kepada ${roleBaru.toUpperCase()}?`);
+    if (!sah) return;
+
+    try {
+        const userRef = doc(db, "pengguna", email);
+        await updateDoc(userRef, {
+            peranan: roleBaru
+        });
+        alert(`Berjaya! Akses untuk ${email} kini adalah ${roleBaru.toUpperCase()}.`);
+    } catch (error) {
+        console.error("Ralat mengemaskini peranan:", error);
+        alert("Gagal mengemaskini peranan. Sila pastikan anda mempunyai akses admin.");
+    }
+};
+
+// PANGGIL FUNGSI INI APABILA LAMAN ADMIN DIBUKA
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("senarai-pengguna-body")) {
+        muatSenaraiPengguna();
     }
 });
-
-// 3. Pastikan fungsi padam rekod boleh dibaca oleh HTML
-if (typeof padamRekod !== 'undefined') {
-    window.padamRekod = padamRekod;
-}
