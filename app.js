@@ -887,12 +887,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-
 // =========================================================================
 // 13. PENGURUSAN BARISAN GURU (ADMIN & DASHBOARD)
 // =========================================================================
 
-// A. Fungsi Paparkan Guru di Muka Depan (index.html) - VERSI AUTO & MANUAL SCROLL (Nama Penuh)
+// A. Fungsi Paparkan Guru di Muka Depan (index.html)
 function paparkanSenaraiGuru() {
     const ruang = document.getElementById('ruangSenaraiGuru');
     if (!ruang) return; 
@@ -903,7 +902,6 @@ function paparkanSenaraiGuru() {
         let senarai = [];
         snapshot.forEach(docSnap => senarai.push({ id: docSnap.id, ...docSnap.data() }));
         
-        // Susun ikut yang terawal dimasukkan
         senarai.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
 
         if (senarai.length === 0) {
@@ -916,7 +914,6 @@ function paparkanSenaraiGuru() {
             let imgUrl = data.url_gambar;
             let fileId = "";
 
-            // Tangkap ID gambar dari pelbagai jenis link Google Drive
             if (imgUrl) {
                 if (imgUrl.includes("/file/d/")) {
                     fileId = imgUrl.split("/file/d/")[1].split("/")[0];
@@ -925,12 +922,10 @@ function paparkanSenaraiGuru() {
                 }
             }
 
-            // Guna Thumbnail API Google Drive supaya tak disekat
             if (fileId) {
                 imgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`; 
             }
 
-            // Gambar sandaran (fallback) jika tiada/gagal
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=200`;
 
             kadHtml += `
@@ -939,7 +934,6 @@ function paparkanSenaraiGuru() {
                         <img src="${imgUrl}" alt="${data.nama}" class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='${fallbackAvatar}';">
                     </div>
                     <div class="p-3 text-center bg-white flex-1 flex flex-col justify-start">
-                        <!-- Perubahan di sini: Buang line-clamp-1 supaya nama boleh dua baris -->
                         <p class="font-bold text-slate-800 text-sm leading-tight mb-1">${data.nama}</p>
                         <p class="text-[10px] text-slate-500 mt-auto uppercase tracking-wider font-bold bg-slate-50 py-1 rounded-md">${data.jawatan}</p>
                     </div>
@@ -947,14 +941,9 @@ function paparkanSenaraiGuru() {
             `;
         });
 
-        // Salin (Duplicate) kad 2 kali untuk efek loop tanpa putus
         ruang.innerHTML = kadHtml + kadHtml;
 
-        // ============================================
-        // LOGIK AUTOSCROLL & MANUAL SCROLL
-        // ============================================
         let isPaused = false;
-
         ruang.addEventListener('mouseenter', () => isPaused = true);
         ruang.addEventListener('mouseleave', () => isPaused = false);
         ruang.addEventListener('touchstart', () => isPaused = true, { passive: true });
@@ -963,7 +952,6 @@ function paparkanSenaraiGuru() {
         function gerakkanScroll() {
             if (!isPaused) {
                 ruang.scrollLeft += 1; 
-
                 if (ruang.scrollLeft >= ruang.scrollWidth / 2) {
                     ruang.scrollLeft = 0;
                 }
@@ -1033,7 +1021,7 @@ if (formTambahGuru) {
     });
 }
 
-// C. Fungsi Jadual Admin (Lihat & Padam) (admin.html)
+// C. Fungsi Jadual Admin (Lihat, Edit & Padam) (admin.html)
 function urusSenaraiGuru() {
     const jadual = document.getElementById('jadualPengurusanGuru');
     if (!jadual) return;
@@ -1063,24 +1051,30 @@ function urusSenaraiGuru() {
                 }
             }
 
-            // Paparan jadual admin (saiz imej lebih kecil: w150)
             if (fileId) {
                 imgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w150`; 
             }
 
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=150`;
 
+            // Nama perlu 'escape' single quotes supaya tak rosakkan parameter function
+            const namaPenuh = data.nama.replace(/'/g, "\\'");
+            const jawatanPenuh = data.jawatan.replace(/'/g, "\\'");
+
             html += `
                 <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                    <td class="p-3">
+                    <td class="p-3 w-16">
                         <div class="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden relative border border-slate-200">
                             <img src="${imgUrl}" alt="Gambar" class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='${fallbackAvatar}';">
                         </div>
                     </td>
                     <td class="p-3 font-bold text-slate-800">${data.nama}</td>
                     <td class="p-3 text-slate-500 text-xs uppercase tracking-wider">${data.jawatan}</td>
-                    <td class="p-3 text-right">
-                        <button onclick="padamGuru('${data.id}', '${data.nama}')" class="bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded-md text-xs font-bold transition">
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="editGuru('${data.id}', '${namaPenuh}', '${jawatanPenuh}')" class="bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1.5 rounded-md text-xs font-bold transition mr-2">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </button>
+                        <button onclick="padamGuru('${data.id}', '${namaPenuh}')" class="bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded-md text-xs font-bold transition">
                             <i class="fas fa-trash mr-1"></i> Padam
                         </button>
                     </td>
@@ -1091,7 +1085,30 @@ function urusSenaraiGuru() {
     });
 }
 
-// D. Fungsi Padam Rekod
+// D1. Fungsi Edit Rekod (BARU)
+window.editGuru = async function(id, namaLama, jawatanLama) {
+    const namaBaru = prompt("Kemaskini Nama Guru:", namaLama);
+    if (namaBaru === null || namaBaru.trim() === "") return; // Jika klik Cancel atau biar kosong
+
+    const jawatanBaru = prompt("Kemaskini Jawatan Guru:", jawatanLama);
+    if (jawatanBaru === null || jawatanBaru.trim() === "") return; // Jika klik Cancel atau biar kosong
+
+    // Hantar perubahan ke pangkalan data jika ada yang ditukar
+    if (namaBaru !== namaLama || jawatanBaru !== jawatanLama) {
+        try {
+            await updateDoc(doc(db, "guru_skfls", id), {
+                nama: namaBaru.trim(),
+                jawatan: jawatanBaru.trim()
+            });
+            // Tidak perlu alert berjaya kerana UI akan auto refresh (onSnapshot)
+        } catch (error) {
+            console.error("Ralat kemaskini:", error);
+            alert("Ralat mengemaskini profil: " + error.message);
+        }
+    }
+};
+
+// D2. Fungsi Padam Rekod
 window.padamGuru = async function(id, nama) {
     if (confirm(`Pasti mahu memadam profil Cikgu ${nama} dari muka depan?`)) {
         try {
