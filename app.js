@@ -362,7 +362,12 @@ document.addEventListener('click', (e) => {
 
     if (btn && (btn.textContent.includes('Muat Naik') || btn.classList.contains('btn-muat-naik') || btn.id === 'btnInjectUploadUtama')) {
         if (!window.userSemasa) return alert("Sila Log Masuk (DELIMa) terlebih dahulu.");
-        if (!window.isAdmin) return alert("Akses muat naik hanya dibenarkan untuk Admin.");
+        const urlParams = new URLSearchParams(window.location.search);
+const subjekSemasaBorang = urlParams.get('subjek');
+
+if (!window.semakKebenaranAkses(subjekSemasaBorang)) {
+    return alert("Akses ditolak: Anda hanya dibenarkan memuat naik fail di bahagian seliaan anda sahaja.");
+}
         
         let folderBidik = btn.getAttribute('data-folder');
         
