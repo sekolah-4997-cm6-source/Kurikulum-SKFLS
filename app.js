@@ -825,7 +825,7 @@ function paparkanSenaraiGuru() {
                         <img src="${imgUrl}" alt="${data.nama}" class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='${fallbackAvatar}';">
                     </div>
                     <div class="p-3 text-center bg-white flex-1 flex flex-col justify-center">
-                        <p class="font-bold text-slate-800 text-sm line-clamp-1" title="${data.nama}">${data.nama}</p>
+                        <p class="font-bold text-slate-800 text-sm leading-tight mb-1">${data.nama}</p>
                         <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold bg-slate-50 py-1 rounded-md">${data.jawatan}</p>
                     </div>
                 </div>
