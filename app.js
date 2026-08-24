@@ -398,11 +398,21 @@ if (formUpload) {
             reader.onload = async function() {
                 const base64Data = reader.result.split(',')[1]; 
                 const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
-                
+
+
+const jenisFail = document.getElementById('ID_INPUT_JENIS_FAIL_CIKGU').value; 
+const namaPanitia = document.getElementById('ID_INPUT_NAMA_PANITIA_CIKGU').value;
+const namaFolderGabungan = jenisFail + " " + namaPanitia;
+              
                 const responsGAS = await fetch(gasUrl, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ filename: file.name, mimeType: file.type, base64: base64Data })
+                    body: JSON.stringify({ 
+                    filename: file.name, 
+                    mimeType: file.type, 
+                    base64: base64Data,
+                    namaFolder: namaFolderGabungan 
+})
                 });
                 const hasilGAS = await responsGAS.json();
 
