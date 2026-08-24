@@ -37,13 +37,15 @@ const btnLogin = document.getElementById('btnLogin');
 const txtLogin = document.getElementById('txtLogin');
 const iconLogin = document.getElementById('iconLogin');
 
-// Fungsi Pintar Semak Akses (Boleh diguna oleh fungsi Muat Naik/Padam)
+// Fungsi Pintar Semak Akses (BAHARU - Sokong Pelbagai Peranan)
 window.semakKebenaranAkses = function(subjekDiuji) {
-    if (window.isAdmin) return true; // Admin boleh buat semua perkara
-    if ((window.userRole === "ketua_panitia" || window.userRole === "penyelaras") && window.userKawalan === subjekDiuji) {
-        return true; // KP atau Penyelaras di halaman mereka sendiri
+    if (window.isAdmin) return true; // Admin sentiasa boleh
+    
+    // Semak jika pengguna mempunyai 'akses_khas' dan kawasan mereka (Array) mengandungi subjek yang diuji
+    if (window.userRole === "akses_khas" && Array.isArray(window.userKawalan) && window.userKawalan.includes(subjekDiuji)) {
+        return true; 
     }
-    return false; // Selain itu, dilarang
+    return false; 
 };
 
 onAuthStateChanged(auth, async (user) => {
