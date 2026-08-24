@@ -126,7 +126,7 @@
                 <p class="text-blue-600 text-sm">Sila pilih menu di sebelah kiri untuk melihat dokumen, SPI, minit mesyuarat atau fail-fail panitia. Log masuk menggunakan e-mel DELIMa untuk memuat naik bahan.</p>
             </div>
 
-<!-- KAWASAN BARISAN GURU (DYNAMIC FIRESTORE) -->
+<!-- KAWASAN BARISAN GURU -->
 <div class="mt-8 mb-8" id="seksyenBarisanGuru">
     <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-slate-800">
@@ -134,9 +134,11 @@
         </h2>
     </div>
     
-    <!-- Container Scroll ke tepi (Akan diisi oleh Javascript) -->
-    <div id="ruangSenaraiGuru" class="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory hide-scrollbar">
-        <p class="text-slate-500 text-sm italic py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuatkan senarai guru...</p>
+    <!-- Container ini membenarkan manual scroll & auto-scroll -->
+    <div id="ruangSenaraiGuru" class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar cursor-pointer">
+        <p class="text-slate-500 text-sm italic py-4">
+            <i class="fas fa-spinner fa-spin mr-2"></i>Memuatkan senarai guru...
+        </p>
     </div>
 </div>
             
