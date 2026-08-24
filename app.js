@@ -39,7 +39,7 @@ const iconLogin = document.getElementById('iconLogin');
 
 // Fungsi Pintar Semak Akses (Boleh diguna oleh fungsi Muat Naik/Padam)
 window.semakKebenaranAkses = function(subjekDiuji) {
-    if (window.isAdmin) return true; // Admin boleh semua
+    if (window.isAdmin) return true; // Admin boleh buat semua perkara
     if ((window.userRole === "ketua_panitia" || window.userRole === "penyelaras") && window.userKawalan === subjekDiuji) {
         return true; // KP atau Penyelaras di halaman mereka sendiri
     }
@@ -54,19 +54,7 @@ onAuthStateChanged(auth, async (user) => {
             signOut(auth);
             return;
         }
-if (btnLogin) {
-    btnLogin.addEventListener('click', () => {
-        if (window.userSemasa) {
-            signOut(auth).then(() => {
-                alert("Anda telah log keluar.");
-                // Muat semula halaman supaya kembali ke paparan asal
-                window.location.reload(); 
-            }).catch((error) => console.error("Ralat log keluar:", error));
-        } else {
-            signInWithPopup(auth, provider).catch((error) => alert("Gagal log masuk: " + error.message));
-        }
-    });
-}  
+
         window.userSemasa = user;
         if (txtLogin) txtLogin.innerText = "Log Keluar";
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
@@ -79,17 +67,19 @@ if (btnLogin) {
         let kawasanPengguna = ""; // Kawasan lalai (kosong)
         
         if (!userSnap.exists()) {
+            // Jika pengguna log masuk kali pertama
             await setDoc(userRef, {
                 nama: user.displayName || "Pengguna DELIMa",
                 email: user.email,
                 peranan: "guru"
             });
         } else {
+            // Jika sudah ada, ambil peranan mereka
             perananPengguna = userSnap.data().peranan || "guru";
-            kawasanPengguna = userSnap.data().kawasan || ""; // Ambil data kawasan jika ada
+            kawasanPengguna = userSnap.data().kawasan || "";
         }
 
-        // Simpan dalam memori supaya bahagian lain (Upload) boleh baca
+        // Simpan dalam memori supaya bahagian lain (Upload/Padam) boleh baca
         window.userRole = perananPengguna;
         window.userKawalan = kawasanPengguna;
 
@@ -102,15 +92,18 @@ if (btnLogin) {
 
         if (perananPengguna === "admin") {
             window.isAdmin = true;
-            if (typeof sahkanHalamanAdmin === "function") sahkanHalamanAdmin(); 
+            if (typeof sahkanHalamanAdmin === "function") sahkanHalamanAdmin(); // Benarkan akses admin.html
             
+            // Paparkan semua butang khusus admin (Upload, Padam)
             document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
+            
+            // Paparkan butang menu admin khusus
             if (adminMenuBtn) adminMenuBtn.classList.remove("hidden");
             
         } else {
             window.isAdmin = false;
             
-            // Tendang keluar jika cuba masuk admin.html
+            // Tendang keluar jika cuba akses admin.html tapi bukan admin
             if (window.location.pathname.includes('admin.html')) {
                 alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir sistem.");
                 window.location.href = "index.html";
@@ -118,18 +111,18 @@ if (btnLogin) {
             
             // Logik KP & Penyelaras: Jika kawasan mereka sepadan dengan URL
             if (window.semakKebenaranAkses(subjekSemasaHalaman)) {
-                // Buka butang muat naik/padam untuk halaman ini sahaja!
+                // Buka butang muat naik/padam untuk halaman ini sahaja
                 document.querySelectorAll('.hanya-admin').forEach(el => el.classList.remove('hidden'));
             } else {
                 // Tutup butang jika bukan halaman mereka
                 document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
             }
 
-            // Butang menu admin sentiasa disembunyikan untuk KP/Penyelaras/Guru
+            // Sembunyikan menu admin untuk KP/Penyelaras/Guru
             if (adminMenuBtn) adminMenuBtn.classList.add("hidden");
         }
 
-        // 4. Jalankan fungsi jadual
+        // 4. Jalankan fungsi jadual & tracker
         if (typeof muatJadual === "function") muatJadual();
         
         if (document.getElementById('jadualTrackerBody') && typeof janaTrackerPanitia === "function") {
@@ -138,7 +131,7 @@ if (btnLogin) {
         }
 
     } else {
-        // 5. Logik log keluar
+        // 5. Logik apabila pengguna log keluar
         window.userSemasa = null;
         window.isAdmin = false;
         window.userRole = null;
@@ -147,18 +140,37 @@ if (btnLogin) {
         if (txtLogin) txtLogin.innerText = "Log Masuk (DELIMa)";
         if (iconLogin) iconLogin.className = "fas fa-sign-in-alt mr-2 text-slate-600";
         
+        // Tendang keluar jika berada di halaman admin
         if (window.location.pathname.includes('admin.html')) {
             alert("Sila log masuk menggunakan e-mel DELIMa terlebih dahulu.");
             window.location.href = "index.html";
         }
         
+        // Sembunyikan elemen admin
         document.querySelectorAll('.hanya-admin').forEach(el => el.classList.add('hidden'));
         const adminMenuBtn = document.getElementById("admin-menu-button");
         if (adminMenuBtn) adminMenuBtn.classList.add("hidden");
         
+        // Tetap jalankan jadual untuk paparan awam (tanpa fungsi admin)
         if (typeof muatJadual === "function") muatJadual();
     }
 });
+
+// ==========================================
+// LOGIK BUTANG KLIK LOG MASUK / KELUAR
+// ==========================================
+if (btnLogin) {
+    btnLogin.addEventListener('click', () => {
+        if (window.userSemasa) {
+            signOut(auth).then(() => {
+                alert("Anda telah log keluar.");
+                window.location.reload(); // Muat semula halaman selepas log keluar
+            }).catch((error) => console.error("Ralat log keluar:", error));
+        } else {
+            signInWithPopup(auth, provider).catch((error) => alert("Gagal log masuk: " + error.message));
+        }
+    });
+}
 
 
 // ==========================================
