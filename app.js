@@ -400,9 +400,7 @@ if (formUpload) {
                 const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
 
 
-const jenisFail = document.getElementById('ID_INPUT_JENIS_FAIL_CIKGU').value; 
-const namaPanitia = document.getElementById('ID_INPUT_NAMA_PANITIA_CIKGU').value;
-const namaFolderGabungan = jenisFail + " " + namaPanitia;
+const namaFolderGabungan = folderSasaranSemasa.replace('_', ' ').toUpperCase() + " " + subjekSemasa.toUpperCase();
               
                 const responsGAS = await fetch(gasUrl, {
                     method: "POST",
