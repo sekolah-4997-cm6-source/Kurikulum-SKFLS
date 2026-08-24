@@ -54,7 +54,19 @@ onAuthStateChanged(auth, async (user) => {
             signOut(auth);
             return;
         }
-
+if (btnLogin) {
+    btnLogin.addEventListener('click', () => {
+        if (window.userSemasa) {
+            signOut(auth).then(() => {
+                alert("Anda telah log keluar.");
+                // Muat semula halaman supaya kembali ke paparan asal
+                window.location.reload(); 
+            }).catch((error) => console.error("Ralat log keluar:", error));
+        } else {
+            signInWithPopup(auth, provider).catch((error) => alert("Gagal log masuk: " + error.message));
+        }
+    });
+}  
         window.userSemasa = user;
         if (txtLogin) txtLogin.innerText = "Log Keluar";
         if (iconLogin) iconLogin.className = "fas fa-sign-out-alt mr-2 text-red-500";
