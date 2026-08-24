@@ -744,6 +744,10 @@ async function muatSenaraiPengguna() {
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const email = docSnap.id;
+            const emailSafe = email.replace(/[@.]/g, ''); // Buang simbol untuk ID unik
+
+            // Semak adakah dropdown kawasan patut disembunyikan
+            const hideKawasan = (data.peranan === 'ketua_panitia' || data.peranan === 'penyelaras') ? '' : 'hidden';
 
             const tr = document.createElement("tr");
             tr.className = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
@@ -753,12 +757,44 @@ async function muatSenaraiPengguna() {
                     <div class="text-sm text-slate-500">${data.email}</div>
                 </td>
                 <td class="p-4">
-                    <select id="role-${email.replace(/[@.]/g, '')}" class="border border-slate-300 rounded-lg p-2 w-full text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <!-- Dropdown Peranan -->
+                    <select id="role-${emailSafe}" onchange="tukarPaparanKawasan('${emailSafe}')" class="border border-slate-300 rounded-lg p-2 w-full text-sm focus:ring-blue-500 focus:border-blue-500 outline-none mb-2">
                         <option value="guru" ${data.peranan === 'guru' ? 'selected' : ''}>Guru Biasa</option>
+                        <option value="ketua_panitia" ${data.peranan === 'ketua_panitia' ? 'selected' : ''}>Ketua Panitia</option>
+                        <option value="penyelaras" ${data.peranan === 'penyelaras' ? 'selected' : ''}>Penyelaras</option>
                         <option value="admin" ${data.peranan === 'admin' ? 'selected' : ''}>Admin</option>
                     </select>
+                    
+                    <!-- Dropdown Kawasan (Hanya muncul jika KP / Penyelaras) -->
+                    <select id="kawasan-${emailSafe}" class="border border-slate-300 rounded-lg p-2 w-full text-sm focus:ring-blue-500 focus:border-blue-500 outline-none ${hideKawasan}">
+                        <option value="">-- Pilih Subjek/Kawasan --</option>
+                        
+                        <!-- Senarai Panitia -->
+                        <optgroup label="Panitia">
+                            <option value="bm" ${data.kawasan === 'bm' ? 'selected' : ''}>Bahasa Melayu</option>
+                            <option value="bi" ${data.kawasan === 'bi' ? 'selected' : ''}>Bahasa Inggeris</option>
+                            <option value="mt" ${data.kawasan === 'mt' ? 'selected' : ''}>Matematik</option>
+                            <option value="sn" ${data.kawasan === 'sn' ? 'selected' : ''}>Sains</option>
+                            <option value="pai" ${data.kawasan === 'pai' ? 'selected' : ''}>Pendidikan Islam</option>
+                            <option value="ba" ${data.kawasan === 'ba' ? 'selected' : ''}>Bahasa Arab</option>
+                            <option value="sejarah" ${data.kawasan === 'sejarah' ? 'selected' : ''}>Sejarah</option>
+                            <option value="rbt" ${data.kawasan === 'rbt' ? 'selected' : ''}>RBT</option>
+                            <option value="psv" ${data.kawasan === 'psv' ? 'selected' : ''}>PSV</option>
+                            <option value="pjpk" ${data.kawasan === 'pjpk' ? 'selected' : ''}>PJPK</option>
+                            <option value="muzik" ${data.kawasan === 'muzik' ? 'selected' : ''}>Pend. Muzik</option>
+                            <option value="pm" ${data.kawasan === 'pm' ? 'selected' : ''}>Pend. Moral</option>
+                        </optgroup>
+                        
+                        <!-- Senarai Unit/Penyelaras Lain -->
+                        <optgroup label="Unit Lain">
+                            <option value="plan" ${data.kawasan === 'plan' ? 'selected' : ''}>Program PLaN</option>
+                            <option value="pra" ${data.kawasan === 'pra' ? 'selected' : ''}>Pra Sekolah</option>
+                            <option value="pemulihan" ${data.kawasan === 'pemulihan' ? 'selected' : ''}>Pemulihan</option>
+                            <option value="visi_misi" ${data.kawasan === 'visi_misi' ? 'selected' : ''}>Visi & Misi</option>
+                        </optgroup>
+                    </select>
                 </td>
-                <td class="p-4 text-right whitespace-nowrap">
+                <td class="p-4 text-right whitespace-nowrap align-top">
                     <button onclick="kemaskiniPeranan('${email}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-bold transition shadow-sm">
                         Simpan
                     </button>
@@ -772,11 +808,29 @@ async function muatSenaraiPengguna() {
     }
 }
 
-// Jadikan fungsi global supaya butang HTML 'onclick' boleh memanggilnya
+// Fungsi untuk papar/sembunyi dropdown Kawasan bergantung kepada peranan yang dipilih
+window.tukarPaparanKawasan = function(emailSafe) {
+    const roleSelect = document.getElementById(`role-${emailSafe}`).value;
+    const kawasanSelect = document.getElementById(`kawasan-${emailSafe}`);
+    
+    if (roleSelect === 'ketua_panitia' || roleSelect === 'penyelaras') {
+        kawasanSelect.classList.remove('hidden');
+    } else {
+        kawasanSelect.classList.add('hidden');
+        kawasanSelect.value = ""; // Kosongkan nilai jika tukar balik ke guru/admin
+    }
+};
+
+// Fungsi kemas kini ke Firestore
 window.kemaskiniPeranan = async function(email) {
-    // Kita buang simbol khas pada ID select box
-    const selectId = `role-${email.replace(/[@.]/g, '')}`;
-    const roleBaru = document.getElementById(selectId).value;
+    const emailSafe = email.replace(/[@.]/g, '');
+    const roleBaru = document.getElementById(`role-${emailSafe}`).value;
+    const kawasanBaru = document.getElementById(`kawasan-${emailSafe}`).value;
+
+    // Semakan wajib: Jika KP atau Penyelaras, kawasan WAJIB dipilih
+    if ((roleBaru === 'ketua_panitia' || roleBaru === 'penyelaras') && kawasanBaru === "") {
+        return alert("Sila pilih Subjek/Kawasan seliaan untuk pengguna ini.");
+    }
 
     const sah = confirm(`Adakah anda pasti mahu menukar akses ${email} kepada ${roleBaru.toUpperCase()}?`);
     if (!sah) return;
@@ -784,9 +838,10 @@ window.kemaskiniPeranan = async function(email) {
     try {
         const userRef = doc(db, "pengguna", email);
         await updateDoc(userRef, {
-            peranan: roleBaru
+            peranan: roleBaru,
+            kawasan: kawasanBaru
         });
-        alert(`Berjaya! Akses untuk ${email} kini adalah ${roleBaru.toUpperCase()}.`);
+        alert(`Berjaya! Akses untuk ${email} telah dikemaskini.`);
     } catch (error) {
         console.error("Ralat mengemaskini peranan:", error);
         alert("Gagal mengemaskini peranan. Sila pastikan anda mempunyai akses admin.");
@@ -799,6 +854,7 @@ document.addEventListener("DOMContentLoaded", () => {
         muatSenaraiPengguna();
     }
 });
+
 
 // =========================================================================
 // 13. PENGURUSAN BARISAN GURU (ADMIN & DASHBOARD)
