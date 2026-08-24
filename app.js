@@ -778,7 +778,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 13. PENGURUSAN BARISAN GURU (ADMIN & DASHBOARD)
 // =========================================================================
 
-// A. Fungsi Paparkan Guru di Muka Depan (index.html) - VERSI AUTO & MANUAL SCROLL
+// A. Fungsi Paparkan Guru di Muka Depan (index.html) - VERSI AUTO & MANUAL SCROLL (Nama Penuh)
 function paparkanSenaraiGuru() {
     const ruang = document.getElementById('ruangSenaraiGuru');
     if (!ruang) return; 
@@ -821,12 +821,13 @@ function paparkanSenaraiGuru() {
 
             kadHtml += `
                 <div class="shrink-0 w-36 md:w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all flex flex-col">
-                    <div class="h-40 md:h-48 bg-slate-200 w-full relative">
+                    <div class="h-40 md:h-48 bg-slate-200 w-full relative shrink-0">
                         <img src="${imgUrl}" alt="${data.nama}" class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='${fallbackAvatar}';">
                     </div>
-                    <div class="p-3 text-center bg-white flex-1 flex flex-col justify-center">
+                    <div class="p-3 text-center bg-white flex-1 flex flex-col justify-start">
+                        <!-- Perubahan di sini: Buang line-clamp-1 supaya nama boleh dua baris -->
                         <p class="font-bold text-slate-800 text-sm leading-tight mb-1">${data.nama}</p>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold bg-slate-50 py-1 rounded-md">${data.jawatan}</p>
+                        <p class="text-[10px] text-slate-500 mt-auto uppercase tracking-wider font-bold bg-slate-50 py-1 rounded-md">${data.jawatan}</p>
                     </div>
                 </div>
             `;
@@ -840,27 +841,22 @@ function paparkanSenaraiGuru() {
         // ============================================
         let isPaused = false;
 
-        // Berhenti autoscroll bila tetikus berada di atas (Desktop) atau jari menyentuh skrin (Mobile)
         ruang.addEventListener('mouseenter', () => isPaused = true);
         ruang.addEventListener('mouseleave', () => isPaused = false);
-        // passive: true digunakan supaya scroll manual di telefon lancar
         ruang.addEventListener('touchstart', () => isPaused = true, { passive: true });
         ruang.addEventListener('touchend', () => isPaused = false);
 
         function gerakkanScroll() {
             if (!isPaused) {
-                ruang.scrollLeft += 1; // Kelajuan. Boleh tukar ke 2 jika mahu laju sedikit.
+                ruang.scrollLeft += 1; 
 
-                // Jika scroll telah melepasi separuh, kembali ke titik sifar secara licin
                 if (ruang.scrollLeft >= ruang.scrollWidth / 2) {
                     ruang.scrollLeft = 0;
                 }
             }
-            // Ulang animasi ini berterusan
             requestAnimationFrame(gerakkanScroll);
         }
 
-        // Mulakan pergerakan
         gerakkanScroll();
     });
 }
