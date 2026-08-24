@@ -778,7 +778,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 13. PENGURUSAN BARISAN GURU (ADMIN & DASHBOARD)
 // =========================================================================
 
-// A. Fungsi Paparkan Guru di Muka Depan (index.html)
+// A. Fungsi Paparkan Guru di Muka Depan (index.html) - VERSI AUTO & MANUAL SCROLL
 function paparkanSenaraiGuru() {
     const ruang = document.getElementById('ruangSenaraiGuru');
     if (!ruang) return; 
@@ -797,12 +797,12 @@ function paparkanSenaraiGuru() {
             return;
         }
 
-        let html = '';
+        let kadHtml = '';
         senarai.forEach(data => {
             let imgUrl = data.url_gambar;
             let fileId = "";
 
-            // Tangkap ID gambar tidak kira format URL apa yang dihantar oleh Google Drive
+            // Tangkap ID gambar dari pelbagai jenis link Google Drive
             if (imgUrl) {
                 if (imgUrl.includes("/file/d/")) {
                     fileId = imgUrl.split("/file/d/")[1].split("/")[0];
@@ -811,27 +811,57 @@ function paparkanSenaraiGuru() {
                 }
             }
 
-            // Guna pautan khas paparan imej (Thumbnail / LH3) yang tidak disekat Google
+            // Guna Thumbnail API Google Drive supaya tak disekat
             if (fileId) {
                 imgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`; 
             }
 
-            // Fallback image jika ralat
+            // Gambar sandaran (fallback) jika tiada/gagal
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=200`;
 
-            html += `
-                <div class="snap-start shrink-0 w-36 md:w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+            kadHtml += `
+                <div class="shrink-0 w-36 md:w-40 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all flex flex-col">
                     <div class="h-40 md:h-48 bg-slate-200 w-full relative">
                         <img src="${imgUrl}" alt="${data.nama}" class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null;this.src='${fallbackAvatar}';">
                     </div>
                     <div class="p-3 text-center bg-white flex-1 flex flex-col justify-center">
                         <p class="font-bold text-slate-800 text-sm line-clamp-1" title="${data.nama}">${data.nama}</p>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-medium">${data.jawatan}</p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold bg-slate-50 py-1 rounded-md">${data.jawatan}</p>
                     </div>
                 </div>
             `;
         });
-        ruang.innerHTML = html;
+
+        // Salin (Duplicate) kad 2 kali untuk efek loop tanpa putus
+        ruang.innerHTML = kadHtml + kadHtml;
+
+        // ============================================
+        // LOGIK AUTOSCROLL & MANUAL SCROLL
+        // ============================================
+        let isPaused = false;
+
+        // Berhenti autoscroll bila tetikus berada di atas (Desktop) atau jari menyentuh skrin (Mobile)
+        ruang.addEventListener('mouseenter', () => isPaused = true);
+        ruang.addEventListener('mouseleave', () => isPaused = false);
+        // passive: true digunakan supaya scroll manual di telefon lancar
+        ruang.addEventListener('touchstart', () => isPaused = true, { passive: true });
+        ruang.addEventListener('touchend', () => isPaused = false);
+
+        function gerakkanScroll() {
+            if (!isPaused) {
+                ruang.scrollLeft += 1; // Kelajuan. Boleh tukar ke 2 jika mahu laju sedikit.
+
+                // Jika scroll telah melepasi separuh, kembali ke titik sifar secara licin
+                if (ruang.scrollLeft >= ruang.scrollWidth / 2) {
+                    ruang.scrollLeft = 0;
+                }
+            }
+            // Ulang animasi ini berterusan
+            requestAnimationFrame(gerakkanScroll);
+        }
+
+        // Mulakan pergerakan
+        gerakkanScroll();
     });
 }
 
@@ -859,7 +889,6 @@ if (formTambahGuru) {
             reader.readAsDataURL(file);
             reader.onload = async function() {
                 const base64Data = reader.result.split(',')[1];
-                // Link GAS sedia ada cikgu
                 const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
                 
                 const responsGAS = await fetch(gasUrl, {
@@ -916,7 +945,6 @@ function urusSenaraiGuru() {
             let imgUrl = data.url_gambar;
             let fileId = "";
 
-            // Tangkap ID gambar tidak kira format URL apa yang dihantar oleh Google Drive
             if (imgUrl) {
                 if (imgUrl.includes("/file/d/")) {
                     fileId = imgUrl.split("/file/d/")[1].split("/")[0];
@@ -925,9 +953,9 @@ function urusSenaraiGuru() {
                 }
             }
 
-            // Guna pautan khas paparan imej (Thumbnail / LH3) yang tidak disekat Google
+            // Paparan jadual admin (saiz imej lebih kecil: w150)
             if (fileId) {
-                imgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`; 
+                imgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w150`; 
             }
 
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama)}&background=random&color=fff&size=150`;
