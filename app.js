@@ -772,7 +772,6 @@ async function muatSenaraiPengguna() {
             const email = docSnap.id;
             const emailSafe = email.replace(/[@.]/g, ''); 
 
-            // Pastikan kawasan adalah array, jika tiada jadikan array kosong
             const userKawasan = Array.isArray(data.kawasan) ? data.kawasan : [];
             const hideKawasan = (data.peranan === 'akses_khas') ? '' : 'hidden';
 
@@ -784,14 +783,12 @@ async function muatSenaraiPengguna() {
                     <div class="text-sm text-slate-500">${data.email}</div>
                 </td>
                 <td class="p-4">
-                    <!-- Dropdown Peranan Utama -->
                     <select id="role-${emailSafe}" onchange="tukarPaparanKawasan('${emailSafe}')" class="border border-slate-300 rounded-lg p-2 w-full text-sm outline-none mb-2">
                         <option value="guru" ${data.peranan === 'guru' ? 'selected' : ''}>Guru Biasa</option>
                         <option value="akses_khas" ${data.peranan === 'akses_khas' ? 'selected' : ''}>Akses Khas (Panitia / Penyelaras)</option>
                         <option value="admin" ${data.peranan === 'admin' ? 'selected' : ''}>Admin</option>
                     </select>
                     
-                    <!-- Dropdown Kawasan (Multi-Select) -->
                     <div id="div-kawasan-${emailSafe}" class="${hideKawasan}">
                         <select id="kawasan-${emailSafe}" multiple class="border border-slate-300 rounded-lg p-2 w-full text-sm outline-none h-40">
                             <optgroup label="Panitia (12 Subjek)">
@@ -814,6 +811,7 @@ async function muatSenaraiPengguna() {
                                 <option value="spi" ${userKawasan.includes('spi') ? 'selected' : ''}>SPI</option>
                                 <option value="dasar" ${userKawasan.includes('dasar') ? 'selected' : ''}>Dasar Kurikulum</option>
                                 <option value="takwim" ${userKawasan.includes('takwim') ? 'selected' : ''}>Takwim</option>
+                                <option value="buku_pengurusan" ${userKawasan.includes('buku_pengurusan') ? 'selected' : ''}>Buku Pengurusan</option>
                                 <option value="mesyuarat_induk" ${userKawasan.includes('mesyuarat_induk') ? 'selected' : ''}>Mesyuarat Induk</option>
                                 <option value="mmi" ${userKawasan.includes('mmi') ? 'selected' : ''}>MMI</option>
                                 <option value="plan" ${userKawasan.includes('plan') ? 'selected' : ''}>Program PLaN</option>
