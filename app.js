@@ -182,12 +182,31 @@ const urlParams = new URLSearchParams(window.location.search);
 const subjekSemasa = (urlParams.get('subjek') || 'umum').toLowerCase();
 
 const senaraiNamaPanitia = {
-    'visi_misi': 'Visi, Misi & Matlamat Sekolah', 'spi': 'Surat Pekeliling Ikhtisas (SPI)', 'dasar': 'Dasar & Penetapan Kurikulum', 'takwim': 'Perancangan Pelaksanaan Kurikulum',
-    'mesyuarat_induk': 'Mesyuarat Kurikulum Induk', 'mmi': 'Mengurus Masa Instruksional (MMI)',
-    'bm': 'Panitia Bahasa Melayu', 'bi': 'Panitia Bahasa Inggeris', 'mt': 'Panitia Matematik', 'sn': 'Panitia Sains', 'pi': 'Panitia Pendidikan Islam', 'pm': 'Panitia Pendidikan Moral',
-    'sej': 'Panitia Sejarah', 'rbt': 'Panitia Reka Bentuk & Teknologi', 'psv': 'Panitia Pendidikan Seni Visual', 'mz': 'Panitia Pendidikan Muzik', 'pjpk': 'Panitia PJPK', 'ba': 'Panitia Bahasa Arab',
-    'plan': 'Program PLaN', 'pemulihan': 'Pemulihan Khas', 'transisi': 'Program Transisi Tahun 1', 'intervensi_t1': 'Intervensi Tahun 1 (3M)',
-    'pss': 'Pusat Sumber Sekolah (PSS)', 'pra': 'Prasekolah', 'umum': 'One-Stop Centre'
+    'visi_misi': 'Visi, Misi & Matlamat Sekolah','spi': 'Surat Pekeliling Ikhtisas (SPI)', 
+    'dasar': 'Dasar & Penetapan Kurikulum', 
+    'takwim': 'Perancangan Pelaksanaan Kurikulum',
+    'buku_pengurusan': 'Buku Pengurusan Kurikulum',
+    'mesyuarat_induk': 'Mesyuarat Kurikulum Induk', 
+    'mmi': 'Mengurus Masa Instruksional (MMI)',
+    'bm': 'Panitia Bahasa Melayu', 
+    'bi': 'Panitia Bahasa Inggeris', 
+    'mt': 'Panitia Matematik', 
+    'sn': 'Panitia Sains', 
+    'pi': 'Panitia Pendidikan Islam', 
+    'pm': 'Panitia Pendidikan Moral',
+    'sej': 'Panitia Sejarah', 
+    'rbt': 'Panitia Reka Bentuk & Teknologi', 
+    'psv': 'Panitia Pendidikan Seni Visual', 
+    'mz': 'Panitia Pendidikan Muzik', 
+    'pjpk': 'Panitia PJPK', 
+    'ba': 'Panitia Bahasa Arab',
+    'plan': 'Program PLaN', 
+    'pemulihan': 'Pemulihan Khas', 
+    'transisi': 'Program Transisi Tahun 1', 
+    'intervensi_t1': 'Intervensi Tahun 1 (3M)',
+    'pss': 'Pusat Sumber Sekolah (PSS)', 
+    'pra': 'Prasekolah', 
+    'umum': 'One-Stop Centre'
 };
 
 const tajukPanitia = document.getElementById('tajukPanitia');
