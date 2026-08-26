@@ -182,12 +182,45 @@ const urlParams = new URLSearchParams(window.location.search);
 const subjekSemasa = (urlParams.get('subjek') || 'umum').toLowerCase();
 
 const senaraiNamaPanitia = {
-    'visi_misi': 'Visi, Misi & Matlamat Sekolah','spi': 'Surat Pekeliling Ikhtisas (SPI)', 
-    'dasar': 'Dasar & Penetapan Kurikulum', 
-    'takwim': 'Perancangan Pelaksanaan Kurikulum',
+    // 1. PENGURUSAN UNIT KURIKULUM
+    'surat_lantikan_kurikulum': 'Surat Lantikan Jawatankuasa Kurikulum Sekolah',
+    'carta_kurikulum': 'Carta Organisasi Unit Kurikulum',
+    'visi_misi_kpm': 'Visi dan Misi KPM',
+    'visi_misi_sekolah': 'Visi dan Misi Sekolah',
+    'dasar_kurikulum': 'Matlamat / Dasar / Ketetapan Kurikulum Sekolah',
     'buku_pengurusan': 'Buku Pengurusan Kurikulum',
-    'mesyuarat_induk': 'Mesyuarat Kurikulum Induk', 
-    'mmi': 'Mengurus Masa Instruksional (MMI)',
+    'takwim_persekolahan': 'Takwim Persekolahan',
+    'takwim_kurikulum': 'Takwim Kurikulum',
+
+    // 2. PEKELILING & MAKLUMAN
+    'spi': 'Surat Pekeliling Ikhtisas (SPI) / Surat Siaran',
+    'surat_makluman': 'Surat Makluman',
+
+    // 3. DOKUMEN KURIKULUM
+    'dskp': 'DSKP Semua Mata Pelajaran',
+    'bahan_muat_turun': 'Bahan-bahan Dimuat Turun',
+    'bahan_muat_naik': 'Bahan-bahan Dimuat Naik',
+
+    // 4. PERANCANGAN KURIKULUM
+    'perancangan_strategik': 'Perancangan Strategik Unit Kurikulum',
+    'analisis_swot': 'Analisis SWOT',
+    'pelan_taktikal': 'Pelan Taktikal Kurikulum',
+    'pelan_operasi': 'Pelan Operasi Kurikulum',
+    'oppm_pintas': 'Pengurus Projek Satu Muka Surat (OPPM) & PINTAS',
+
+    // 5. MENGURUS MASA INSTRUKSIONAL
+    'jk_jadual_waktu': 'Jawatankuasa Jadual Waktu',
+    'jadual_waktu': 'Jadual Waktu Induk / Kelas',
+    'jadual_guru_ganti': 'Jadual Guru Ganti',
+
+    // 6. MESYUARAT INDUK KURIKULUM
+    'mesyuarat_bil1': 'Surat Panggilan & Minit Mesyuarat Kurikulum Bil. 1',
+    'mesyuarat_bil2': 'Surat Panggilan & Minit Mesyuarat Kurikulum Bil. 2',
+    'mesyuarat_bil3': 'Surat Panggilan & Minit Mesyuarat Kurikulum Bil. 3',
+    'mesyuarat_bil4': 'Surat Panggilan & Minit Mesyuarat Kurikulum Bil. 4',
+    'maklum_balas_mesyuarat': 'Maklum Balas Minit Mesyuarat',
+
+    // 7. PENGURUSAN PANITIA & PROGRAM
     'bm': 'Panitia Bahasa Melayu', 
     'bi': 'Panitia Bahasa Inggeris', 
     'mt': 'Panitia Matematik', 
@@ -200,12 +233,57 @@ const senaraiNamaPanitia = {
     'mz': 'Panitia Pendidikan Muzik', 
     'pjpk': 'Panitia PJPK', 
     'ba': 'Panitia Bahasa Arab',
-    'plan': 'Program PLaN', 
-    'pemulihan': 'Pemulihan Khas', 
-    'transisi': 'Program Transisi Tahun 1', 
-    'intervensi_t1': 'Intervensi Tahun 1 (3M)',
-    'pss': 'Pusat Sumber Sekolah (PSS)', 
-    'pra': 'Prasekolah', 
+    'plc_panitia': 'PLC Panitia',
+    'kertas_kerja_program': 'Kertas Kerja Program',
+    'laporan_program': 'Dokumentasi / Laporan Program',
+
+    // 8. PEMANTAUAN KURIKULUM
+    'instrumen_pencerapan': 'Instrumen Pencerapan / Semakan',
+    'jadual_pencerapan': 'Agihan Jadual Pencerapan / Semakan',
+    'pencerapan_erph': 'Pencerapan e-RPH (Google Classroom)',
+    'pencerapan_kendiri': 'Pencerapan PdPc Kendiri',
+    'pencerapan_fasa1': 'Pencerapan PdPc Fasa 1',
+    'pencerapan_fasa2': 'Pencerapan PdPc Fasa 2',
+    'semakan_buku_latihan': 'Semakan Buku Latihan Murid',
+
+    // 9. PENTAKSIRAN BILIK DARJAH (PBD)
+    'jk_pbd': 'Jawatankuasa PBD',
+    'takwim_pbd': 'Takwim PBD',
+    'jadual_pbd': 'Jadual Pelaksanaan PBD',
+    'instrumen_pbd': 'Instrumen PBD',
+    'analisis_pbd': 'Analisis PBD',
+    'intervensi_pbd': 'Program Intervensi PBD',
+    'penjaminan_kualiti_pbd': 'Rekod Penjaminan Kualiti / Mutu',
+    'pelaporan_pbd': 'Pelaporan PBD',
+
+    // 10. UPSA / UASA
+    'takwim_upsa': 'Takwim Pentaksiran UPSA / UASA',
+    'jadual_upsa': 'Jadual UPSA / UASA',
+    'jadual_gubal_soalan': 'Jadual Penggubalan Soalan',
+    'analisis_upsa': 'Analisis Keputusan',
+    'intervensi_upsa': 'Program Intervensi UPSA / UASA',
+
+    // 11. BMI5-9T & SEGAK
+    'jk_segak': 'Jawatankuasa BMI5-9T & SEGAK',
+    'takwim_segak': 'Takwim Pelaksanaan BMI5-9T & SEGAK',
+    'jadual_segak': 'Jadual Pelaksanaan BMI5-9T & SEGAK',
+
+    // 12. KBAT
+    'jk_kbat': 'Jawatankuasa KBAT',
+    'instrumen_kbat': 'Instrumen KBAT',
+    'pencerapan_kbat_kendiri': 'Pencerapan PdPc KBAT (Kendiri)',
+    'pencerapan_kbat_pentadbir': 'Pencerapan PdPc KBAT (Pentadbir)',
+
+    // 13. STANDARD KUALITI @ SEKOLAH
+    'jk_standard_kualiti': 'Jawatankuasa Kurikulum / PPS',
+    'panduan_standard_kualiti': 'Buku Panduan',
+    'standard_kurikulum': 'Standard Kurikulum',
+    'instrumen_standard_kualiti': 'Instrumen Kurikulum',
+
+    // 14. PENDIGITALAN ICT
+    'jk_ict': 'Jawatankuasa Pendigitalan ICT',
+
+    // LAIN-LAIN (Fallback)
     'umum': 'One-Stop Centre'
 };
 
