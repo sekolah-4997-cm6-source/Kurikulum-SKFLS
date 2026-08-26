@@ -857,11 +857,17 @@ function janaTrackerPanitia(tahun) {
 // =========================================================================
 
 async function muatSenaraiPengguna() {
+    console.log("Fungsi muatSenaraiPengguna mula berjalan..."); 
+    
     const tbody = document.getElementById("senarai-pengguna-body");
-    if (!tbody) return; 
+    if (!tbody) {
+        console.error("Ralat: ID 'senarai-pengguna-body' tidak dijumpai di dalam HTML!");
+        return; 
+    }
 
     try {
         const querySnapshot = await getDocs(collection(db, "pengguna"));
+        console.log("Berjaya menarik data pengguna dari Firebase.");
         tbody.innerHTML = ""; 
 
         querySnapshot.forEach((docSnap) => {
@@ -1020,7 +1026,7 @@ async function muatSenaraiPengguna() {
         });
     } catch (error) {
         console.error("Ralat memuat senarai pengguna:", error);
-        tbody.innerHTML = `<tr><td colspan="3" class="text-red-500 text-center p-4">Gagal memuatkan data.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" class="text-red-500 text-center p-4">Ralat: ${error.message}</td></tr>`;
     }
 }
 
