@@ -45,168 +45,178 @@
             </button>
         </header>
 
-        <!-- KANDUNGAN UTAMA (Hanya papar lepas admin login) -->
+<!-- KANDUNGAN UTAMA (Hanya papar lepas admin login) -->
         <main id="adminContent" class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 custom-scrollbar">
             
-            <div class="max-w-6xl mx-auto space-y-8">
-                
-                <!-- SEKSYEN 1: ARKIB (TONG SAMPAH) -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-red-50 border-b border-red-100 p-5 flex justify-between items-center">
-                        <div>
-                            <h2 class="text-lg font-bold text-red-800"><i class="fas fa-trash-restore mr-2"></i>Arkib Fail Dipadam</h2>
-                            <p class="text-sm text-red-600 mt-1">Fail di bawah telah dipadam oleh pengguna. Anda boleh pulihkan (restore) atau padam terus dari pangkalan data.</p>
+            <div class="max-w-6xl mx-auto space-y-6">
+
+                <!-- NAVBAR MODUL ADMIN (TAB MENUS) -->
+                <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-2 sticky top-0 z-10">
+                    <button onclick="tukarModulAdmin('arkib')" id="btn-modul-arkib" class="px-4 py-2 rounded-xl font-bold text-sm bg-blue-600 text-white shadow-sm transition">
+                        🗑️ Arkib Fail
+                    </button>
+                    <button onclick="tukarModulAdmin('dokumen')" id="btn-modul-dokumen" class="px-4 py-2 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        📁 Semua Dokumen
+                    </button>
+                    <button onclick="tukarModulAdmin('akses')" id="btn-modul-akses" class="px-4 py-2 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        🔑 Akses Pengguna
+                    </button>
+                    <button onclick="tukarModulAdmin('guru')" id="btn-modul-guru" class="px-4 py-2 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        👨‍🏫 Barisan Guru
+                    </button>
+                    <button onclick="tukarModulAdmin('tracker')" id="btn-modul-tracker" class="px-4 py-2 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        📊 Pemantauan Tracker
+                    </button>
+                </div>
+
+                <!-- MODUL 1: ARKIB (Default Buka) -->
+                <div id="modul-arkib" class="modul-admin-tab block">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-red-50 border-b border-red-100 p-5 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-lg font-bold text-red-800"><i class="fas fa-trash-restore mr-2"></i>Arkib Fail Dipadam</h2>
+                                <p class="text-sm text-red-600 mt-1">Fail di bawah telah dipadam oleh pengguna. Anda boleh pulihkan (restore) atau padam terus dari pangkalan data.</p>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <!-- Jadual Arkib -->
-                    <div id="ruangArkib" class="p-0">
-                        <p class="text-center text-slate-400 py-10"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Memuatkan arkib...</p>
+                        <div id="ruangArkib" class="p-0">
+                            <p class="text-center text-slate-400 py-10"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Memuatkan arkib...</p>
+                        </div>
                     </div>
                 </div>
 
-<!-- MULA: Seksyen Pengurusan Akses Pengguna -->
-<div class="mt-10 bg-white p-6 rounded-lg shadow-md mb-10">
-    <h2 class="text-xl font-bold mb-4 text-gray-800">Pengurusan Akses Pengguna</h2>
-    <p class="text-sm text-gray-500 mb-4">Urus peranan pengguna. Hanya admin boleh melihat dan mengurus sistem.</p>
-    
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-100 text-gray-700">
-                    <th class="p-3 border-b">Nama & E-mel</th>
-                    <th class="p-3 border-b w-48">Peranan</th>
-                    <th class="p-3 border-b w-32 text-center">Tindakan</th>
-                </tr>
-            </thead>
-            <tbody id="senarai-pengguna-body">
-                <tr>
-                    <td colspan="3" class="p-4 text-center text-gray-500">Memuatkan data pengguna...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-<!-- TAMAT: Seksyen Pengurusan Akses Pengguna -->
-
-<!-- SEKSYEN PENGURUSAN BARISAN GURU -->
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 mt-8">
-    <h2 class="text-lg font-bold text-slate-800 mb-4"><i class="fas fa-chalkboard-teacher text-blue-600 mr-2"></i>Pengurusan Barisan Guru (Muka Depan)</h2>
-    
-    <!-- Borang Tambah Guru -->
-    <form id="formTambahGuru" class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-100">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Nama Guru</label>
-                <input type="text" id="inputNamaGuru" required class="w-full p-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500" placeholder="Cth: Cikgu Ahmad">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Jawatan / Peranan</label>
-                <input type="text" id="inputJawatanGuru" required class="w-full p-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500" placeholder="Cth: Guru Besar">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Gambar (Muat Naik)</label>
-                <input type="file" id="inputGambarGuru" accept="image/*" required class="w-full p-1.5 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer">
-            </div>
-        </div>
-        <button type="submit" id="btnSubmitGuru" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm w-full md:w-auto">
-            <span id="txtSubmitGuru"><i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan</span>
-        </button>
-    </form>
-
-    <!-- Jadual Senarai Guru -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
-                    <th class="p-3 font-medium rounded-tl-lg w-16">Gambar</th>
-                    <th class="p-3 font-medium">Nama Guru</th>
-                    <th class="p-3 font-medium">Jawatan</th>
-                    <th class="p-3 font-medium text-right rounded-tr-lg">Tindakan</th>
-                </tr>
-            </thead>
-            <tbody id="jadualPengurusanGuru" class="text-sm">
-                <tr><td colspan="4" class="text-center py-4 text-slate-500">Memuatkan data...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-                
-                <!-- SEKSYEN 2: CHECKLIST TRACKER UI PANITIA -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-indigo-50 border-b border-indigo-100 p-5">
-                        <h2 class="text-lg font-bold text-indigo-800"><i class="fas fa-tasks mr-2"></i>Checklist Tracker Fail Panitia (<span id="labelTahunTracker">2026</span>)</h2>
-                        <p class="text-sm text-indigo-600 mt-1">Pemantauan fail-fail yang diwajibkan ada bagi setiap Panitia mengikut tahun semasa.</p>
+                <!-- MODUL 2: PENGURUSAN SEMUA DOKUMEN GLOBAL (BARU) -->
+                <div id="modul-dokumen" class="modul-admin-tab hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="mb-4">
+                        <h2 class="text-xl font-bold text-slate-800">Master List: Pengurus Semua Dokumen Sistem</h2>
+                        <p class="text-sm text-slate-500">Paparan global untuk melihat dan memadam kekal mana-mana fail, termasuk fail yang "hilang".</p>
                     </div>
-                    
-                    <div class="p-6 overflow-x-auto">
-                        <table class="min-w-full bg-white text-sm">
-                            <thead class="bg-gray-100 border-b">
-                                <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-gray-700">Subjek Panitia</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 1</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 2</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 3</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 4</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Status</th>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                                    <th class="p-4">Tajuk Dokumen</th>
+                                    <th class="p-4">Kawasan / Folder</th>
+                                    <th class="p-4">Pemilik</th>
+                                    <th class="p-4 text-right">Tindakan</th>
                                 </tr>
                             </thead>
-                            <tbody id="jadualTrackerBody">
-                                <!-- Akan diisi oleh JS -->
+                            <tbody id="senarai-semua-dokumen-body">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Tekan tab ini untuk memuatkan semua dokumen...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- SEKSYEN 3: KAWASAN TRACKER BUKAN PANITIA -->
-                <div class="mt-10 mb-4">
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 border-b pb-2"><i class="fas fa-clipboard-check text-blue-500 mr-2"></i>Tracker Pengurusan (Bukan Panitia)</h3>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    
-                    <!-- Table Maklumat Induk -->
-                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-                        <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 flex justify-between items-center">
-                            <h4 class="font-bold text-blue-800"><i class="fas fa-sitemap mr-2"></i>1. Maklumat Induk</h4>
-                        </div>
-                        <table class="w-full text-sm">
-                            <tbody id="trackerMaklumatInduk" class="divide-y divide-slate-100">
-                                <!-- Data akan dimasukkan oleh app.js -->
+                <!-- MODUL 3: AKSES PENGGUNA -->
+                <div id="modul-akses" class="modul-admin-tab hidden mt-10 bg-white p-6 rounded-lg shadow-md mb-10">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800">Pengurusan Akses Pengguna</h2>
+                    <p class="text-sm text-gray-500 mb-4">Urus peranan pengguna. Hanya admin boleh melihat dan mengurus sistem.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="p-3 border-b">Nama & E-mel</th>
+                                    <th class="p-3 border-b w-48">Peranan</th>
+                                    <th class="p-3 border-b w-32 text-center">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="senarai-pengguna-body">
+                                <tr>
+                                    <td colspan="3" class="p-4 text-center text-gray-500">Memuatkan data pengguna...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Table Mesyuarat & Masa -->
-                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-                        <div class="bg-amber-50 px-4 py-3 border-b border-amber-100 flex justify-between items-center">
-                            <h4 class="font-bold text-amber-800"><i class="fas fa-users mr-2"></i>2. Mesyuarat & Masa</h4>
+                </div>
+
+                <!-- MODUL 4: BARISAN GURU -->
+                <div id="modul-guru" class="modul-admin-tab hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 mt-8">
+                    <h2 class="text-lg font-bold text-slate-800 mb-4"><i class="fas fa-chalkboard-teacher text-blue-600 mr-2"></i>Pengurusan Barisan Guru (Muka Depan)</h2>
+                    <form id="formTambahGuru" class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Nama Guru</label>
+                                <input type="text" id="inputNamaGuru" required class="w-full p-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500" placeholder="Cth: Cikgu Ahmad">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Jawatan / Peranan</label>
+                                <input type="text" id="inputJawatanGuru" required class="w-full p-2 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500" placeholder="Cth: Guru Besar">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Gambar (Muat Naik)</label>
+                                <input type="file" id="inputGambarGuru" accept="image/*" required class="w-full p-1.5 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer">
+                            </div>
                         </div>
-                        <table class="w-full text-sm">
-                            <tbody id="trackerMesyuarat" class="divide-y divide-slate-100"></tbody>
+                        <button type="submit" id="btnSubmitGuru" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm w-full md:w-auto">
+                            <span id="txtSubmitGuru"><i class="fas fa-plus mr-2"></i>Tambah Ke Muka Depan</span>
+                        </button>
+                    </form>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 text-sm border-b border-slate-200">
+                                    <th class="p-3 font-medium rounded-tl-lg w-16">Gambar</th>
+                                    <th class="p-3 font-medium">Nama Guru</th>
+                                    <th class="p-3 font-medium">Jawatan</th>
+                                    <th class="p-3 font-medium text-right rounded-tr-lg">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jadualPengurusanGuru" class="text-sm">
+                                <tr><td colspan="4" class="text-center py-4 text-slate-500">Memuatkan data...</td></tr>
+                            </tbody>
                         </table>
                     </div>
+                </div>
 
-                    <!-- Table Program & Intervensi -->
-                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-                        <div class="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex justify-between items-center">
-                            <h4 class="font-bold text-emerald-800"><i class="fas fa-chart-line mr-2"></i>4. Program & Intervensi</h4>
+                <!-- MODUL 5: PEMANTAUAN TRACKER (Gabungan Panitia & Pengurusan) -->
+                <div id="modul-tracker" class="modul-admin-tab hidden space-y-8">
+                    <!-- Tracker Panitia -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-indigo-50 border-b border-indigo-100 p-5">
+                            <h2 class="text-lg font-bold text-indigo-800"><i class="fas fa-tasks mr-2"></i>Checklist Tracker Fail Panitia (<span id="labelTahunTracker">2026</span>)</h2>
+                            <p class="text-sm text-indigo-600 mt-1">Pemantauan fail-fail yang diwajibkan ada bagi setiap Panitia mengikut tahun semasa.</p>
                         </div>
-                        <table class="w-full text-sm">
-                            <tbody id="trackerProgram" class="divide-y divide-slate-100"></tbody>
-                        </table>
+                        <div class="p-6 overflow-x-auto">
+                            <table class="min-w-full bg-white text-sm">
+                                <thead class="bg-gray-100 border-b">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Subjek Panitia</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 1</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 2</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 3</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-gray-700">Fail 4</th>
+                                        <th class="px-4 py-3 text-center font-semibold text-gray-700">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jadualTrackerBody"></tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- Table Sokongan & Awal -->
-                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-                        <div class="bg-purple-50 px-4 py-3 border-b border-purple-100 flex justify-between items-center">
-                            <h4 class="font-bold text-purple-800"><i class="fas fa-hands-helping mr-2"></i>5. Sokongan & Awal</h4>
+                    <!-- Tracker Bukan Panitia -->
+                    <div>
+                        <div class="mb-4">
+                            <h3 class="text-lg md:text-xl font-bold text-slate-800 border-b pb-2"><i class="fas fa-clipboard-check text-blue-500 mr-2"></i>Tracker Pengurusan (Bukan Panitia)</h3>
                         </div>
-                        <table class="w-full text-sm">
-                            <tbody id="trackerSokongan" class="divide-y divide-slate-100"></tbody>
-                        </table>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                                <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 flex justify-between items-center"><h4 class="font-bold text-blue-800"><i class="fas fa-sitemap mr-2"></i>1. Maklumat Induk</h4></div>
+                                <table class="w-full text-sm"><tbody id="trackerMaklumatInduk" class="divide-y divide-slate-100"></tbody></table>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                                <div class="bg-amber-50 px-4 py-3 border-b border-amber-100 flex justify-between items-center"><h4 class="font-bold text-amber-800"><i class="fas fa-users mr-2"></i>2. Mesyuarat & Masa</h4></div>
+                                <table class="w-full text-sm"><tbody id="trackerMesyuarat" class="divide-y divide-slate-100"></tbody></table>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                                <div class="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex justify-between items-center"><h4 class="font-bold text-emerald-800"><i class="fas fa-chart-line mr-2"></i>4. Program & Intervensi</h4></div>
+                                <table class="w-full text-sm"><tbody id="trackerProgram" class="divide-y divide-slate-100"></tbody></table>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                                <div class="bg-purple-50 px-4 py-3 border-b border-purple-100 flex justify-between items-center"><h4 class="font-bold text-purple-800"><i class="fas fa-hands-helping mr-2"></i>5. Sokongan & Awal</h4></div>
+                                <table class="w-full text-sm"><tbody id="trackerSokongan" class="divide-y divide-slate-100"></tbody></table>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
 
             </div> <!-- Penutup max-w-6xl -->
