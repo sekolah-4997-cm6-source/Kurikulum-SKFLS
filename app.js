@@ -1273,3 +1273,41 @@ document.addEventListener('DOMContentLoaded', () => {
         muatSenaraiPengguna();
     }
 });
+
+
+// =========================================================================
+// SISTEM NAVIGASI TAB ADMIN
+// =========================================================================
+
+function tukarModulAdmin(modulId) {
+    const senaraiModul = ['arkib', 'dokumen', 'akses', 'guru', 'tracker'];
+    
+    senaraiModul.forEach(id => {
+        const kandungan = document.getElementById(`modul-${id}`);
+        const butang = document.getElementById(`btn-modul-${id}`);
+        
+        if (!kandungan || !butang) return; // Lindungi jika ada tab yang tak jumpa
+
+        if (id === modulId) {
+            // Tunjuk Tab
+            kandungan.classList.remove('hidden');
+            kandungan.classList.add('block');
+            // Butang Aktif (Biru)
+            butang.className = "px-4 py-2 rounded-xl font-bold text-sm bg-blue-600 text-white shadow-sm transition";
+            
+            // JIKA buka tab dokumen, automatik muat data master list
+            if (id === 'dokumen' && typeof muatSemuaDokumenAdmin === 'function') {
+                muatSemuaDokumenAdmin();
+            }
+        } else {
+            // Sembunyi Tab Lain
+            kandungan.classList.remove('block');
+            kandungan.classList.add('hidden');
+            // Butang Pasif (Kelabu)
+            butang.className = "px-4 py-2 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+        }
+    });
+}
+
+// WAJIB: Dedahkan fungsi ini ke global supaya onclick="tukarModulAdmin(...)" pada HTML boleh panggil ia
+window.tukarModulAdmin = tukarModulAdmin;
