@@ -1267,3 +1267,9 @@ document.addEventListener("DOMContentLoaded", () => {
     paparkanSenaraiGuru(); 
     urusSenaraiGuru();     
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById("senarai-pengguna-body")) {
+        muatSenaraiPengguna();
+    }
+});
