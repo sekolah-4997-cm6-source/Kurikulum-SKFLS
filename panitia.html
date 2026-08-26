@@ -14,69 +14,7 @@
 
     <!-- BAHAGIAN KIRI: SIDEBAR KANDUNGAN -->
     <aside id="sidebar" class="w-64 bg-slate-900 text-white min-h-screen fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out flex flex-col shadow-xl">
-        <div class="p-6 text-center border-b border-slate-700 sticky top-0 bg-slate-900 z-10 flex justify-between items-center md:block">
-            <div>
-                <h1 class="text-2xl font-bold tracking-wider text-blue-400">SKFLS</h1>
-                <p class="text-xs text-slate-400 mt-1">Portal Kurikulum Digital</p>
-            </div>
-        </div>
-
-        <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto pb-20 custom-scrollbar">
-            
-            <a href="index.html" class="flex items-center space-x-3 p-2 bg-blue-600 rounded-lg text-white transition mb-4">
-                <i class="fas fa-home w-5 text-center"></i> <span class="text-sm font-medium">Dashboard Utama</span>
-            </a>
-<p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-2 hanya-admin hidden">Pengurusan Sistem</p>
-<a href="admin.html" class="hanya-admin hidden flex items-center space-x-3 p-2 text-amber-300 hover:bg-slate-800 rounded-lg transition mb-4">
-    <i class="fas fa-cogs w-5 text-center"></i> <span class="text-sm font-medium">Admin Console</span>
-</a>
-            <!-- 1. Maklumat Induk Kurikulum -->
-            <div class="pt-2 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">1. Maklumat Induk</p></div>
-            <a href="panitia.html?subjek=visi_misi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-bullseye w-5 text-center"></i> <span>Visi & Misi</span></a>
-            <a href="panitia.html?subjek=spi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-file-contract w-5 text-center"></i> <span>Pekeliling (SPI)</span></a>
-            <a href="panitia.html?subjek=dasar" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-book-open w-5 text-center"></i> <span>Dasar & Penetapan</span></a>
-            <a href="panitia.html?subjek=takwim" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-calendar-check w-5 text-center"></i> <span>Takwim & Carta</span></a>
-            <a href="panitia.html?subjek=buku_pengurusan" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-book w-5 text-center"></i> <span>Buku Pengurusan Kurikulum</span></a>
-
-            <!-- 2. Pengurusan Mesyuarat & Masa -->
-            <div class="pt-4 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">2. Mesyuarat & Masa</p></div>
-            <a href="panitia.html?subjek=mesyuarat_induk" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-users w-5 text-center"></i> <span>Mesyuarat Induk</span></a>
-            <a href="panitia.html?subjek=mmi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-clock w-5 text-center"></i> <span>Pengurusan Masa (MMI)</span></a>
-
-            <!-- 3. Pengurusan Panitia -->
-            <div class="pt-4 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">3. Panitia Subjek</p></div>
-            <a href="panitia.html?subjek=bm" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-language w-5 text-center"></i> <span>B. Melayu</span></a>
-            <a href="panitia.html?subjek=bi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-globe w-5 text-center"></i> <span>B. Inggeris</span></a>
-            <a href="panitia.html?subjek=mt" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-calculator w-5 text-center"></i> <span>Matematik</span></a>
-            <a href="panitia.html?subjek=sn" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-flask w-5 text-center"></i> <span>Sains</span></a>
-            <a href="panitia.html?subjek=pi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-mosque w-5 text-center"></i> <span>Pend. Islam</span></a>
-            <a href="panitia.html?subjek=pm" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-hands-helping w-5 text-center"></i> <span>Pend. Moral</span></a>
-            <a href="panitia.html?subjek=sej" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-landmark w-5 text-center"></i> <span>Sejarah</span></a>
-            <a href="panitia.html?subjek=rbt" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-tools w-5 text-center"></i> <span>RBT</span></a>
-            <a href="panitia.html?subjek=psv" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-palette w-5 text-center"></i> <span>Pend. Seni Visual</span></a>
-            <a href="panitia.html?subjek=mz" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-music w-5 text-center"></i> <span>Muzik</span></a>
-            <a href="panitia.html?subjek=pjpk" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-running w-5 text-center"></i> <span>PJPK</span></a>
-            <a href="panitia.html?subjek=ba" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-font w-5 text-center"></i> <span>B. Arab</span></a>
-
-            <!-- 4. Program Khas & Intervensi -->
-            <div class="pt-4 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">4. Program & Intervensi</p></div>
-            <a href="panitia.html?subjek=plan" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-chart-line w-5 text-center"></i> <span>PLaN</span></a>
-            <a href="panitia.html?subjek=pemulihan" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-chalkboard-teacher w-5 text-center"></i> <span>Pemulihan Khas</span></a>
-            <a href="panitia.html?subjek=transisi" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-child w-5 text-center"></i> <span>Transisi Thn 1</span></a>
-            <a href="panitia.html?subjek=intervensi_t1" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-user-graduate w-5 text-center"></i> <span>Intervensi Thn 1</span></a>
-
-            <!-- 5. Entiti Sokongan & Pendidikan Awal -->
-            <div class="pt-4 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">5. Sokongan & Awal</p></div>
-            <a href="panitia.html?subjek=pss" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-book-reader w-5 text-center"></i> <span>Pusat Sumber (PSS)</span></a>
-            <a href="panitia.html?subjek=pra" class="flex items-center space-x-3 p-2 text-slate-300 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-shapes w-5 text-center"></i> <span>Prasekolah</span></a>
-
-            <!-- 6. Pautan Sistem Luar -->
-            <div class="pt-4 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">6. Pautan Pantas</p></div>
-            <a href="https://sekolah-4997-cm6-source.github.io/Sistem-OPR-Laka-Selatan/" target="_blank" class="flex items-center space-x-3 p-2 text-amber-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-external-link-alt w-5 text-center"></i> <span>Sistem OPR</span></a>
-            <a href="https://classroom.google.com/" target="_blank" class="flex items-center space-x-3 p-2 text-emerald-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-chalkboard w-5 text-center"></i> <span>Google Classroom</span></a>
-            <a href="https://idme.moe.gov.my/" target="_blank" class="flex items-center space-x-3 p-2 text-blue-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-id-badge w-5 text-center"></i> <span>Idme / SPPB</span></a>
-
-        </nav>
+       
     </aside>
 
    <!-- BAHAGIAN KANAN: KANDUNGAN UTAMA -->
@@ -223,6 +161,7 @@
         </div>
     </div>
 
+    <script src="menu.js"></script>
     <script type="module" src="app.js?v=2"></script>
     <!-- MODAL CARIAN GLOBAL -->
 <div id="modalCarian" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-start justify-center pt-20">
