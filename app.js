@@ -887,37 +887,125 @@ async function muatSenaraiPengguna() {
                     </select>
                     
                     <div id="div-kawasan-${emailSafe}" class="${hideKawasan}">
-                        <select id="kawasan-${emailSafe}" multiple class="border border-slate-300 rounded-lg p-2 w-full text-sm outline-none h-40">
-                            <optgroup label="Panitia (12 Subjek)">
+                        <select id="kawasan-${emailSafe}" multiple class="border border-slate-300 rounded-lg p-2 w-full text-sm outline-none h-60 custom-scrollbar">
+                            <optgroup label="1. Pengurusan Unit">
+                                <option value="surat_lantikan_kurikulum" ${userKawasan.includes('surat_lantikan_kurikulum') ? 'selected' : ''}>Surat Lantikan JK</option>
+                                <option value="carta_kurikulum" ${userKawasan.includes('carta_kurikulum') ? 'selected' : ''}>Carta Organisasi</option>
+                                <option value="visi_misi_kpm" ${userKawasan.includes('visi_misi_kpm') ? 'selected' : ''}>Visi & Misi KPM</option>
+                                <option value="visi_misi_sekolah" ${userKawasan.includes('visi_misi_sekolah') ? 'selected' : ''}>Visi & Misi Sekolah</option>
+                                <option value="dasar_kurikulum" ${userKawasan.includes('dasar_kurikulum') ? 'selected' : ''}>Dasar Kurikulum</option>
+                                <option value="buku_pengurusan" ${userKawasan.includes('buku_pengurusan') ? 'selected' : ''}>Buku Pengurusan</option>
+                                <option value="takwim_persekolahan" ${userKawasan.includes('takwim_persekolahan') ? 'selected' : ''}>Takwim Persekolahan</option>
+                                <option value="takwim_kurikulum" ${userKawasan.includes('takwim_kurikulum') ? 'selected' : ''}>Takwim Kurikulum</option>
+                            </optgroup>
+                            
+                            <optgroup label="2. Pekeliling & Makluman">
+                                <option value="spi" ${userKawasan.includes('spi') ? 'selected' : ''}>Pekeliling (SPI)</option>
+                                <option value="surat_makluman" ${userKawasan.includes('surat_makluman') ? 'selected' : ''}>Surat Makluman</option>
+                            </optgroup>
+
+                            <optgroup label="3. Dokumen Kurikulum">
+                                <option value="dskp" ${userKawasan.includes('dskp') ? 'selected' : ''}>DSKP</option>
+                                <option value="bahan_muat_turun" ${userKawasan.includes('bahan_muat_turun') ? 'selected' : ''}>Bahan Muat Turun</option>
+                                <option value="bahan_muat_naik" ${userKawasan.includes('bahan_muat_naik') ? 'selected' : ''}>Bahan Muat Naik</option>
+                            </optgroup>
+
+                            <optgroup label="4. Perancangan Kurikulum">
+                                <option value="perancangan_strategik" ${userKawasan.includes('perancangan_strategik') ? 'selected' : ''}>Perancangan Strategik</option>
+                                <option value="analisis_swot" ${userKawasan.includes('analisis_swot') ? 'selected' : ''}>Analisis SWOT</option>
+                                <option value="pelan_taktikal" ${userKawasan.includes('pelan_taktikal') ? 'selected' : ''}>Pelan Taktikal</option>
+                                <option value="pelan_operasi" ${userKawasan.includes('pelan_operasi') ? 'selected' : ''}>Pelan Operasi</option>
+                                <option value="oppm_pintas" ${userKawasan.includes('oppm_pintas') ? 'selected' : ''}>OPPM & PINTAS</option>
+                            </optgroup>
+
+                            <optgroup label="5. Masa Instruksional">
+                                <option value="jk_jadual_waktu" ${userKawasan.includes('jk_jadual_waktu') ? 'selected' : ''}>JK Jadual Waktu</option>
+                                <option value="jadual_waktu" ${userKawasan.includes('jadual_waktu') ? 'selected' : ''}>Jadual Waktu</option>
+                                <option value="jadual_guru_ganti" ${userKawasan.includes('jadual_guru_ganti') ? 'selected' : ''}>Jadual Guru Ganti</option>
+                            </optgroup>
+
+                            <optgroup label="6. Mesyuarat Induk">
+                                <option value="mesyuarat_bil1" ${userKawasan.includes('mesyuarat_bil1') ? 'selected' : ''}>Mesyuarat Bil 1</option>
+                                <option value="mesyuarat_bil2" ${userKawasan.includes('mesyuarat_bil2') ? 'selected' : ''}>Mesyuarat Bil 2</option>
+                                <option value="mesyuarat_bil3" ${userKawasan.includes('mesyuarat_bil3') ? 'selected' : ''}>Mesyuarat Bil 3</option>
+                                <option value="mesyuarat_bil4" ${userKawasan.includes('mesyuarat_bil4') ? 'selected' : ''}>Mesyuarat Bil 4</option>
+                                <option value="maklum_balas_mesyuarat" ${userKawasan.includes('maklum_balas_mesyuarat') ? 'selected' : ''}>Maklum Balas Minit</option>
+                            </optgroup>
+
+                            <optgroup label="7. Panitia Subjek">
                                 <option value="bm" ${userKawasan.includes('bm') ? 'selected' : ''}>Bahasa Melayu</option>
                                 <option value="bi" ${userKawasan.includes('bi') ? 'selected' : ''}>Bahasa Inggeris</option>
                                 <option value="mt" ${userKawasan.includes('mt') ? 'selected' : ''}>Matematik</option>
                                 <option value="sn" ${userKawasan.includes('sn') ? 'selected' : ''}>Sains</option>
-                                <option value="pai" ${userKawasan.includes('pai') ? 'selected' : ''}>Pendidikan Islam</option>
+                                <option value="pi" ${userKawasan.includes('pi') ? 'selected' : ''}>Pendidikan Islam</option>
                                 <option value="ba" ${userKawasan.includes('ba') ? 'selected' : ''}>Bahasa Arab</option>
-                                <option value="sejarah" ${userKawasan.includes('sejarah') ? 'selected' : ''}>Sejarah</option>
+                                <option value="sej" ${userKawasan.includes('sej') ? 'selected' : ''}>Sejarah</option>
                                 <option value="rbt" ${userKawasan.includes('rbt') ? 'selected' : ''}>RBT</option>
                                 <option value="psv" ${userKawasan.includes('psv') ? 'selected' : ''}>PSV</option>
                                 <option value="pjpk" ${userKawasan.includes('pjpk') ? 'selected' : ''}>PJPK</option>
-                                <option value="muzik" ${userKawasan.includes('muzik') ? 'selected' : ''}>Pend. Muzik</option>
+                                <option value="mz" ${userKawasan.includes('mz') ? 'selected' : ''}>Pend. Muzik</option>
                                 <option value="pm" ${userKawasan.includes('pm') ? 'selected' : ''}>Pend. Moral</option>
                             </optgroup>
-                            
-                            <optgroup label="Penyelaras (Bahagian Lain)">
-                                <option value="visi_misi" ${userKawasan.includes('visi_misi') ? 'selected' : ''}>Visi & Misi</option>
-                                <option value="spi" ${userKawasan.includes('spi') ? 'selected' : ''}>SPI</option>
-                                <option value="dasar" ${userKawasan.includes('dasar') ? 'selected' : ''}>Dasar Kurikulum</option>
-                                <option value="takwim" ${userKawasan.includes('takwim') ? 'selected' : ''}>Takwim</option>
-                                <option value="buku_pengurusan" ${userKawasan.includes('buku_pengurusan') ? 'selected' : ''}>Buku Pengurusan</option>
-                                <option value="mesyuarat_induk" ${userKawasan.includes('mesyuarat_induk') ? 'selected' : ''}>Mesyuarat Induk</option>
-                                <option value="mmi" ${userKawasan.includes('mmi') ? 'selected' : ''}>MMI</option>
-                                <option value="plan" ${userKawasan.includes('plan') ? 'selected' : ''}>Program PLaN</option>
-                                <option value="pemulihan" ${userKawasan.includes('pemulihan') ? 'selected' : ''}>Pemulihan</option>
-                                <option value="transisi" ${userKawasan.includes('transisi') ? 'selected' : ''}>Transisi</option>
-                                <option value="intervensi_t1" ${userKawasan.includes('intervensi_t1') ? 'selected' : ''}>Intervensi T1</option>
-                                <option value="pss" ${userKawasan.includes('pss') ? 'selected' : ''}>PSS</option>
-                                <option value="pra" ${userKawasan.includes('pra') ? 'selected' : ''}>Pra Sekolah</option>
+
+                            <optgroup label="7b. Program Panitia">
+                                <option value="plc_panitia" ${userKawasan.includes('plc_panitia') ? 'selected' : ''}>PLC Panitia</option>
+                                <option value="kertas_kerja_program" ${userKawasan.includes('kertas_kerja_program') ? 'selected' : ''}>Kertas Kerja Program</option>
+                                <option value="laporan_program" ${userKawasan.includes('laporan_program') ? 'selected' : ''}>Laporan Program</option>
                             </optgroup>
+
+                            <optgroup label="8. Pemantauan Kurikulum">
+                                <option value="instrumen_pencerapan" ${userKawasan.includes('instrumen_pencerapan') ? 'selected' : ''}>Instrumen Pencerapan</option>
+                                <option value="jadual_pencerapan" ${userKawasan.includes('jadual_pencerapan') ? 'selected' : ''}>Jadual Pencerapan</option>
+                                <option value="pencerapan_erph" ${userKawasan.includes('pencerapan_erph') ? 'selected' : ''}>Pencerapan eRPH</option>
+                                <option value="pencerapan_kendiri" ${userKawasan.includes('pencerapan_kendiri') ? 'selected' : ''}>PdPc Kendiri</option>
+                                <option value="pencerapan_fasa1" ${userKawasan.includes('pencerapan_fasa1') ? 'selected' : ''}>PdPc Fasa 1</option>
+                                <option value="pencerapan_fasa2" ${userKawasan.includes('pencerapan_fasa2') ? 'selected' : ''}>PdPc Fasa 2</option>
+                                <option value="semakan_buku_latihan" ${userKawasan.includes('semakan_buku_latihan') ? 'selected' : ''}>Semakan Buku Latihan</option>
+                            </optgroup>
+
+                            <optgroup label="9. PBD">
+                                <option value="jk_pbd" ${userKawasan.includes('jk_pbd') ? 'selected' : ''}>JK PBD</option>
+                                <option value="takwim_pbd" ${userKawasan.includes('takwim_pbd') ? 'selected' : ''}>Takwim PBD</option>
+                                <option value="jadual_pbd" ${userKawasan.includes('jadual_pbd') ? 'selected' : ''}>Jadual PBD</option>
+                                <option value="instrumen_pbd" ${userKawasan.includes('instrumen_pbd') ? 'selected' : ''}>Instrumen PBD</option>
+                                <option value="analisis_pbd" ${userKawasan.includes('analisis_pbd') ? 'selected' : ''}>Analisis PBD</option>
+                                <option value="intervensi_pbd" ${userKawasan.includes('intervensi_pbd') ? 'selected' : ''}>Intervensi PBD</option>
+                                <option value="penjaminan_kualiti_pbd" ${userKawasan.includes('penjaminan_kualiti_pbd') ? 'selected' : ''}>Penjaminan Kualiti PBD</option>
+                                <option value="pelaporan_pbd" ${userKawasan.includes('pelaporan_pbd') ? 'selected' : ''}>Pelaporan PBD</option>
+                            </optgroup>
+
+                            <optgroup label="10. UPSA/UASA">
+                                <option value="takwim_upsa" ${userKawasan.includes('takwim_upsa') ? 'selected' : ''}>Takwim UPSA</option>
+                                <option value="jadual_upsa" ${userKawasan.includes('jadual_upsa') ? 'selected' : ''}>Jadual UPSA</option>
+                                <option value="jadual_gubal_soalan" ${userKawasan.includes('jadual_gubal_soalan') ? 'selected' : ''}>Jadual Gubal Soalan</option>
+                                <option value="analisis_upsa" ${userKawasan.includes('analisis_upsa') ? 'selected' : ''}>Analisis UPSA</option>
+                                <option value="intervensi_upsa" ${userKawasan.includes('intervensi_upsa') ? 'selected' : ''}>Intervensi UPSA</option>
+                            </optgroup>
+
+                            <optgroup label="11. BMI5-9T & SEGAK">
+                                <option value="jk_segak" ${userKawasan.includes('jk_segak') ? 'selected' : ''}>JK SEGAK</option>
+                                <option value="takwim_segak" ${userKawasan.includes('takwim_segak') ? 'selected' : ''}>Takwim SEGAK</option>
+                                <option value="jadual_segak" ${userKawasan.includes('jadual_segak') ? 'selected' : ''}>Jadual SEGAK</option>
+                            </optgroup>
+
+                            <optgroup label="12. KBAT">
+                                <option value="jk_kbat" ${userKawasan.includes('jk_kbat') ? 'selected' : ''}>JK KBAT</option>
+                                <option value="instrumen_kbat" ${userKawasan.includes('instrumen_kbat') ? 'selected' : ''}>Instrumen KBAT</option>
+                                <option value="pencerapan_kbat_kendiri" ${userKawasan.includes('pencerapan_kbat_kendiri') ? 'selected' : ''}>Pencerapan Kendiri</option>
+                                <option value="pencerapan_kbat_pentadbir" ${userKawasan.includes('pencerapan_kbat_pentadbir') ? 'selected' : ''}>Pencerapan Pentadbir</option>
+                            </optgroup>
+
+                            <optgroup label="13. Standard Kualiti">
+                                <option value="jk_standard_kualiti" ${userKawasan.includes('jk_standard_kualiti') ? 'selected' : ''}>JK Standard Kualiti</option>
+                                <option value="panduan_standard_kualiti" ${userKawasan.includes('panduan_standard_kualiti') ? 'selected' : ''}>Buku Panduan</option>
+                                <option value="standard_kurikulum" ${userKawasan.includes('standard_kurikulum') ? 'selected' : ''}>Standard Kurikulum</option>
+                                <option value="instrumen_standard_kualiti" ${userKawasan.includes('instrumen_standard_kualiti') ? 'selected' : ''}>Instrumen Kualiti</option>
+                            </optgroup>
+
+                            <optgroup label="14. Pendigitalan ICT">
+                                <option value="jk_ict" ${userKawasan.includes('jk_ict') ? 'selected' : ''}>JK ICT</option>
+                            </optgroup>
+                            
                         </select>
                         <p class="text-[11px] text-slate-500 mt-1 italic">*Tahan butang CTRL (Windows) atau CMD (Mac) untuk pilih lebih dari satu.</p>
                     </div>
@@ -935,52 +1023,6 @@ async function muatSenaraiPengguna() {
         tbody.innerHTML = `<tr><td colspan="3" class="text-red-500 text-center p-4">Gagal memuatkan data.</td></tr>`;
     }
 }
-
-window.tukarPaparanKawasan = function(emailSafe) {
-    const roleSelect = document.getElementById(`role-${emailSafe}`).value;
-    const divKawasan = document.getElementById(`div-kawasan-${emailSafe}`);
-    
-    if (roleSelect === 'akses_khas') {
-        divKawasan.classList.remove('hidden');
-    } else {
-        divKawasan.classList.add('hidden');
-        Array.from(document.getElementById(`kawasan-${emailSafe}`).options).forEach(opt => opt.selected = false);
-    }
-};
-
-window.kemaskiniPeranan = async function(email) {
-    const emailSafe = email.replace(/[@.]/g, '');
-    const roleBaru = document.getElementById(`role-${emailSafe}`).value;
-    const kawasanSelect = document.getElementById(`kawasan-${emailSafe}`);
-    
-    // Dapatkan semua kawasan yang dipilih dan masukkan dalam Array
-    const kawasanDipilih = Array.from(kawasanSelect.selectedOptions).map(opt => opt.value);
-
-    if (roleBaru === 'akses_khas' && kawasanDipilih.length === 0) {
-        return alert("Sila pilih sekurang-kurangnya satu Subjek/Kawasan seliaan untuk pengguna ini.");
-    }
-
-    const sah = confirm(`Adakah anda pasti mahu menukar akses ${email}?`);
-    if (!sah) return;
-
-    try {
-        const userRef = doc(db, "pengguna", email);
-        await updateDoc(userRef, {
-            peranan: roleBaru,
-            kawasan: kawasanDipilih 
-        });
-        alert(`Berjaya! Akses untuk ${email} telah dikemaskini.`);
-    } catch (error) {
-        console.error("Ralat mengemaskini peranan:", error);
-        alert("Gagal mengemaskini peranan.");
-    }
-};
-
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("senarai-pengguna-body")) {
-        muatSenaraiPengguna();
-    }
-});
 
 // =========================================================================
 // 13. PENGURUSAN BARISAN GURU (ADMIN & DASHBOARD)
