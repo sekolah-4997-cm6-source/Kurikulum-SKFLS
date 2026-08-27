@@ -124,12 +124,12 @@ onAuthStateChanged(auth, async (user) => {
             if (adminMenuBtn) adminMenuBtn.classList.add("hidden");
         }
 
-        // 4. Jalankan fungsi jadual & tracker
+       // 4. Jalankan fungsi jadual & tracker
         if (typeof muatJadual === "function") muatJadual();
         
-        if (document.getElementById('jadualTrackerBody') && typeof janaTrackerPanitia === "function") {
-            const tahunSemasa = document.getElementById('filterTahun') ? document.getElementById('filterTahun').value : new Date().getFullYear().toString();
-            janaTrackerPanitia(tahunSemasa);
+        // Panggil fungsi tracker panitia untuk Admin Panel
+        if (typeof muatTrackerPanitia === "function") {
+            muatTrackerPanitia();
         }
 
     } else {
@@ -742,6 +742,50 @@ window.kembalikanFail = async function(id) {
 window.padamKekalFail = async function(id) {
     if (confirm("AMARAN: Fail akan dipadam sepenuhnya. Teruskan?")) await deleteDoc(doc(db, "kandungan", id));
 }
+
+// =========================================================================
+// FUNGSI TRACKER PANITIA (UNTUK ADMIN PANEL)
+// =========================================================================
+export async function muatTrackerPanitia() {
+    console.log("Fungsi muatTrackerPanitia mula berjalan...");
+    
+    // Pastikan jadual wujud di halaman ini (supaya tiada ralat di halaman lain)
+    const jadualWujud = document.getElementById("bodyTrackerSemuaPanitia");
+    if (!jadualWujud) return; // Berhenti jika bukan di admin.html
+
+    try {
+        // Anggap koleksi dokumen anda bernama "dokumen"
+        const querySnapshot = await getDocs(collection(db, "dokumen"));
+        
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            
+            // Dapatkan data kawasan (subjek) dan folder (fail_1, fail_2, dll.)
+            const kawasan = data.kawasan; 
+            const folder = data.folder; 
+            
+            if (kawasan && folder) {
+                // Tukar format 'fail_1' kepada 'fail1' untuk padan dengan ID HTML
+                const folderFormat = folder.replace('_', ''); 
+                
+                // Cari ID ikon yang sepadan, contoh: status-bm-fail1
+                const idIkon = `status-${kawasan}-${folderFormat}`;
+                const elemenIkon = document.getElementById(idIkon);
+                
+                // Jika jumpa elemen HTML tersebut, tukar class kepada hijau
+                if (elemenIkon) {
+                    elemenIkon.className = "fas fa-check-circle text-green-500 text-lg transition-all duration-300 transform scale-110";
+                }
+            }
+        });
+        
+        console.log("Tracker Panitia berjaya dikemas kini.");
+
+    } catch (error) {
+        console.error("Ralat semasa menyemak tracker panitia:", error);
+    }
+}
+
 
 // =========================================================================
 // JANA TRACKER PEMANTAUAN (KEMAS KINI 18 MODUL SIDEBAR)
