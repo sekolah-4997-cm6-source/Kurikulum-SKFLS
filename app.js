@@ -41,9 +41,9 @@ const iconLogin = document.getElementById('iconLogin');
 window.semakKebenaranAkses = function(subjekDiuji) {
     if (window.isAdmin) return true; // Admin sentiasa boleh
     
-    // Semak jika pengguna mempunyai 'akses_khas' dan kawasan mereka (Array) mengandungi subjek yang diuji
-    if (window.userRole === "akses_khas" && Array.isArray(window.userKawalan) && window.userKawalan.includes(subjekDiuji)) {
-        return true; 
+    // Pastikan subjekDiuji wujud dan userKawalan adalah sebuah array
+    if (subjekDiuji && window.userRole === "akses_khas" && Array.isArray(window.userKawalan)) {
+        return window.userKawalan.includes(subjekDiuji); 
     }
     return false; 
 };
@@ -66,19 +66,21 @@ onAuthStateChanged(auth, async (user) => {
         const userSnap = await getDoc(userRef);
         
         let perananPengguna = "guru"; // Peranan lalai
-        let kawasanPengguna = ""; // Kawasan lalai (kosong)
+        let kawasanPengguna = []; // [DIBAIKI] Guna array kosong berbanding ""
         
         if (!userSnap.exists()) {
             // Jika pengguna log masuk kali pertama
             await setDoc(userRef, {
                 nama: user.displayName || "Pengguna DELIMa",
                 email: user.email,
-                peranan: "guru"
+                peranan: "guru",
+                kawasan: [] // [DIBAIKI] Simpan array kosong sebagai default
             });
         } else {
             // Jika sudah ada, ambil peranan mereka
-            perananPengguna = userSnap.data().peranan || "guru";
-            kawasanPengguna = userSnap.data().kawasan || "";
+            const userData = userSnap.data();
+            perananPengguna = userData.peranan || "guru";
+            kawasanPengguna = userData.kawasan || []; // [DIBAIKI] Pastikan fallback adalah array
         }
 
         // Simpan dalam memori supaya bahagian lain (Upload/Padam) boleh baca
@@ -109,6 +111,7 @@ onAuthStateChanged(auth, async (user) => {
             if (window.location.pathname.includes('admin.html')) {
                 alert("Akses Ditolak. Halaman ini hanya untuk Pentadbir sistem.");
                 window.location.href = "index.html";
+                return; // [DIBAIKI] Tambah return supaya kod bawah tidak terus berjalan
             }
             
             // Logik KP & Penyelaras: Jika kawasan mereka sepadan dengan URL
@@ -146,6 +149,7 @@ onAuthStateChanged(auth, async (user) => {
         if (window.location.pathname.includes('admin.html')) {
             alert("Sila log masuk menggunakan e-mel DELIMa terlebih dahulu.");
             window.location.href = "index.html";
+            return; // [DIBAIKI] Berhenti di sini selepas redirect
         }
         
         // Sembunyikan elemen admin
@@ -746,46 +750,55 @@ window.padamKekalFail = async function(id) {
 // =========================================================================
 // FUNGSI TRACKER PANITIA (UNTUK ADMIN PANEL)
 // =========================================================================
-export async function muatTrackerPanitia() {
-    console.log("Fungsi muatTrackerPanitia mula berjalan...");
+window.muatTrackerPanitia = async function() {
+    console.log("--> Fungsi muatTrackerPanitia MULA dipanggil.");
     
-    // Pastikan jadual wujud di halaman ini (supaya tiada ralat di halaman lain)
-    const jadualWujud = document.getElementById("bodyTrackerSemuaPanitia");
-    if (!jadualWujud) return; // Berhenti jika bukan di admin.html
+    const tbody = document.getElementById("bodyTrackerSemuaPanitia");
+    if (!tbody) {
+        console.log("--> Batal: Tracker tidak dijumpai (bukan di admin.html).");
+        return;
+    }
 
     try {
-        // Anggap koleksi dokumen anda bernama "dokumen"
+        console.log("--> Sedang menarik data dari Firebase (koleksi: dokumen)...");
+        // NOTA: Pastikan nama koleksi anda adalah "dokumen". Jika tidak, tukar di bawah.
         const querySnapshot = await getDocs(collection(db, "dokumen"));
-        
+        let jumlahDikemaskini = 0;
+
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             
-            // Dapatkan data kawasan (subjek) dan folder (fail_1, fail_2, dll.)
-            const kawasan = data.kawasan; 
-            const folder = data.folder; 
-            
+            // Semak: Adakah sistem anda guna 'kawasan' atau 'subjek'? 
+            // Kita ambil kedua-duanya sebagai langkah berjaga-jaga.
+            let kawasan = data.kawasan || data.subjek || data.modul; 
+            let folder = data.folder || data.jenisFail; 
+
             if (kawasan && folder) {
-                // Tukar format 'fail_1' kepada 'fail1' untuk padan dengan ID HTML
-                const folderFormat = folder.replace('_', ''); 
+                // Buat semua jadi huruf kecil dan buang underscore (_)
+                // fail_1 akan jadi fail1. BM akan jadi bm.
+                const folderSafe = folder.replace('_', '').toLowerCase(); 
+                const kawasanSafe = kawasan.toLowerCase(); 
                 
-                // Cari ID ikon yang sepadan, contoh: status-bm-fail1
-                const idIkon = `status-${kawasan}-${folderFormat}`;
+                // ID sasaran. Contoh: status-bm-fail1
+                const idIkon = `status-${kawasanSafe}-${folderSafe}`;
                 const elemenIkon = document.getElementById(idIkon);
                 
-                // Jika jumpa elemen HTML tersebut, tukar class kepada hijau
+                // Print dalam console untuk kita troubleshoot jika tak berjaya
+                // console.log(`Semak Fail: [${data.tajuk}] -> Mencari ID HTML: #${idIkon}`);
+
                 if (elemenIkon) {
                     elemenIkon.className = "fas fa-check-circle text-green-500 text-lg transition-all duration-300 transform scale-110";
+                    jumlahDikemaskini++;
                 }
             }
         });
         
-        console.log("Tracker Panitia berjaya dikemas kini.");
+        console.log(`--> SELESAI! Sebanyak ${jumlahDikemaskini} kotak tracker telah ditukar ke hijau.`);
 
     } catch (error) {
-        console.error("Ralat semasa menyemak tracker panitia:", error);
+        console.error("--> Ralat memuatkan tracker panitia:", error);
     }
 }
-
 
 // =========================================================================
 // JANA TRACKER PEMANTAUAN (KEMAS KINI 18 MODUL SIDEBAR)
