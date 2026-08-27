@@ -174,6 +174,56 @@
         <span>Tracker Pengurusan (Bukan Panitia)</span>
     </h3>
 
+<!-- ========================================================================= -->
+<!-- TRACKER KESELURUHAN PANITIA (12 SUBJEK) -->
+<!-- ========================================================================= -->
+<div id="ruangTrackerPanitiaKhas" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8 mt-6">
+    <div class="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center">
+        <h3 class="font-bold text-slate-800">
+            <i class="fas fa-tasks text-blue-600 mr-2"></i>Status Semakan Fail Panitia (Semua Subjek)
+        </h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs uppercase tracking-wider">
+                    <th class="p-3 font-semibold text-center w-12">Bil</th>
+                    <th class="p-3 font-semibold">Mata Pelajaran</th>
+                    <th class="p-3 text-center font-semibold">Fail 1<br><span class="text-[10px] text-slate-400 font-normal">Induk (3.1.1.1)</span></th>
+                    <th class="p-3 text-center font-semibold">Fail 2<br><span class="text-[10px] text-slate-400 font-normal">Pengurusan (3.1.2.1)</span></th>
+                    <th class="p-3 text-center font-semibold">Fail 3<br><span class="text-[10px] text-slate-400 font-normal">Kualiti Guru (3.1.2.2)</span></th>
+                    <th class="p-3 text-center font-semibold">Fail 4<br><span class="text-[10px] text-slate-400 font-normal">Pencapaian Murid</span></th>
+                </tr>
+            </thead>
+            <tbody id="bodyTrackerSemuaPanitia" class="text-sm">
+                <!-- Skrip untuk menjana 12 baris subjek dengan pantas -->
+                <script>
+                    const senaraiSubjek = [
+                        "Bahasa Melayu", "Bahasa Inggeris", "Matematik", "Sains", 
+                        "Pendidikan Islam", "Pendidikan Moral", "Sejarah", 
+                        "Reka Bentuk & Teknologi (RBT)", "Pendidikan Seni Visual (PSV)", 
+                        "Pendidikan Jasmani & Kesihatan (PJPK)", "Pendidikan Muzik", "Bahasa Arab"
+                    ];
+                    
+                    const kependekanSubjek = [
+                        "bm", "bi", "mt", "sn", "pi", "pm", "sej", "rbt", "psv", "pjpk", "mz", "ba"
+                    ];
+                    
+                    document.write(senaraiSubjek.map((subjek, index) => `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                            <td class="p-3 text-center text-slate-500">${index + 1}</td>
+                            <td class="p-3 font-medium text-slate-700">${subjek}</td>
+                            <td class="p-3 text-center"><i class="fas fa-times-circle text-red-400" id="status-${kependekanSubjek[index]}-fail1"></i></td>
+                            <td class="p-3 text-center"><i class="fas fa-times-circle text-red-400" id="status-${kependekanSubjek[index]}-fail2"></i></td>
+                            <td class="p-3 text-center"><i class="fas fa-times-circle text-red-400" id="status-${kependekanSubjek[index]}-fail3"></i></td>
+                            <td class="p-3 text-center"><i class="fas fa-times-circle text-red-400" id="status-${kependekanSubjek[index]}-fail4"></i></td>
+                        </tr>
+                    `).join(''));
+                </script>
+            </tbody>
+        </table>
+    </div>
+</div>
 
     
     <!-- Grid 18 Kotak Kategori Tracker Kurikulum -->
