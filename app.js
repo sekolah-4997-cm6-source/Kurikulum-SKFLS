@@ -748,57 +748,68 @@ window.padamKekalFail = async function(id) {
 }
 
 // =========================================================================
-// FUNGSI TRACKER PANITIA (UNTUK ADMIN PANEL)
+// FUNGSI TRACKER PANITIA (DIBAIKI SESUAI PANGKALAN DATA KANDUNGAN)
 // =========================================================================
-window.muatTrackerPanitia = async function() {
-    console.log("--> Fungsi muatTrackerPanitia MULA dipanggil.");
-    
+let unsubscribeTracker = null;
+
+window.muatTrackerPanitia = function() {
     const tbody = document.getElementById("bodyTrackerSemuaPanitia");
-    if (!tbody) {
-        console.log("--> Batal: Tracker tidak dijumpai (bukan di admin.html).");
-        return;
-    }
+    if (!tbody) return; // Berhenti jika bukan di halaman admin.html
 
-    try {
-        console.log("--> Sedang menarik data dari Firebase (koleksi: dokumen)...");
-        // NOTA: Pastikan nama koleksi anda adalah "dokumen". Jika tidak, tukar di bawah.
-        const querySnapshot = await getDocs(collection(db, "dokumen"));
-        let jumlahDikemaskini = 0;
+    // Bersihkan listener lama jika ada
+    if (unsubscribeTracker) unsubscribeTracker();
 
-        querySnapshot.forEach((docSnap) => {
+    // 1. Tarik dari koleksi "kandungan"
+    const q = query(collection(db, "kandungan"));
+
+    // 2. Gunakan Real-Time Listener (onSnapshot) supaya automatik berubah bila ada fail baharu
+    unsubscribeTracker = onSnapshot(q, (snapshot) => {
+        // Reset semua ikon tracker kepada pangkah merah (default)
+        const senaraiSubjek = ['bm', 'bi', 'mt', 'sn', 'pi', 'pm', 'sej', 'rbt', 'psv', 'pjpk', 'mz', 'ba'];
+        senaraiSubjek.forEach(s => {
+            ['fail1', 'fail2', 'fail3', 'fail4'].forEach(f => {
+                const el = document.getElementById(`status-${s}-${f}`);
+                if (el) {
+                    el.className = "fas fa-times-circle text-red-400 text-lg";
+                }
+            });
+        });
+
+        const failWujud = new Set();
+
+        snapshot.forEach(docSnap => {
             const data = docSnap.data();
             
-            // Semak: Adakah sistem anda guna 'kawasan' atau 'subjek'? 
-            // Kita ambil kedua-duanya sebagai langkah berjaga-jaga.
-            let kawasan = data.kawasan || data.subjek || data.modul; 
-            let folder = data.folder || data.jenisFail; 
+            // Hanya semak dokumen yang berstatus 'aktif'
+            if (data.status !== "aktif") return;
 
-            if (kawasan && folder) {
-                // Buat semua jadi huruf kecil dan buang underscore (_)
-                // fail_1 akan jadi fail1. BM akan jadi bm.
-                const folderSafe = folder.replace('_', '').toLowerCase(); 
-                const kawasanSafe = kawasan.toLowerCase(); 
-                
-                // ID sasaran. Contoh: status-bm-fail1
-                const idIkon = `status-${kawasanSafe}-${folderSafe}`;
-                const elemenIkon = document.getElementById(idIkon);
-                
-                // Print dalam console untuk kita troubleshoot jika tak berjaya
-                // console.log(`Semak Fail: [${data.tajuk}] -> Mencari ID HTML: #${idIkon}`);
+            const subjek = data.subjek; // Medan: 'bm', 'bi', dll.
+            const folder = data.folder_destinasi; // Medan: 'fail_1', 'fail_2', dll.
 
-                if (elemenIkon) {
-                    elemenIkon.className = "fas fa-check-circle text-green-500 text-lg transition-all duration-300 transform scale-110";
-                    jumlahDikemaskini++;
-                }
+            if (subjek && folder) {
+                // Tukar 'fail_1' kepada 'fail1' dan kecilkan huruf
+                const folderSafe = folder.replace('_', '').toLowerCase();
+                const subjekSafe = subjek.toLowerCase();
+                
+                // Simpan kunci gabungan (Contoh: "bm-fail1")
+                failWujud.add(`${subjekSafe}-${folderSafe}`);
             }
         });
-        
-        console.log(`--> SELESAI! Sebanyak ${jumlahDikemaskini} kotak tracker telah ditukar ke hijau.`);
 
-    } catch (error) {
-        console.error("--> Ralat memuatkan tracker panitia:", error);
-    }
-}
+        // Tukar ikon kepada tanda semak hijau bagi setiap fail yang dijumpai
+        failWujud.forEach(key => {
+            const idIkon = `status-${key}`;
+            const elemenIkon = document.getElementById(idIkon);
+            if (elemenIkon) {
+                elemenIkon.className = "fas fa-check-circle text-green-500 text-lg transition-all duration-300 transform scale-110";
+            }
+        });
+
+        console.log("Tracker Panitia Admin berjaya dikemas kini secara Real-Time.");
+    }, (error) => {
+        console.error("Ralat memuatkan tracker panitia:", error);
+    });
+};
 
 // =========================================================================
 // JANA TRACKER PEMANTAUAN (KEMAS KINI 18 MODUL SIDEBAR)
