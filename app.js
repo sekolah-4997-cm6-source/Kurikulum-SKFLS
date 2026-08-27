@@ -1311,3 +1311,72 @@ function tukarModulAdmin(modulId) {
 
 // WAJIB: Dedahkan fungsi ini ke global supaya onclick="tukarModulAdmin(...)" pada HTML boleh panggil ia
 window.tukarModulAdmin = tukarModulAdmin;
+
+// =========================================================================
+// MODUL 2: PENGURUSAN SEMUA DOKUMEN GLOBAL (MASTER LIST) TUKAR KE "kandungan"
+// =========================================================================
+
+window.muatSemuaDokumenAdmin = async function() {
+    const tbody = document.getElementById("senarai-semua-dokumen-body");
+    if (!tbody) return;
+    
+    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Sedang menarik semua data dari Firebase...</td></tr>`;
+
+    try {
+        // NAMA COLLECTION TELAH DITUKAR KEPADA "kandungan" BERDASARKAN KOD CIKGU
+        const querySnapshot = await getDocs(collection(db, "kandungan")); 
+        
+        tbody.innerHTML = "";
+
+        if (querySnapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 font-medium">Tiada fail dijumpai di dalam pangkalan data.</td></tr>`;
+            return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+            const docData = docSnap.data();
+            const docId = docSnap.id;
+
+            // Pastikan data ini wujud, kita cuba tangkap apa sahaja bentuk datanya
+            const namaFolder = docData.folder_destinasi || docData.subjek || 'Umum';
+            const tajuk = docData.tajuk || 'Tanpa Tajuk';
+            const pemilik = docData.dimuat_naik_oleh || docData.dimuat_naik_emel || '-';
+
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-50 border-b border-slate-100 text-sm transition-colors";
+            tr.innerHTML = `
+                <td class="p-4 font-semibold text-slate-800">${tajuk}</td>
+                <td class="p-4">
+                    <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2 py-1 rounded border border-slate-200 uppercase">
+                        ${namaFolder}
+                    </span>
+                </td>
+                <td class="p-4 text-slate-600 text-xs">${pemilik}</td>
+                <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                    ${docData.url_fail ? `<a href="${docData.url_fail}" target="_blank" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-bold text-xs transition inline-block">Buka</a>` : ''}
+                    <button onclick="padamDokumenAdmin('${docId}', '${docData.path_stor || docData.url_fail}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition shadow-sm">
+                        <i class="fas fa-trash-alt mr-1"></i> Padam
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Ralat memuatkan Master List:", error);
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Ralat Firebase: ${error.message}</td></tr>`;
+    }
+};
+
+window.padamDokumenAdmin = async function(docId, storagePath) {
+    if (!confirm("AMARAN: Adakah anda PASTI ingin memadam dokumen ini? Fail ini akan dipadam KEKAL.")) return;
+
+    try {
+        // Padam dari pangkalan data "kandungan"
+        await deleteDoc(doc(db, "kandungan", docId));
+
+        alert("Berjaya! Rekod dokumen telah dipadam.");
+        window.muatSemuaDokumenAdmin(); // Refresh jadual secara automatik
+    } catch (error) {
+        alert("Gagal memadam dokumen: " + error.message);
+    }
+};
