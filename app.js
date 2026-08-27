@@ -1279,36 +1279,41 @@ document.addEventListener('DOMContentLoaded', () => {
 // SISTEM NAVIGASI TAB ADMIN
 // =========================================================================
 
-function tukarModulAdmin(modulId) {
+window.tukarModulAdmin = function(modulId) {
     const senaraiModul = ['arkib', 'dokumen', 'akses', 'guru', 'tracker'];
     
     senaraiModul.forEach(id => {
         const kandungan = document.getElementById(`modul-${id}`);
         const butang = document.getElementById(`btn-modul-${id}`);
         
-        if (!kandungan || !butang) return; // Lindungi jika ada tab yang tak jumpa
+        if (!kandungan || !butang) return;
 
         if (id === modulId) {
-            // Tunjuk Tab
+            // Tunjuk Tab & Warnakan Butang
             kandungan.classList.remove('hidden');
             kandungan.classList.add('block');
-            // Butang Aktif (Biru)
             butang.className = "px-4 py-2 rounded-xl font-bold text-sm bg-blue-600 text-white shadow-sm transition";
             
-            // JIKA buka tab dokumen, automatik muat data master list
-            if (id === 'dokumen' && typeof muatSemuaDokumenAdmin === 'function') {
-                muatSemuaDokumenAdmin();
+            // --- JIKA KLIK TAB DOKUMEN ---
+            if (id === 'dokumen' && typeof window.muatSemuaDokumenAdmin === 'function') {
+                window.muatSemuaDokumenAdmin();
             }
+            
+            // --- JIKA KLIK TAB TRACKER ---
+            // Kita panggil fungsi asal cikgu di sini. 
+            // Cikgu boleh ubah "2026" kepada "semua" atau tahun yang cikgu mahu paparkan.
+            if (id === 'tracker' && typeof janaTrackerPanitia === 'function') {
+                janaTrackerPanitia("2026"); 
+            }
+
         } else {
-            // Sembunyi Tab Lain
+            // Sembunyi Tab & Kelabukan Butang
             kandungan.classList.remove('block');
             kandungan.classList.add('hidden');
-            // Butang Pasif (Kelabu)
             butang.className = "px-4 py-2 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
         }
     });
 }
-
 // WAJIB: Dedahkan fungsi ini ke global supaya onclick="tukarModulAdmin(...)" pada HTML boleh panggil ia
 window.tukarModulAdmin = tukarModulAdmin;
 
