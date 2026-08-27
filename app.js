@@ -750,7 +750,6 @@ window.padamKekalFail = async function(id) {
 // =========================================================================
 // FUNGSI TRACKER PANITIA (DIBAIKI SESUAI PANGKALAN DATA KANDUNGAN)
 // =========================================================================
-let unsubscribeTracker = null;
 
 window.muatTrackerPanitia = function() {
     const tbody = document.getElementById("bodyTrackerSemuaPanitia");
