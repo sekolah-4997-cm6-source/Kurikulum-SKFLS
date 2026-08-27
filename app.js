@@ -888,10 +888,10 @@ function janaTrackerPanitia(tahunPilih = "semua") {
 
             // Kira Panitia
             if (dataPanitia[sj] !== undefined) {
-                if (data.folder === "Fail 1") dataPanitia[sj].fail1++;
-                else if (data.folder === "Fail 2") dataPanitia[sj].fail2++;
-                else if (data.folder === "Fail 3") dataPanitia[sj].fail3++;
-                else if (data.folder === "Fail 4") dataPanitia[sj].fail4++;
+                if (data.folder === "fail_1") dataPanitia[sj].fail1++;
+                else if (data.folder === "fail_2") dataPanitia[sj].fail2++;
+                else if (data.folder === "fail_3") dataPanitia[sj].fail3++;
+                else if (data.folder === "fail_4") dataPanitia[sj].fail4++;
             } 
             // Kira Bukan Panitia
             else if (dataBukanPanitia[sj] !== undefined) {
