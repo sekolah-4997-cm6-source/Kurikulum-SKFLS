@@ -723,135 +723,204 @@ window.padamKekalFail = async function(id) {
     if (confirm("AMARAN: Fail akan dipadam sepenuhnya. Teruskan?")) await deleteDoc(doc(db, "kandungan", id));
 }
 
-// ==========================================
-// 10. JADUAL TRACKER KESELURUHAN (PANITIA & BUKAN PANITIA)
-// ==========================================
-function janaTrackerPanitia(tahun) {
-    const trackerTableBody = document.getElementById('jadualTrackerBody');
-    if (!trackerTableBody) return; 
-
-    const labelTahunTracker = document.getElementById('labelTahunTracker');
-    if (labelTahunTracker) labelTahunTracker.innerText = tahun;
-    
-    trackerTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Menyemak Pangkalan Data...</td></tr>';
-
+// =========================================================================
+// JANA TRACKER PEMANTAUAN (KEMASKINI DARI MENU NAVBAR TERKINI)
+// =========================================================================
+function janaTrackerPanitia(tahunPilih = "semua") {
+    // 1. Senarai Panitia - 12 Subjek berdasarkan menu navbar
     const senaraiSemuaPanitia = [
-        { id: "bm", nama: "B. Melayu" }, { id: "bi", nama: "B. Inggeris" },
-        { id: "mt", nama: "Matematik" }, { id: "sn", nama: "Sains" },
-        { id: "pi", nama: "Pend. Islam" }, { id: "pm", nama: "Pend. Moral" },
-        { id: "sej", nama: "Sejarah" }, { id: "rbt", nama: "RBT" },
-        { id: "psv", nama: "Pend. Seni Visual" }, { id: "mz", nama: "Pend. Muzik" },
-        { id: "pjpk", nama: "PJPK" }, { id: "ba", nama: "B. Arab" }
+        { id: "bm", nama: "B. Melayu" },
+        { id: "bi", nama: "B. Inggeris" },
+        { id: "mt", nama: "Matematik" },
+        { id: "sn", nama: "Sains" },
+        { id: "pi", nama: "Pend. Islam" },
+        { id: "pm", nama: "Pend. Moral" },
+        { id: "sej", nama: "Sejarah" },
+        { id: "rbt", nama: "RBT" },
+        { id: "psv", nama: "Pend. Seni Visual" },
+        { id: "mz", nama: "Pend. Muzik" },
+        { id: "pjpk", nama: "PJPK" },
+        { id: "ba", nama: "B. Arab" }
     ];
 
-    try {
-        const qTracker = query(collection(db, "kandungan"), where("status", "==", "aktif"));
-        
-        if (unsubscribeTracker) unsubscribeTracker();
+    // Data Penjejakan (Mula dengan 0)
+    let dataPanitia = {};
+    senaraiSemuaPanitia.forEach(p => {
+        dataPanitia[p.id] = { fail1: 0, fail2: 0, fail3: 0, fail4: 0, status: "Belum Lengkap" };
+    });
 
-        unsubscribeTracker = onSnapshot(qTracker, (snapshot) => {
-            let dataSubjek = {};
-            senaraiSemuaPanitia.forEach(p => { dataSubjek[p.id] = { fail_1: 0, fail_2: 0, fail_3: 0, fail_4: 0 }; });
+    // 2. Senarai Bukan Panitia (Struktur ID dari Menu Navbar Terkini)
+    let dataBukanPanitia = {
+        // 1. Pengurusan Unit
+        'surat_lantikan_kurikulum': 0, 'carta_kurikulum': 0, 'visi_misi_kpm': 0, 'visi_misi_sekolah': 0, 'dasar_kurikulum': 0, 'buku_pengurusan': 0, 'takwim_persekolahan': 0, 'takwim_kurikulum': 0,
+        // 2. Pekeliling & Makluman
+        'spi': 0, 'surat_makluman': 0,
+        // 3. Dokumen Kurikulum
+        'dskp': 0, 'bahan_muat_turun': 0, 'bahan_muat_naik': 0,
+        // 4. Perancangan Kurikulum
+        'perancangan_strategik': 0, 'analisis_swot': 0, 'pelan_taktikal': 0, 'pelan_operasi': 0, 'oppm_pintas': 0,
+        // 5. Masa Instruksional
+        'jk_jadual_waktu': 0, 'jadual_waktu': 0, 'jadual_guru_ganti': 0,
+        // 6. Mesyuarat Induk
+        'mesyuarat_bil1': 0, 'mesyuarat_bil2': 0, 'mesyuarat_bil3': 0, 'mesyuarat_bil4': 0, 'maklum_balas_mesyuarat': 0,
+        // 7. Panitia & Program (Selain 12 Subjek)
+        'plc_panitia': 0, 'kertas_kerja_program': 0, 'laporan_program': 0,
+        // 8. Pemantauan Kurikulum
+        'instrumen_pencerapan': 0, 'jadual_pencerapan': 0, 'pencerapan_erph': 0, 'pencerapan_kendiri': 0, 'pencerapan_fasa1': 0, 'pencerapan_fasa2': 0, 'semakan_buku_latihan': 0,
+        // 9. Pentaksiran (PBD)
+        'jk_pbd': 0, 'takwim_pbd': 0, 'jadual_pbd': 0, 'instrumen_pbd': 0, 'analisis_pbd': 0, 'intervensi_pbd': 0, 'penjaminan_kualiti_pbd': 0, 'pelaporan_pbd': 0,
+        // 10. UPSA / UASA
+        'takwim_upsa': 0, 'jadual_upsa': 0, 'jadual_gubal_soalan': 0, 'analisis_upsa': 0, 'intervensi_upsa': 0,
+        // 11. BMI5-9T & SEGAK
+        'jk_segak': 0, 'takwim_segak': 0, 'jadual_segak': 0,
+        // 12. KBAT
+        'jk_kbat': 0, 'instrumen_kbat': 0, 'pencerapan_kbat_kendiri': 0, 'pencerapan_kbat_pentadbir': 0,
+        // 13. Standard Kualiti
+        'jk_standard_kualiti': 0, 'panduan_standard_kualiti': 0, 'standard_kurikulum': 0, 'instrumen_standard_kualiti': 0,
+        // 14. Pendigitalan ICT
+        'jk_ict': 0
+    };
 
-            let dataBukanPanitia = {
-                'visi_misi': 0, 'spi': 0, 'dasar': 0, 'takwim': 0,
-                'mesyuarat_induk': 0, 'mmi': 0,
-                'plan': 0, 'pemulihan': 0, 'transisi': 0, 'intervensi_t1': 0,
-                'pss': 0, 'pra': 0
-            };
+    // Ambil semua dokumen dari Firestore tanpa filter tahun, filter di buat di bawah
+    const qTracker = query(collection(db, "kandungan")); 
 
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                
-                if (tahun && tahun.toLowerCase() !== "semua") {
-                    const docTahun = data.tahun ? String(data.tahun).toLowerCase() : "";
-                    const filterKecil = String(tahun).toLowerCase();
-                    if (docTahun !== "" && !docTahun.includes(filterKecil) && !filterKecil.includes(docTahun)) return; 
-                }
-                
-                const subjek = data.subjek ? String(data.subjek).toLowerCase() : "";
-                
-                if (dataSubjek[subjek]) {
-                    let folder = data.folder_destinasi;
-                    if (!['fail_1', 'fail_2', 'fail_3', 'fail_4'].includes(folder)) folder = 'fail_1'; 
-                    dataSubjek[subjek][folder]++;
-                }
+    onSnapshot(qTracker, (snapshot) => {
+        // Reset semula kiraan pada setiap perubahan
+        senaraiSemuaPanitia.forEach(p => {
+            dataPanitia[p.id] = { fail1: 0, fail2: 0, fail3: 0, fail4: 0, status: "Belum Lengkap" };
+        });
+        Object.keys(dataBukanPanitia).forEach(k => dataBukanPanitia[k] = 0);
 
-                if (dataBukanPanitia[subjek] !== undefined) {
-                    dataBukanPanitia[subjek]++;
-                }
-            });
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const sj = data.subjek;
+            const docTahun = data.tahun;
+            
+            // TAPISAN TAHUN
+            if (tahunPilih !== "semua" && docTahun !== tahunPilih) return; // Langkau jika bukan tahun dipilih
 
-            let htmlTracker = "";
-            senaraiSemuaPanitia.forEach(p => {
-                const kiraan = dataSubjek[p.id];
-                const formatKotak = (jumlah) => jumlah > 0 
-                    ? `<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200"><i class="fas fa-check"></i> (${jumlah})</span>`
-                    : `<span class="text-slate-400 bg-slate-50 px-2 py-1 rounded"><i class="fas fa-times"></i> (0)</span>`;
-
-                const lengkapSemua = (kiraan.fail_1 > 0 && kiraan.fail_2 > 0 && kiraan.fail_3 > 0 && kiraan.fail_4 > 0);
-                const statusLengkap = lengkapSemua 
-                    ? '<span class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Lengkap</span>' 
-                    : '<span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">Belum Lengkap</span>';
-
-                htmlTracker += `
-                    <tr class="hover:bg-slate-50 border-b border-slate-100 transition duration-150">
-                        <td class="p-3 font-medium text-slate-700 border-r border-slate-50">${p.nama}</td>
-                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_1)}</td>
-                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_2)}</td>
-                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_3)}</td>
-                        <td class="p-3 text-center border-r border-slate-50">${formatKotak(kiraan.fail_4)}</td>
-                        <td class="p-3 text-center">${statusLengkap}</td>
-                    </tr>`;
-            });
-            trackerTableBody.innerHTML = htmlTracker;
-
-            const renderBukanPanitia = (kumpulanData, targetId) => {
-                const targetEl = document.getElementById(targetId);
-                if (!targetEl) return;
-                
-                let html = "";
-                kumpulanData.forEach(item => {
-                    const jumlah = dataBukanPanitia[item.id];
-                    const statusIkon = jumlah > 0 
-                        ? `<span class="text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md text-xs font-bold border border-emerald-200 shadow-sm"><i class="fas fa-check-circle mr-1"></i>Ada (${jumlah})</span>`
-                        : `<span class="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md text-xs border border-slate-200"><i class="fas fa-times-circle mr-1 text-slate-400"></i>Tiada (0)</span>`;
-                    
-                    html += `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-3 font-medium text-slate-700 w-2/3">${item.nama}</td>
-                            <td class="p-3 text-right w-1/3">${statusIkon}</td>
-                        </tr>`;
-                });
-                targetEl.innerHTML = html;
-            };
-
-            renderBukanPanitia([
-                { id: 'visi_misi', nama: 'Visi & Misi' }, { id: 'spi', nama: 'Pekeliling (SPI)' },
-                { id: 'dasar', nama: 'Dasar & Penetapan' }, { id: 'takwim', nama: 'Takwim & Carta' }
-            ], 'trackerMaklumatInduk');
-
-            renderBukanPanitia([
-                { id: 'mesyuarat_induk', nama: 'Mesyuarat Induk' }, { id: 'mmi', nama: 'Pengurusan Masa (MMI)' }
-            ], 'trackerMesyuarat');
-
-            renderBukanPanitia([
-                { id: 'plan', nama: 'PLaN' }, { id: 'pemulihan', nama: 'Pemulihan Khas' },
-                { id: 'transisi', nama: 'Transisi Tahun 1' }, { id: 'intervensi_t1', nama: 'Intervensi Tahun 1' }
-            ], 'trackerProgram');
-
-            renderBukanPanitia([
-                { id: 'pss', nama: 'Pusat Sumber (PSS)' }, { id: 'pra', nama: 'Prasekolah' }
-            ], 'trackerSokongan');
-
+            // A. KIRA PANITIA
+            if (dataPanitia[sj] !== undefined) {
+                if (data.folder === "Fail 1") dataPanitia[sj].fail1++;
+                else if (data.folder === "Fail 2") dataPanitia[sj].fail2++;
+                else if (data.folder === "Fail 3") dataPanitia[sj].fail3++;
+                else if (data.folder === "Fail 4") dataPanitia[sj].fail4++;
+            } 
+            // B. KIRA BUKAN PANITIA
+            else if (dataBukanPanitia[sj] !== undefined) {
+                dataBukanPanitia[sj]++;
+            }
         });
 
-    } catch (error) {
-        console.error("Ralat Tracker:", error);
-        trackerTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">Ralat: ${error.message}</td></tr>`;
-    }
-}
+        // ==========================================
+        // RENDER 1: JADUAL PANITIA
+        // ==========================================
+        const jadualBody = document.getElementById('jadualTrackerBody');
+        if (jadualBody) {
+            jadualBody.innerHTML = "";
+            let htmlPanitia = "";
+            senaraiSemuaPanitia.forEach(p => {
+                let d = dataPanitia[p.id];
+                
+                // Syarat Lengkap: Fail 1,2,3 mesti ada min. 1 fail. Fail 4 abaikan.
+                if (d.fail1 >= 1 && d.fail2 >= 1 && d.fail3 >= 1) {
+                    d.status = "Lengkap";
+                }
+                
+                let badgetStatus = d.status === "Lengkap" 
+                    ? `<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold border border-green-200">Lengkap</span>`
+                    : `<span class="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs border border-amber-200">Belum Lengkap</span>`;
+                
+                htmlPanitia += `
+                <tr class="border-b border-slate-100 hover:bg-blue-50 transition text-xs">
+                    <td class="py-3 px-4 font-semibold text-slate-700">${p.nama}</td>
+                    <td class="py-3 px-4 text-center">${d.fail1 > 0 ? `<span class="text-green-600 font-bold">✔ (${d.fail1})</span>` : `<span class="text-slate-300">✖ (0)</span>`}</td>
+                    <td class="py-3 px-4 text-center">${d.fail2 > 0 ? `<span class="text-green-600 font-bold">✔ (${d.fail2})</span>` : `<span class="text-slate-300">✖ (0)</span>`}</td>
+                    <td class="py-3 px-4 text-center">${d.fail3 > 0 ? `<span class="text-green-600 font-bold">✔ (${d.fail3})</span>` : `<span class="text-slate-300">✖ (0)</span>`}</td>
+                    <td class="py-3 px-4 text-center">${d.fail4 > 0 ? `<span class="text-green-600 font-bold">✔ (${d.fail4})</span>` : `<span class="text-slate-300">✖ (0)</span>`}</td>
+                    <td class="py-3 px-4 text-center">${badgetStatus}</td>
+                </tr>`;
+            });
+            jadualBody.innerHTML = htmlPanitia;
+        }
 
+        // ==========================================
+        // FUNGSI RENDER BUKAN PANITIA
+        // ==========================================
+        function renderBukanPanitia(kumpulan, elementId) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+            
+            let htmlList = `<div class="space-y-1 mt-2">`;
+            kumpulan.forEach(item => {
+                let count = dataBukanPanitia[item.id];
+                let lencana = count > 0 
+                    ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200">Ada (${count})</span>`
+                    : `<span class="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[10px] border border-slate-200">Tiada (0)</span>`;
+                
+                htmlList += `
+                <div class="flex justify-between items-center bg-white p-2 border-b border-slate-50 last:border-0 hover:bg-slate-50">
+                    <span class="text-xs text-slate-600">${item.nama}</span>
+                    ${lencana}
+                </div>`;
+            });
+            htmlList += `</div>`;
+            container.innerHTML = htmlList;
+        }
+
+        // KUMPULAN 1: Pengurusan Unit (Biru)
+        renderBukanPanitia([
+            { id: 'surat_lantikan_kurikulum', nama: 'Surat Lantikan' },
+            { id: 'carta_kurikulum', nama: 'Carta Organisasi' },
+            { id: 'visi_misi_kpm', nama: 'Visi Misi KPM' },
+            { id: 'visi_misi_sekolah', nama: 'Visi Misi Sekolah' },
+            { id: 'dasar_kurikulum', nama: 'Dasar / Ketetapan' },
+            { id: 'buku_pengurusan', nama: 'Buku Pengurusan' },
+            { id: 'takwim_persekolahan', nama: 'Takwim Persekolahan' },
+            { id: 'takwim_kurikulum', nama: 'Takwim Kurikulum' }
+        ], 'trackerMaklumatInduk');
+
+        // KUMPULAN 2: Pekeliling, Makluman & Masa Instruksional (Jingga/Kuning)
+        renderBukanPanitia([
+            { id: 'spi', nama: 'SPI' },
+            { id: 'surat_makluman', nama: 'Surat Makluman' },
+            { id: 'jk_jadual_waktu', nama: 'JK Jadual Waktu' },
+            { id: 'jadual_waktu', nama: 'Jadual Induk/Kelas' },
+            { id: 'jadual_guru_ganti', nama: 'Jadual Ganti' }
+        ], 'trackerMesyuarat');
+
+        // KUMPULAN 3: Dokumen & Perancangan (Hijau)
+        renderBukanPanitia([
+            { id: 'dskp', nama: 'DSKP' },
+            { id: 'bahan_muat_turun', nama: 'Bahan M/Turun' },
+            { id: 'bahan_muat_naik', nama: 'Bahan M/Naik' },
+            { id: 'perancangan_strategik', nama: 'P. Strategik' },
+            { id: 'analisis_swot', nama: 'Analisis SWOT' },
+            { id: 'pelan_taktikal', nama: 'Pelan Taktikal' },
+            { id: 'pelan_operasi', nama: 'Pelan Operasi' },
+            { id: 'oppm_pintas', nama: 'OPPM & PINTAS' }
+        ], 'trackerIntervensi');
+
+        // KUMPULAN 4: Mesyuarat Induk, Panitia, Program (Ungu)
+        renderBukanPanitia([
+            { id: 'mesyuarat_bil1', nama: 'Minit Mesy. Bil 1' },
+            { id: 'mesyuarat_bil2', nama: 'Minit Mesy. Bil 2' },
+            { id: 'mesyuarat_bil3', nama: 'Minit Mesy. Bil 3' },
+            { id: 'mesyuarat_bil4', nama: 'Minit Mesy. Bil 4' },
+            { id: 'maklum_balas_mesyuarat', nama: 'Maklum Balas' },
+            { id: 'plc_panitia', nama: 'PLC Panitia' },
+            { id: 'kertas_kerja_program', nama: 'Kertas Kerja' },
+            { id: 'laporan_program', nama: 'Laporan Program' }
+        ], 'trackerPencerapan');
+        
+        // KUMPULAN 5: Pemantauan Kurikulum (Merah/Teal)
+        // NOTA: Perlu wujudkan div id "trackerPemantauan" di HTML admin jika mahu paparkan ini,
+        // buat masa ini saya gabungkan ke div yang ada atau biarkan.
+        // Jika nak buat div baru, cikgu tambah di HTML <div id="trackerPemantauan"></div>
+        
+    });
+}
+window.janaTrackerPanitia = janaTrackerPanitia; // Wajib ada untuk butang tracker
 // =========================================================================
 // 11. PENGURUSAN AKSES PENGGUNA (ADMIN PANEL)
 // =========================================================================
