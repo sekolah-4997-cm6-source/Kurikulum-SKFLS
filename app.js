@@ -871,7 +871,8 @@ function janaTrackerPanitia(tahunPilih = "semua") {
 
         // 2. SPI / Surat Siaran
         renderBukanPanitia([
-            { id: 'spi', nama: 'SPI' }, { id: 'surat_siaran', nama: 'Surat Siaran' }
+            { id: 'spi', nama: 'SPI' }, 
+            { id: 'surat_siaran', nama: 'Surat Siaran' }
         ], 'boxSpi');
 
         // 3. Dokumen Kurikulum (Bahan Utama)
@@ -896,10 +897,10 @@ function janaTrackerPanitia(tahunPilih = "semua") {
             { id: 'mesyuarat_bil3', nama: 'Minit Mesyuarat Bil. 3' }, { id: 'mesyuarat_bil4', nama: 'Minit Mesyuarat Bil. 4' }, { id: 'maklum_balas_mesyuarat', nama: 'Maklum Balas Minit' }
         ], 'boxMesyuarat');
 
-        // 7. Pengurusan Panitia (PLC Panitia)
+        // 7. Pengurusan Panitia
         renderBukanPanitia([
             { id: 'plc_panitia', nama: 'PLC Panitia' }
-        ], 'boxPlcPanitia');
+        ], 'boxPanitia');
 
         // 8. Dokumen Kurikulum (Salinan)
         renderBukanPanitia([
@@ -915,8 +916,9 @@ function janaTrackerPanitia(tahunPilih = "semua") {
 
         // 10. Program Kurikulum
         renderBukanPanitia([
-            { id: 'kertas_kerja_program', nama: 'Kertas Kerja Program' }, { id: 'laporan_program', nama: 'Dokumentasi / Laporan' }
-        ], 'boxProgram');
+            { id: 'kertas_kerja_program', nama: 'Kertas Kerja Program' }, 
+            { id: 'laporan_program', nama: 'Dokumentasi / Laporan' }
+       ], 'boxProgram');
 
         // 11. Pendigitalan ICT
         renderBukanPanitia([
