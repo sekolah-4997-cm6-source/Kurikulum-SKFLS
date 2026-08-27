@@ -724,68 +724,46 @@ window.padamKekalFail = async function(id) {
 }
 
 // =========================================================================
-// JANA TRACKER PEMANTAUAN (KEMASKINI DARI MENU NAVBAR TERKINI)
+// JANA TRACKER PEMANTAUAN (14 KOTAK MENGIKUT NAVBAR)
 // =========================================================================
 function janaTrackerPanitia(tahunPilih = "semua") {
     // 1. Senarai Panitia - 12 Subjek berdasarkan menu navbar
     const senaraiSemuaPanitia = [
-        { id: "bm", nama: "B. Melayu" },
-        { id: "bi", nama: "B. Inggeris" },
-        { id: "mt", nama: "Matematik" },
-        { id: "sn", nama: "Sains" },
-        { id: "pi", nama: "Pend. Islam" },
-        { id: "pm", nama: "Pend. Moral" },
-        { id: "sej", nama: "Sejarah" },
-        { id: "rbt", nama: "RBT" },
-        { id: "psv", nama: "Pend. Seni Visual" },
-        { id: "mz", nama: "Pend. Muzik" },
-        { id: "pjpk", nama: "PJPK" },
-        { id: "ba", nama: "B. Arab" }
+        { id: "bm", nama: "B. Melayu" }, { id: "bi", nama: "B. Inggeris" },
+        { id: "mt", nama: "Matematik" }, { id: "sn", nama: "Sains" },
+        { id: "pi", nama: "Pend. Islam" }, { id: "pm", nama: "Pend. Moral" },
+        { id: "sej", nama: "Sejarah" }, { id: "rbt", nama: "RBT" },
+        { id: "psv", nama: "Pend. Seni Visual" }, { id: "mz", nama: "Pend. Muzik" },
+        { id: "pjpk", nama: "PJPK" }, { id: "ba", nama: "B. Arab" }
     ];
 
-    // Data Penjejakan (Mula dengan 0)
     let dataPanitia = {};
     senaraiSemuaPanitia.forEach(p => {
         dataPanitia[p.id] = { fail1: 0, fail2: 0, fail3: 0, fail4: 0, status: "Belum Lengkap" };
     });
 
-    // 2. Senarai Bukan Panitia (Struktur ID dari Menu Navbar Terkini)
+    // 2. Senarai Bukan Panitia
     let dataBukanPanitia = {
-        // 1. Pengurusan Unit
         'surat_lantikan_kurikulum': 0, 'carta_kurikulum': 0, 'visi_misi_kpm': 0, 'visi_misi_sekolah': 0, 'dasar_kurikulum': 0, 'buku_pengurusan': 0, 'takwim_persekolahan': 0, 'takwim_kurikulum': 0,
-        // 2. Pekeliling & Makluman
         'spi': 0, 'surat_makluman': 0,
-        // 3. Dokumen Kurikulum
         'dskp': 0, 'bahan_muat_turun': 0, 'bahan_muat_naik': 0,
-        // 4. Perancangan Kurikulum
         'perancangan_strategik': 0, 'analisis_swot': 0, 'pelan_taktikal': 0, 'pelan_operasi': 0, 'oppm_pintas': 0,
-        // 5. Masa Instruksional
         'jk_jadual_waktu': 0, 'jadual_waktu': 0, 'jadual_guru_ganti': 0,
-        // 6. Mesyuarat Induk
         'mesyuarat_bil1': 0, 'mesyuarat_bil2': 0, 'mesyuarat_bil3': 0, 'mesyuarat_bil4': 0, 'maklum_balas_mesyuarat': 0,
-        // 7. Panitia & Program (Selain 12 Subjek)
         'plc_panitia': 0, 'kertas_kerja_program': 0, 'laporan_program': 0,
-        // 8. Pemantauan Kurikulum
         'instrumen_pencerapan': 0, 'jadual_pencerapan': 0, 'pencerapan_erph': 0, 'pencerapan_kendiri': 0, 'pencerapan_fasa1': 0, 'pencerapan_fasa2': 0, 'semakan_buku_latihan': 0,
-        // 9. Pentaksiran (PBD)
         'jk_pbd': 0, 'takwim_pbd': 0, 'jadual_pbd': 0, 'instrumen_pbd': 0, 'analisis_pbd': 0, 'intervensi_pbd': 0, 'penjaminan_kualiti_pbd': 0, 'pelaporan_pbd': 0,
-        // 10. UPSA / UASA
         'takwim_upsa': 0, 'jadual_upsa': 0, 'jadual_gubal_soalan': 0, 'analisis_upsa': 0, 'intervensi_upsa': 0,
-        // 11. BMI5-9T & SEGAK
         'jk_segak': 0, 'takwim_segak': 0, 'jadual_segak': 0,
-        // 12. KBAT
         'jk_kbat': 0, 'instrumen_kbat': 0, 'pencerapan_kbat_kendiri': 0, 'pencerapan_kbat_pentadbir': 0,
-        // 13. Standard Kualiti
         'jk_standard_kualiti': 0, 'panduan_standard_kualiti': 0, 'standard_kurikulum': 0, 'instrumen_standard_kualiti': 0,
-        // 14. Pendigitalan ICT
         'jk_ict': 0
     };
 
-    // Ambil semua dokumen dari Firestore tanpa filter tahun, filter di buat di bawah
     const qTracker = query(collection(db, "kandungan")); 
 
     onSnapshot(qTracker, (snapshot) => {
-        // Reset semula kiraan pada setiap perubahan
+        // Reset 
         senaraiSemuaPanitia.forEach(p => {
             dataPanitia[p.id] = { fail1: 0, fail2: 0, fail3: 0, fail4: 0, status: "Belum Lengkap" };
         });
@@ -796,33 +774,28 @@ function janaTrackerPanitia(tahunPilih = "semua") {
             const sj = data.subjek;
             const docTahun = data.tahun;
             
-            // TAPISAN TAHUN
-            if (tahunPilih !== "semua" && docTahun !== tahunPilih) return; // Langkau jika bukan tahun dipilih
+            if (tahunPilih !== "semua" && docTahun !== tahunPilih) return; 
 
-            // A. KIRA PANITIA
+            // Kira Panitia
             if (dataPanitia[sj] !== undefined) {
                 if (data.folder === "Fail 1") dataPanitia[sj].fail1++;
                 else if (data.folder === "Fail 2") dataPanitia[sj].fail2++;
                 else if (data.folder === "Fail 3") dataPanitia[sj].fail3++;
                 else if (data.folder === "Fail 4") dataPanitia[sj].fail4++;
             } 
-            // B. KIRA BUKAN PANITIA
+            // Kira Bukan Panitia
             else if (dataBukanPanitia[sj] !== undefined) {
                 dataBukanPanitia[sj]++;
             }
         });
 
-        // ==========================================
-        // RENDER 1: JADUAL PANITIA
-        // ==========================================
+        // ================== RENDER JADUAL PANITIA ==================
         const jadualBody = document.getElementById('jadualTrackerBody');
         if (jadualBody) {
             jadualBody.innerHTML = "";
             let htmlPanitia = "";
             senaraiSemuaPanitia.forEach(p => {
                 let d = dataPanitia[p.id];
-                
-                // Syarat Lengkap: Fail 1,2,3 mesti ada min. 1 fail. Fail 4 abaikan.
                 if (d.fail1 >= 1 && d.fail2 >= 1 && d.fail3 >= 1) {
                     d.status = "Lengkap";
                 }
@@ -844,14 +817,12 @@ function janaTrackerPanitia(tahunPilih = "semua") {
             jadualBody.innerHTML = htmlPanitia;
         }
 
-        // ==========================================
-        // FUNGSI RENDER BUKAN PANITIA
-        // ==========================================
+        // ================== RENDER BUKAN PANITIA ==================
         function renderBukanPanitia(kumpulan, elementId) {
             const container = document.getElementById(elementId);
             if (!container) return;
             
-            let htmlList = `<div class="space-y-1 mt-2">`;
+            let htmlList = `<div class="space-y-1">`;
             kumpulan.forEach(item => {
                 let count = dataBukanPanitia[item.id];
                 let lencana = count > 0 
@@ -859,8 +830,8 @@ function janaTrackerPanitia(tahunPilih = "semua") {
                     : `<span class="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[10px] border border-slate-200">Tiada (0)</span>`;
                 
                 htmlList += `
-                <div class="flex justify-between items-center bg-white p-2 border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                    <span class="text-xs text-slate-600">${item.nama}</span>
+                <div class="flex justify-between items-center bg-white p-2 border border-transparent border-b-slate-100 last:border-b-transparent hover:bg-slate-50 transition rounded-md">
+                    <span class="text-[11px] text-slate-600 font-medium">${item.nama}</span>
                     ${lencana}
                 </div>`;
             });
@@ -868,59 +839,79 @@ function janaTrackerPanitia(tahunPilih = "semua") {
             container.innerHTML = htmlList;
         }
 
-        // KUMPULAN 1: Pengurusan Unit (Biru)
+        // Papar ikut 14 Kotak
         renderBukanPanitia([
-            { id: 'surat_lantikan_kurikulum', nama: 'Surat Lantikan' },
-            { id: 'carta_kurikulum', nama: 'Carta Organisasi' },
-            { id: 'visi_misi_kpm', nama: 'Visi Misi KPM' },
-            { id: 'visi_misi_sekolah', nama: 'Visi Misi Sekolah' },
-            { id: 'dasar_kurikulum', nama: 'Dasar / Ketetapan' },
-            { id: 'buku_pengurusan', nama: 'Buku Pengurusan' },
-            { id: 'takwim_persekolahan', nama: 'Takwim Persekolahan' },
-            { id: 'takwim_kurikulum', nama: 'Takwim Kurikulum' }
-        ], 'trackerMaklumatInduk');
+            { id: 'surat_lantikan_kurikulum', nama: 'Surat Lantikan JK' }, { id: 'carta_kurikulum', nama: 'Carta Organisasi Unit' },
+            { id: 'visi_misi_kpm', nama: 'Visi & Misi KPM' }, { id: 'visi_misi_sekolah', nama: 'Visi & Misi Sekolah' },
+            { id: 'dasar_kurikulum', nama: 'Matlamat/Dasar/Ketetapan' }, { id: 'buku_pengurusan', nama: 'Buku Pengurusan' },
+            { id: 'takwim_persekolahan', nama: 'Takwim Persekolahan' }, { id: 'takwim_kurikulum', nama: 'Takwim Kurikulum' }
+        ], 'boxPengurusanUnit');
 
-        // KUMPULAN 2: Pekeliling, Makluman & Masa Instruksional (Jingga/Kuning)
         renderBukanPanitia([
-            { id: 'spi', nama: 'SPI' },
-            { id: 'surat_makluman', nama: 'Surat Makluman' },
-            { id: 'jk_jadual_waktu', nama: 'JK Jadual Waktu' },
-            { id: 'jadual_waktu', nama: 'Jadual Induk/Kelas' },
-            { id: 'jadual_guru_ganti', nama: 'Jadual Ganti' }
-        ], 'trackerMesyuarat');
+            { id: 'spi', nama: 'SPI' }, { id: 'surat_makluman', nama: 'Surat Makluman' }
+        ], 'boxPekeliling');
 
-        // KUMPULAN 3: Dokumen & Perancangan (Hijau)
         renderBukanPanitia([
-            { id: 'dskp', nama: 'DSKP' },
-            { id: 'bahan_muat_turun', nama: 'Bahan M/Turun' },
-            { id: 'bahan_muat_naik', nama: 'Bahan M/Naik' },
-            { id: 'perancangan_strategik', nama: 'P. Strategik' },
-            { id: 'analisis_swot', nama: 'Analisis SWOT' },
-            { id: 'pelan_taktikal', nama: 'Pelan Taktikal' },
-            { id: 'pelan_operasi', nama: 'Pelan Operasi' },
-            { id: 'oppm_pintas', nama: 'OPPM & PINTAS' }
-        ], 'trackerIntervensi');
+            { id: 'dskp', nama: 'DSKP Semua MP' }, { id: 'bahan_muat_turun', nama: 'Bahan Dimuat Turun' }, { id: 'bahan_muat_naik', nama: 'Bahan Dimuat Naik' }
+        ], 'boxDokumen');
 
-        // KUMPULAN 4: Mesyuarat Induk, Panitia, Program (Ungu)
         renderBukanPanitia([
-            { id: 'mesyuarat_bil1', nama: 'Minit Mesy. Bil 1' },
-            { id: 'mesyuarat_bil2', nama: 'Minit Mesy. Bil 2' },
-            { id: 'mesyuarat_bil3', nama: 'Minit Mesy. Bil 3' },
-            { id: 'mesyuarat_bil4', nama: 'Minit Mesy. Bil 4' },
-            { id: 'maklum_balas_mesyuarat', nama: 'Maklum Balas' },
-            { id: 'plc_panitia', nama: 'PLC Panitia' },
-            { id: 'kertas_kerja_program', nama: 'Kertas Kerja' },
-            { id: 'laporan_program', nama: 'Laporan Program' }
-        ], 'trackerPencerapan');
-        
-        // KUMPULAN 5: Pemantauan Kurikulum (Merah/Teal)
-        // NOTA: Perlu wujudkan div id "trackerPemantauan" di HTML admin jika mahu paparkan ini,
-        // buat masa ini saya gabungkan ke div yang ada atau biarkan.
-        // Jika nak buat div baru, cikgu tambah di HTML <div id="trackerPemantauan"></div>
-        
+            { id: 'perancangan_strategik', nama: 'Perancangan Strategik' }, { id: 'analisis_swot', nama: 'Analisis SWOT' },
+            { id: 'pelan_taktikal', nama: 'Pelan Taktikal' }, { id: 'pelan_operasi', nama: 'Pelan Operasi' }, { id: 'oppm_pintas', nama: 'OPPM & PINTAS' }
+        ], 'boxPerancangan');
+
+        renderBukanPanitia([
+            { id: 'jk_jadual_waktu', nama: 'JK Jadual Waktu' }, { id: 'jadual_waktu', nama: 'Jadual Waktu Induk/Kelas' }, { id: 'jadual_guru_ganti', nama: 'Jadual Guru Ganti' }
+        ], 'boxMasa');
+
+        renderBukanPanitia([
+            { id: 'mesyuarat_bil1', nama: 'Minit Mesyuarat Bil. 1' }, { id: 'mesyuarat_bil2', nama: 'Minit Mesyuarat Bil. 2' },
+            { id: 'mesyuarat_bil3', nama: 'Minit Mesyuarat Bil. 3' }, { id: 'mesyuarat_bil4', nama: 'Minit Mesyuarat Bil. 4' }, { id: 'maklum_balas_mesyuarat', nama: 'Maklum Balas Minit' }
+        ], 'boxMesyuarat');
+
+        renderBukanPanitia([
+            { id: 'plc_panitia', nama: 'PLC Panitia' }, { id: 'kertas_kerja_program', nama: 'Kertas Kerja Program' }, { id: 'laporan_program', nama: 'Dokumentasi / Laporan' }
+        ], 'boxPanitiaProgram');
+
+        renderBukanPanitia([
+            { id: 'instrumen_pencerapan', nama: 'Instrumen Pencerapan' }, { id: 'jadual_pencerapan', nama: 'Agihan Jadual' },
+            { id: 'pencerapan_erph', nama: 'Pencerapan e-RPH' }, { id: 'pencerapan_kendiri', nama: 'PdPc Kendiri' },
+            { id: 'pencerapan_fasa1', nama: 'PdPc Fasa 1' }, { id: 'pencerapan_fasa2', nama: 'PdPc Fasa 2' }, { id: 'semakan_buku_latihan', nama: 'Semakan Buku Latihan' }
+        ], 'boxPemantauan');
+
+        renderBukanPanitia([
+            { id: 'jk_pbd', nama: 'Jawatankuasa PBD' }, { id: 'takwim_pbd', nama: 'Takwim PBD' }, { id: 'jadual_pbd', nama: 'Jadual Pelaksanaan' },
+            { id: 'instrumen_pbd', nama: 'Instrumen PBD' }, { id: 'analisis_pbd', nama: 'Analisis PBD' }, { id: 'intervensi_pbd', nama: 'Program Intervensi' },
+            { id: 'penjaminan_kualiti_pbd', nama: 'Penjaminan Kualiti' }, { id: 'pelaporan_pbd', nama: 'Pelaporan PBD' }
+        ], 'boxPbd');
+
+        renderBukanPanitia([
+            { id: 'takwim_upsa', nama: 'Takwim Pentaksiran' }, { id: 'jadual_upsa', nama: 'Jadual UPSA / UASA' }, { id: 'jadual_gubal_soalan', nama: 'Jadual Gubal Soalan' },
+            { id: 'analisis_upsa', nama: 'Analisis Keputusan' }, { id: 'intervensi_upsa', nama: 'Program Intervensi' }
+        ], 'boxUpsa');
+
+        renderBukanPanitia([
+            { id: 'jk_segak', nama: 'Jawatankuasa' }, { id: 'takwim_segak', nama: 'Takwim Pelaksanaan' }, { id: 'jadual_segak', nama: 'Jadual Pelaksanaan' }
+        ], 'boxSegak');
+
+        renderBukanPanitia([
+            { id: 'jk_kbat', nama: 'Jawatankuasa KBAT' }, { id: 'instrumen_kbat', nama: 'Instrumen KBAT' },
+            { id: 'pencerapan_kbat_kendiri', nama: 'PdPc KBAT (Kendiri)' }, { id: 'pencerapan_kbat_pentadbir', nama: 'PdPc (Pentadbir)' }
+        ], 'boxKbat');
+
+        renderBukanPanitia([
+            { id: 'jk_standard_kualiti', nama: 'Jawatankuasa / PPS' }, { id: 'panduan_standard_kualiti', nama: 'Buku Panduan' },
+            { id: 'standard_kurikulum', nama: 'Standard Kurikulum' }, { id: 'instrumen_standard_kualiti', nama: 'Instrumen Kurikulum' }
+        ], 'boxStandard');
+
+        renderBukanPanitia([
+            { id: 'jk_ict', nama: 'Jawatankuasa ICT' }
+        ], 'boxIct');
+
     });
 }
-window.janaTrackerPanitia = janaTrackerPanitia; // Wajib ada untuk butang tracker
+window.janaTrackerPanitia = janaTrackerPanitia;
+
 // =========================================================================
 // 11. PENGURUSAN AKSES PENGGUNA (ADMIN PANEL)
 // =========================================================================
