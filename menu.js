@@ -272,10 +272,10 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 17. STANDARD KUALITI @ SEKOLAH -->
+        <!-- 17. SK@S -->
         <details class="group mb-1">
             <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
-                <span class="flex items-center space-x-2.5"><i class="fas fa-star w-4 text-center text-amber-300"></i><span>17. Standard Kualiti</span></span>
+                <span class="flex items-center space-x-2.5"><i class="fas fa-star w-4 text-center text-amber-300"></i><span>17. SK@S</span></span>
                 <i class="fas fa-chevron-down text-[10px] transition-transform duration-200 group-open:rotate-180 text-slate-500"></i>
             </summary>
             <div class="ml-3 pl-3 border-l border-slate-700 my-1 space-y-1 text-slate-400">
