@@ -300,7 +300,7 @@ const senaraiNamaPanitia = {
     'pencerapan_kbat_kendiri': 'Pencerapan PdPc KBAT (Kendiri)',
     'pencerapan_kbat_pentadbir': 'Pencerapan PdPc KBAT (Pentadbir)',
 
-    // 17. STANDARD KUALITI @ SEKOLAH
+    // 17. SK@S
     'jk_standard_kualiti': 'Jawatankuasa Kurikulum / PPS',
     'panduan_standard_kualiti': 'Buku Panduan Standard Kualiti',
     'standard_kurikulum': 'Standard Kurikulum',
@@ -1058,7 +1058,7 @@ function janaTrackerPanitia(tahunPilih = "semua") {
             { id: 'pencerapan_kbat_kendiri', nama: 'PdPc KBAT (Kendiri)' }, { id: 'pencerapan_kbat_pentadbir', nama: 'PdPc (Pentadbir)' }
         ], 'boxKbat');
 
-        // 17. Standard Kualiti
+        // 17. SK@S
         renderBukanPanitia([
             { id: 'jk_standard_kualiti', nama: 'Jawatankuasa / PPS' }, { id: 'panduan_standard_kualiti', nama: 'Buku Panduan' },
             { id: 'standard_kurikulum', nama: 'Standard Kurikulum' }, { id: 'instrumen_standard_kualiti', nama: 'Instrumen Kurikulum' }
@@ -1253,7 +1253,7 @@ async function muatSenaraiPengguna() {
                                 <option value="pencerapan_kbat_pentadbir" ${userKawasan.includes('pencerapan_kbat_pentadbir') ? 'selected' : ''}>Pencerapan Pentadbir</option>
                             </optgroup>
 
-                            <optgroup label="17. Standard Kualiti @ Sekolah">
+                            <optgroup label="17. SK@S">
                                 <option value="jk_standard_kualiti" ${userKawasan.includes('jk_standard_kualiti') ? 'selected' : ''}>JK Standard Kualiti</option>
                                 <option value="panduan_standard_kualiti" ${userKawasan.includes('panduan_standard_kualiti') ? 'selected' : ''}>Buku Panduan</option>
                                 <option value="standard_kurikulum" ${userKawasan.includes('standard_kurikulum') ? 'selected' : ''}>Standard Kurikulum</option>
