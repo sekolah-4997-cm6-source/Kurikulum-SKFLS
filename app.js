@@ -1222,7 +1222,17 @@ async function muatSenaraiPengguna() {
                                 <option value="pelaporan_pbd" ${userKawasan.includes('pelaporan_pbd') ? 'selected' : ''}>Pelaporan PBD</option>
                             </optgroup>
 
-                            <optgroup label="13. UPSA / UASA">
+                            <optgroup label="13. Pembelajaran Matriks Tahun 4">
+                                <option value="jk_matriks4" ${userKawasan.includes('jk_matriks4') ? 'selected' : ''}>Jawatankuasa</option>
+                                <option value="takwim_matriks4" ${userKawasan.includes('takwim_matriks4') ? 'selected' : ''}>Takwim PBD</option>
+                                <option value="instrumen_matriks4" ${userKawasan.includes('instrumen_matriks4') ? 'selected' : ''}>Instrumen PBD</option>
+                                <option value="analisis_matriks4" ${userKawasan.includes('analisis_matriks4') ? 'selected' : ''}>Analisis PBD</option>
+                                <option value="intervensi_matriks4" ${userKawasan.includes('intervensi_matriks4') ? 'selected' : ''}>Program Intervensi</option>
+                                <option value="penjaminan_kualiti_matriks4" ${userKawasan.includes('penjaminan_kualiti_matriks4') ? 'selected' : ''}>Rekod Penjaminan Kualiti/Mutu</option>
+                                 <option value="pelaporan_matriks4" ${userKawasan.includes('pelaporan_matriks4') ? 'selected' : ''}>Pelaporan PBD</option>
+                            </optgroup>
+
+                            <optgroup label="14. UPSA / UASA">
                                 <option value="takwim_upsa" ${userKawasan.includes('takwim_upsa') ? 'selected' : ''}>Takwim UPSA/UASA</option>
                                 <option value="jadual_upsa" ${userKawasan.includes('jadual_upsa') ? 'selected' : ''}>Jadual UPSA/UASA</option>
                                 <option value="jadual_gubal_soalan" ${userKawasan.includes('jadual_gubal_soalan') ? 'selected' : ''}>Jadual Gubal Soalan</option>
@@ -1230,31 +1240,31 @@ async function muatSenaraiPengguna() {
                                 <option value="intervensi_upsa" ${userKawasan.includes('intervensi_upsa') ? 'selected' : ''}>Intervensi UPSA/UASA</option>
                             </optgroup>
 
-                            <optgroup label="14. BMI5-9T & SEGAK">
+                            <optgroup label="15. BMI5-9T & SEGAK">
                                 <option value="jk_segak" ${userKawasan.includes('jk_segak') ? 'selected' : ''}>JK SEGAK</option>
                                 <option value="takwim_segak" ${userKawasan.includes('takwim_segak') ? 'selected' : ''}>Takwim SEGAK</option>
                                 <option value="jadual_segak" ${userKawasan.includes('jadual_segak') ? 'selected' : ''}>Jadual SEGAK</option>
                             </optgroup>
 
-                            <optgroup label="15. KBAT">
+                            <optgroup label="16. KBAT">
                                 <option value="jk_kbat" ${userKawasan.includes('jk_kbat') ? 'selected' : ''}>JK KBAT</option>
                                 <option value="instrumen_kbat" ${userKawasan.includes('instrumen_kbat') ? 'selected' : ''}>Instrumen KBAT</option>
                                 <option value="pencerapan_kbat_kendiri" ${userKawasan.includes('pencerapan_kbat_kendiri') ? 'selected' : ''}>Pencerapan Kendiri</option>
                                 <option value="pencerapan_kbat_pentadbir" ${userKawasan.includes('pencerapan_kbat_pentadbir') ? 'selected' : ''}>Pencerapan Pentadbir</option>
                             </optgroup>
 
-                            <optgroup label="16. Standard Kualiti @ Sekolah">
+                            <optgroup label="17. Standard Kualiti @ Sekolah">
                                 <option value="jk_standard_kualiti" ${userKawasan.includes('jk_standard_kualiti') ? 'selected' : ''}>JK Standard Kualiti</option>
                                 <option value="panduan_standard_kualiti" ${userKawasan.includes('panduan_standard_kualiti') ? 'selected' : ''}>Buku Panduan</option>
                                 <option value="standard_kurikulum" ${userKawasan.includes('standard_kurikulum') ? 'selected' : ''}>Standard Kurikulum</option>
                                 <option value="instrumen_standard_kualiti" ${userKawasan.includes('instrumen_standard_kualiti') ? 'selected' : ''}>Instrumen Kualiti</option>
                             </optgroup>
                             
-                            <optgroup label="17. Surat Makluman">
+                            <optgroup label="18. Surat Makluman">
                                 <option value="surat_makluman" ${userKawasan.includes('surat_makluman') ? 'selected' : ''}>Surat Makluman</option>
                             </optgroup>
                             
-                            <optgroup label="18. Program & Sokongan Awal">
+                            <optgroup label="19. Program & Sokongan Awal">
                                 <option value="plan" ${userKawasan.includes('plan') ? 'selected' : ''}>PLaN</option>
                                 <option value="pemulihan_khas" ${userKawasan.includes('pemulihan_khas') ? 'selected' : ''}>Pemulihan Khas</option>
                                 <option value="transisi_tahun1" ${userKawasan.includes('transisi_tahun1') ? 'selected' : ''}>Transisi Tahun 1</option>
