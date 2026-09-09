@@ -213,7 +213,24 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 13. UPSA / UASA -->
+        <!-- 13. PEMBELAJARAN MATRIKS TAHUN 4 -->
+        <details class="group mb-1">
+            <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
+                <span class="flex items-center space-x-2.5"><i class="fas fa-table w-4 text-center text-blue-300"></i><span>13. Pembelajaran Matriks Tahun 4</span></span>
+                <i class="fas fa-chevron-down text-[10px] transition-transform duration-200 group-open:rotate-180 text-slate-500"></i>
+            </summary>
+            <div class="ml-3 pl-3 border-l border-slate-700 my-1 space-y-1 text-slate-400">
+                <a href="panitia.html?subjek=jk_matriks4" class="block p-1.5 hover:text-white hover:bg-slate-800 rounded">Jawatankuasa</a>
+                <a href="panitia.html?subjek=takwim_matriks4" class="block p-1.5 hover:text-white hover:bg-slate-800 rounded">Takwim PBD</a>
+                <a href="panitia.html?subjek=instrumen_matriks4" class="block p-1.5 hover:text-white hover:bg-slate-800 rounded">Instrumen PBD</a>
+                <a href="panitia.html?subjek=analisis_matriks4" class="block p-1.5 hover:text-white hover:bg-slate-800 rounded">Analisis PBD</a>
+                <a href="panitia.html?subjek=intervensi_matriks4" class="block p-1.5 hover:text-white hover:bg-slate-800 rounded">Program Intervensi</a>
+                <a href="panitia.html?subjek=penjaminan_kualiti_matriks4" class="block p-1.5 hover:text-white hover:bg-slate-800 rounded">Rekod Penjaminan Kualiti/Mutu</a>
+                <a href="panitia.html?subjek=pelaporan_matriks4" class="block p-1.5 hover:text-white hover:bg-slate-800 rounded">Pelaporan PBD</a>
+            </div>
+        </details>
+
+        <!-- 14. UPSA / UASA -->
         <details class="group mb-1">
             <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
                 <span class="flex items-center space-x-2.5"><i class="fas fa-award w-4 text-center text-pink-400"></i><span>13. UPSA / UASA</span></span>
@@ -228,7 +245,7 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 14. BMI5-9T & SEGAK -->
+        <!-- 15. BMI5-9T & SEGAK -->
         <details class="group mb-1">
             <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
                 <span class="flex items-center space-x-2.5"><i class="fas fa-heartbeat w-4 text-center text-red-400"></i><span>14. BMI5-9T & SEGAK</span></span>
@@ -241,7 +258,7 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 15. KBAT -->
+        <!-- 16. KBAT -->
         <details class="group mb-1">
             <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
                 <span class="flex items-center space-x-2.5"><i class="fas fa-brain w-4 text-center text-orange-400"></i><span>15. KBAT</span></span>
@@ -255,7 +272,7 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 16. STANDARD KUALITI @ SEKOLAH -->
+        <!-- 17. STANDARD KUALITI @ SEKOLAH -->
         <details class="group mb-1">
             <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
                 <span class="flex items-center space-x-2.5"><i class="fas fa-star w-4 text-center text-amber-300"></i><span>16. Standard Kualiti</span></span>
@@ -269,7 +286,7 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 17. SURAT MAKLUMAN -->
+        <!-- 18. SURAT MAKLUMAN -->
         <details class="group mb-1">
             <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
                 <span class="flex items-center space-x-2.5"><i class="fas fa-envelope-open-text w-4 text-center text-lime-400"></i><span>17. Surat Makluman</span></span>
@@ -280,7 +297,7 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 18. PROGRAM, INTERVENSI, DAN SOKONGAN AWAL -->
+        <!-- 19. PROGRAM, INTERVENSI, DAN SOKONGAN AWAL -->
         <details class="group mb-1">
             <summary class="flex justify-between items-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 cursor-pointer transition select-none font-semibold">
                 <span class="flex items-center space-x-2.5"><i class="fas fa-hands-helping w-4 text-center text-fuchsia-400"></i><span>18. Program & Sokongan Awal</span></span>
@@ -296,7 +313,7 @@ const menuHTML = `
             </div>
         </details>
 
-        <!-- 19. PAUTAN PANTAS LUAR -->
+        <!-- 20. PAUTAN PANTAS LUAR -->
         <div class="pt-4 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">Pautan Pantas</p></div>
         <a href="https://sekolah-4997-cm6-source.github.io/Sistem-OPR-Laka-Selatan/" target="_blank" class="flex items-center space-x-3 p-2 text-amber-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-external-link-alt w-4 text-center"></i> <span>Sistem OPR</span></a>
         <a href="https://classroom.google.com/" target="_blank" class="flex items-center space-x-3 p-2 text-emerald-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-chalkboard w-4 text-center"></i> <span>Google Classroom</span></a>
