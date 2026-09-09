@@ -314,11 +314,13 @@ const menuHTML = `
         </details>
 
         <!-- 20. PAUTAN PANTAS LUAR -->
-        <div class="pt-4 pb-1"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">Pautan Pantas</p></div>
-        <a href="https://sekolah-4997-cm6-source.github.io/Sistem-OPR-Laka-Selatan/" target="_blank" class="flex items-center space-x-3 p-2 text-amber-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-external-link-alt w-4 text-center"></i> <span>Sistem OPR</span></a>
-        <a href="https://classroom.google.com/" target="_blank" class="flex items-center space-x-3 p-2 text-emerald-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-chalkboard w-4 text-center"></i> <span>Google Classroom</span></a>
-        <a href="https://idme.moe.gov.my/" target="_blank" class="flex items-center space-x-3 p-2 text-blue-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-id-badge w-4 text-center"></i> <span>Idme / SPPB</span></a>
-
+                <div class="pt-4 pb-1">
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">Pautan Pantas</p>
+                </div>
+                <a href="https://sekolah-4997-cm6-source.github.io/Sistem-OPR-Laka-Selatan/" target="_blank" class="flex items-center space-x-3 p-2 text-amber-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-external-link-alt w-4 text-center"></i> <span>Sistem OPR</span></a>
+                <a href="https://classroom.google.com/" target="_blank" class="flex items-center space-x-3 p-2 text-emerald-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-chalkboard w-4 text-center"></i> <span>Google Classroom</span></a>
+                <a href="https://idme.moe.gov.my/" target="_blank" class="flex items-center space-x-3 p-2 text-blue-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-id-badge w-4 text-center"></i> <span>Idme / SPPB</span></a>
+                <a href="https://eoperasi.moe.gov.my/" target="_blank" class="flex items-center space-x-3 p-2 text-purple-400 hover:bg-slate-800 rounded-lg transition"><i class="fas fa-users w-4 text-center"></i> <span>eOperasi</span></a>
     </nav>
 `;
 
