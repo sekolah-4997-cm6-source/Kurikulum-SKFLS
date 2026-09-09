@@ -811,7 +811,7 @@ window.muatTrackerPanitia = function() {
 };
 
 // =========================================================================
-// JANA TRACKER PEMANTAUAN (KEMAS KINI 18 MODUL SIDEBAR)
+// JANA TRACKER PEMANTAUAN (KEMAS KINI 19 MODUL SIDEBAR)
 // =========================================================================
 function janaTrackerPanitia(tahunPilih = "semua") {
     // 1. Senarai Panitia - 12 Subjek berdasarkan menu navbar Modul 7
@@ -829,7 +829,7 @@ function janaTrackerPanitia(tahunPilih = "semua") {
         dataPanitia[p.id] = { fail1: 0, fail2: 0, fail3: 0, fail4: 0, status: "Belum Lengkap" };
     });
 
-    // 2. Senarai Kunci Subjek Bukan Panitia (Mengikut 18 Modul Navbar)
+    // 2. Senarai Kunci Subjek Bukan Panitia (Mengikut Modul Navbar)
     let dataBukanPanitia = {
         // Modul 1
         'surat_lantikan_kurikulum': 0, 'carta_kurikulum': 0, 'visi_misi_kpm': 0, 'visi_misi_sekolah': 0, 'dasar_kurikulum': 0, 'buku_pengurusan': 0, 'takwim_persekolahan': 0, 'takwim_kurikulum': 0,
@@ -855,17 +855,19 @@ function janaTrackerPanitia(tahunPilih = "semua") {
         'jk_ict': 0,
         // Modul 12
         'jk_pbd': 0, 'takwim_pbd': 0, 'jadual_pbd': 0, 'instrumen_pbd': 0, 'analisis_pbd': 0, 'intervensi_pbd': 0, 'penjaminan_kualiti_pbd': 0, 'pelaporan_pbd': 0,
-        // Modul 13
+        // Modul 13 (Baharu: Pembelajaran Matriks Tahun 4)
+        'jk_matriks4': 0, 'takwim_matriks4': 0, 'instrumen_matriks4': 0, 'analisis_matriks4': 0, 'intervensi_matriks4': 0, 'penjaminan_kualiti_matriks4': 0, 'pelaporan_matriks4': 0,
+        // Modul 14 (UPSA / UASA)
         'takwim_upsa': 0, 'jadual_upsa': 0, 'jadual_gubal_soalan': 0, 'analisis_upsa': 0, 'intervensi_upsa': 0,
-        // Modul 14
-        'jk_segak': 0, 'takwim_segak': 0, 'jadual_segak': 0,
         // Modul 15
-        'jk_kbat': 0, 'instrumen_kbat': 0, 'pencerapan_kbat_kendiri': 0, 'pencerapan_kbat_pentadbir': 0,
+        'jk_segak': 0, 'takwim_segak': 0, 'jadual_segak': 0,
         // Modul 16
-        'jk_standard_kualiti': 0, 'panduan_standard_kualiti': 0, 'standard_kurikulum': 0, 'instrumen_standard_kualiti': 0,
+        'jk_kbat': 0, 'instrumen_kbat': 0, 'pencerapan_kbat_kendiri': 0, 'pencerapan_kbat_pentadbir': 0,
         // Modul 17
-        'surat_makluman': 0,
+        'jk_standard_kualiti': 0, 'panduan_standard_kualiti': 0, 'standard_kurikulum': 0, 'instrumen_standard_kualiti': 0,
         // Modul 18
+        'surat_makluman': 0,
+        // Modul 19
         'plan': 0, 'pemulihan_khas': 0, 'transisi_tahun1': 0, 'intervensi_tahun1': 0, 'pusat_sumber': 0, 'prasekolah': 0
     };
 
@@ -1005,7 +1007,7 @@ function janaTrackerPanitia(tahunPilih = "semua") {
         renderBukanPanitia([
             { id: 'kertas_kerja_program', nama: 'Kertas Kerja Program' }, 
             { id: 'laporan_program', nama: 'Dokumentasi / Laporan' }
-       ], 'boxProgram');
+        ], 'boxProgram');
 
         // 11. Pendigitalan ICT
         renderBukanPanitia([
@@ -1019,35 +1021,46 @@ function janaTrackerPanitia(tahunPilih = "semua") {
             { id: 'penjaminan_kualiti_pbd', nama: 'Penjaminan Kualiti' }, { id: 'pelaporan_pbd', nama: 'Pelaporan PBD' }
         ], 'boxPbd');
 
-        // 13. UPSA / UASA
+        // 13. Pembelajaran Matriks Tahun 4 (Baharu)
+        renderBukanPanitia([
+            { id: 'jk_matriks4', nama: 'Jawatankuasa PBD' },
+            { id: 'takwim_matriks4', nama: 'Takwim PBD' },
+            { id: 'instrumen_matriks4', nama: 'Instrumen PBD' },
+            { id: 'analisis_matriks4', nama: 'Analisis PBD' },
+            { id: 'intervensi_matriks4', nama: 'Program Intervensi' },
+            { id: 'penjaminan_kualiti_pbd_matriks4', nama: 'Penjaminan Kualiti' },
+            { id: 'pelaporan_matriks4', nama: 'Pelaporan PBD' }
+        ], 'boxMatriks4');
+
+        // 14. UPSA / UASA
         renderBukanPanitia([
             { id: 'takwim_upsa', nama: 'Takwim Pentaksiran' }, { id: 'jadual_upsa', nama: 'Jadual UPSA / UASA' }, { id: 'jadual_gubal_soalan', nama: 'Jadual Gubal Soalan' },
             { id: 'analisis_upsa', nama: 'Analisis Keputusan' }, { id: 'intervensi_upsa', nama: 'Program Intervensi' }
         ], 'boxUpsa');
 
-        // 14. BMI5-9T & SEGAK
+        // 15. BMI5-9T & SEGAK
         renderBukanPanitia([
             { id: 'jk_segak', nama: 'Jawatankuasa' }, { id: 'takwim_segak', nama: 'Takwim Pelaksanaan' }, { id: 'jadual_segak', nama: 'Jadual Pelaksanaan' }
         ], 'boxSegak');
 
-        // 15. KBAT
+        // 16. KBAT
         renderBukanPanitia([
             { id: 'jk_kbat', nama: 'Jawatankuasa KBAT' }, { id: 'instrumen_kbat', nama: 'Instrumen KBAT' },
             { id: 'pencerapan_kbat_kendiri', nama: 'PdPc KBAT (Kendiri)' }, { id: 'pencerapan_kbat_pentadbir', nama: 'PdPc (Pentadbir)' }
         ], 'boxKbat');
 
-        // 16. Standard Kualiti
+        // 17. Standard Kualiti
         renderBukanPanitia([
             { id: 'jk_standard_kualiti', nama: 'Jawatankuasa / PPS' }, { id: 'panduan_standard_kualiti', nama: 'Buku Panduan' },
             { id: 'standard_kurikulum', nama: 'Standard Kurikulum' }, { id: 'instrumen_standard_kualiti', nama: 'Instrumen Kurikulum' }
         ], 'boxStandard');
 
-        // 17. Surat Makluman
+        // 18. Surat Makluman
         renderBukanPanitia([
             { id: 'surat_makluman', nama: 'Surat Makluman' }
         ], 'boxSuratMakluman');
 
-        // 18. Program & Sokongan Awal
+        // 19. Program & Sokongan Awal
         renderBukanPanitia([
             { id: 'plan', nama: 'PLaN' }, { id: 'pemulihan_khas', nama: 'Pemulihan Khas' },
             { id: 'transisi_tahun1', nama: 'Transisi Tahun 1' }, { id: 'intervensi_tahun1', nama: 'Intervensi Tahun 1' },
