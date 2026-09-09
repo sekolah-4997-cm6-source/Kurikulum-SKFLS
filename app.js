@@ -273,34 +273,43 @@ const senaraiNamaPanitia = {
     'penjaminan_kualiti_pbd': 'Rekod Penjaminan Kualiti / Mutu PBD',
     'pelaporan_pbd': 'Pelaporan PBD',
 
-    // 13. UPSA / UASA
+    // 13. PEMBELAJARAN MATRIKS TAHUN 4
+    'jk_matriks4': 'Jawatankuasa Pembelajaran Matriks Tahun 4',
+    'takwim_matriks4': 'Takwim Pembelajaran Matriks Tahun 4',
+    'instrumen_matriks4': 'Instrumen Pembelajaran Matriks Tahun 4',
+    'analisis_matriks4': 'Analisis Pembelajaran Matriks Tahun 4',
+    'intervensi_matriks4': 'Program Intervensi Pembelajaran Matriks Tahun 4',
+    'penjaminan_kualiti_matriks4': 'Rekod Penjaminan Kualiti/Mutu Pembelajaran Matriks Tahun 4',
+    'pelaporan_matriks4': 'Pelaporan Pembelajaran Matriks Tahun 4',
+  
+    // 14. UPSA / UASA
     'takwim_upsa': 'Takwim Pentaksiran UPSA / UASA',
     'jadual_upsa': 'Jadual UPSA / UASA',
     'jadual_gubal_soalan': 'Jadual Penggubalan Soalan',
     'analisis_upsa': 'Analisis Keputusan UPSA / UASA',
     'intervensi_upsa': 'Program Intervensi UPSA / UASA',
 
-    // 14. BMI5-9T & SEGAK
+    // 15. BMI5-9T & SEGAK
     'jk_segak': 'Jawatankuasa BMI5-9T & SEGAK',
     'takwim_segak': 'Takwim Pelaksanaan BMI5-9T & SEGAK',
     'jadual_segak': 'Jadual Pelaksanaan BMI5-9T & SEGAK',
 
-    // 15. KBAT
+    // 16. KBAT
     'jk_kbat': 'Jawatankuasa KBAT',
     'instrumen_kbat': 'Instrumen KBAT',
     'pencerapan_kbat_kendiri': 'Pencerapan PdPc KBAT (Kendiri)',
     'pencerapan_kbat_pentadbir': 'Pencerapan PdPc KBAT (Pentadbir)',
 
-    // 16. STANDARD KUALITI @ SEKOLAH
+    // 17. STANDARD KUALITI @ SEKOLAH
     'jk_standard_kualiti': 'Jawatankuasa Kurikulum / PPS',
     'panduan_standard_kualiti': 'Buku Panduan Standard Kualiti',
     'standard_kurikulum': 'Standard Kurikulum',
     'instrumen_standard_kualiti': 'Instrumen Kurikulum Standard Kualiti',
 
-    // 17. SURAT MAKLUMAN
+    // 18. SURAT MAKLUMAN
     'surat_makluman': 'Surat Makluman Kurikulum',
 
-    // 18. PROGRAM & SOKONGAN AWAL
+    // 19. PROGRAM & SOKONGAN AWAL
     'plan': 'Program PLaN (Primary Literacy & Numeracy)',
     'pemulihan_khas': 'Pengurusan Pemulihan Khas',
     'transisi_tahun1': 'Program Transisi Tahun 1',
