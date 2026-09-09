@@ -331,3 +331,50 @@ document.addEventListener("DOMContentLoaded", () => {
         sidebar.innerHTML = menuHTML;
     }
 });
+
+
+// =========================================================================
+// KEKALKAN NAVBAR / DROPDOWN TERBUKA & HIGHLIGHT MENGIKUT URL SEMASA
+// =========================================================================
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Dapatkan parameter 'subjek' dari URL semasa
+    const urlParams = new URLSearchParams(window.location.search);
+    const subjekPilihan = urlParams.get('subjek');
+
+    if (subjekPilihan) {
+        // 2. Cari pautan (tag <a>) dalam sidebar yang mempunyai parameter subjek ini
+        const linkSemasa = document.querySelector(`a[href*="subjek=${subjekPilihan}"]`);
+
+        if (linkSemasa) {
+            // 3. Highlight pautan tersebut (Ubah suai class Tailwind ini ikut warna tema navbar cikgu)
+            // Contoh di bawah akan jadikan latar belakang gelap, teks warna biru dan tebal
+            linkSemasa.classList.add("bg-slate-800", "text-blue-400", "font-bold");
+            
+            // Opsional: Buang class warna asal jika ada (contoh: text-slate-400)
+            linkSemasa.classList.remove("text-slate-400"); 
+
+            // 4. Proses membuka semula dropdown yang tertutup (hidden)
+            let parentElemen = linkSemasa.parentElement;
+            
+            // Kita semak semua elemen 'parent' ke atas sehingga jumpa body
+            while (parentElemen && parentElemen.tagName !== 'BODY') {
+                
+                // Jika elemen tersebut ada class 'hidden' (bermaksud dropdown sedang tertutup)
+                if (parentElemen.classList.contains('hidden')) {
+                    parentElemen.classList.remove('hidden'); // Buka dropdown!
+                    
+                    // (Opsional) Jika butang utama dropdown cikgu ada ikon anak panah (chevron)
+                    // yang perlu dipusingkan (rotate) apabila ia dibuka:
+                    const butangUtama = parentElemen.previousElementSibling;
+                    if (butangUtama) {
+                        const ikonPanah = butangUtama.querySelector('.fa-chevron-down');
+                        if (ikonPanah) {
+                            ikonPanah.classList.add('rotate-180'); // Pusing anak panah ke atas
+                        }
+                    }
+                }
+                parentElemen = parentElemen.parentElement; // Terus semak parent di atasnya
+            }
+        }
+    }
+});
