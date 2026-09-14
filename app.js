@@ -571,7 +571,7 @@ if (formUpload) {
             reader.readAsDataURL(file);
             reader.onload = async function() {
                 const base64Data = reader.result.split(',')[1]; 
-                const gasUrl = "https://script.google.com/macros/s/AKfycbyAeUulIKI140BefI4ovGqmzrifbPKJ5USstIoCZ-mV_OzH4PfR8d3cjxfJGy572zYxbg/exec";
+                const gasUrl = "https://script.google.com/macros/s/AKfycbwvRwgWYEVkkruDw25-TLUFLYXgGXLISvoxdzfvrKBKJax7miV7wyq7b7hK0grgDOUgOg/exec";
 
 
 const namaFolderGabungan = folderSasaranSemasa.replace('_', ' ').toUpperCase() + " " + subjekSemasa.toUpperCase();
